@@ -1,0 +1,56 @@
+import pandas as pd
+import numpy as np
+from data.confidential.validated_date import validated_date
+
+
+def standardise_activity_data(df):
+    df = df.dropna().drop_duplicates()
+    df.time = pd.to_datetime(df.time)
+    df.time = pd.to_datetime(df.time.dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+    df_start = df[['id', 'time', 'location']].drop_duplicates()
+    df_end = df_start.copy()
+    df_start['hour'] = '00:00:00'
+    df_end['hour'] = '23:00:00'
+    df_borders = pd.concat([df_start, df_end])
+    df_borders['time'] = pd.to_datetime(df_borders.time.dt.strftime('%Y-%m-%d')
+                                                    + ' ' + df_borders.hour)
+    df_borders.drop('hour', inplace=True, axis=1)
+
+    df = df.append(df_borders, sort=False, ignore_index=True) \
+        .drop_duplicates(subset=['id', 'time', 'location'])
+    df = df.fillna(0).groupby(['id', 'location']).apply(lambda x: x.set_index('time')
+                                                              .resample('H').sum()).reset_index()
+    table_df = df.pivot_table(index=['id', 'time'], columns='location',
+                              values='value').reset_index()
+    table_df = table_df.replace(np.nan, 0)
+
+    patient_data = pd.read_csv('./data/confidential/UTIs-TP-TN.csv')
+    patient_data = patient_data[['subject', 'datetimeCreateddf', 'valid']].dropna().drop_duplicates()
+    patient_data.columns = ['id', 'time', 'valid']
+    # patient_data.id = map_raw_ids(patient_data.id, True)
+
+    p_data = []
+    d = validated_date()
+    for idx, p_id in enumerate(d.keys()):
+        for data in d[p_id]:
+            p_data.append([p_id, data[0], data[1]])
+    p_data = pd.DataFrame(p_data, columns=['id', 'time', 'valid'])
+
+    patient_data = pd.concat([patient_data, p_data])
+
+    patient_data.time = pd.to_datetime(pd.to_datetime(patient_data.time).dt.date)
+    patient_data['time'] = patient_data.time.dt.strftime('%Y-%m-%d') + patient_data['id'].astype(str)
+
+    # table_df.id = map_raw_ids(table_df.id, True)
+    # table_df['valid'] = table_df.time.dt.strftime('%Y-%m-%d') + table_df['id'].astype(str)
+    # table_df['valid'] = table_df['valid'].map(
+    #     patient_data.loc[:, ['valid', 'time']].set_index('time')['valid'].to_dict())
+    table_df = table_df.dropna()
+    return table_df
+
+
+def normalized(a, axis=-1, order=2):
+    l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
+    l2[l2==0] = 1
+    return a / np.expand_dims(l2, axis)
