@@ -21,7 +21,7 @@ I have not included tensorflow, pytorch and scikit-learn within the ```setup.py`
 4. Install scikit-learn using the command here: [Scikit-Learn Installation Guide](https://scikit-learn.org/stable/install.html)
     - Tested with scikit-learn 1.0 on windows and 1.0 on MacOS.
 
-4. Run ```pip install -e git+https://github.com/alexcapstick/minder_utils.git#egg=minder_utils```. There is a notebook, [Install Example.ipynb](https://github.com/alexcapstick/minder_utils/blob/main/Install%20Example.ipynb) with an example of this running in a jupyter notebook. This will save the package in the working directory. Any changes then made to this code will be reflected in your installation.
+4. Run ```pip install -e git+https://github.com/ImperialCollegeLondon/minder_utils.git@package#egg=minder_utils```. There is a notebook, [Install Example.ipynb](https://github.com/alexcapstick/minder_utils/blob/main/Install%20Example.ipynb) with an example of this running in a jupyter notebook. This will save the package in the working directory. Any changes then made to this code will be reflected in your installation.
 
 
 Please let me know if you run into any issues!
