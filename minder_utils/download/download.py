@@ -39,8 +39,9 @@ class Downloader:
         dictionary
 
         Returns
+        ---------
 
-            _: dict: 
+        - _: dict: 
             This returns a dictionary of the available datasets.
         '''
         try:
@@ -53,14 +54,15 @@ class Downloader:
         This is an internal function that makes the request to download the data.
 
         Arguments
+        ---------
 
-            categories: list or string: 
+        - categories: list or string: 
             If a list, this is the datasets that will be downloaded. Please use the
             dataset names that can be returned by using the get_category_names function.
             If the string 'all' is supplied, this function will return all of the data. This
             is not good! There should be a good reason to do this.
 
-            since: valid input to pd.to_datetime(.): 
+        - since: valid input to pd.to_datetime(.): 
             This is the date and time from which the data will be loaded.
 
         '''
@@ -116,22 +118,23 @@ class Downloader:
         
 
         Arguments
+        ---------
 
-            since: valid input to pd.to_datetime(.): 
+        - since: valid input to pd.to_datetime(.): 
             This is the date and time from which the data will be loaded.
 
-            reload: bool: 
+        - reload: bool: 
             This value determines whether an export request should be sent. 
             In most cases, this should be true, unless you want to download
             the data from a previously run request.
 
-            categories: list or string: 
+        - categories: list or string: 
             If a list, this is the datasets that will be downloaded. Please use the
             dataset names that can be returned by using the get_category_names function.
             If the string 'all' is supplied, this function will return all of the data. This
             is not good! There should be a good reason to do this.
 
-            save_path: string: 
+        - save_path: string: 
             This is the save path for the data that is downloaded from minder.
 
         '''
@@ -175,16 +178,19 @@ class Downloader:
         This function allows you to get the category names from a given measurement name.
 
         Arguments
+        ---------
 
-            measurement_name: str: 
+        - measurement_name: str: 
             This is the name of the measurement that you want to get the categories for.
             The default 'all' returns all the possible measurement names.
 
         Returns
+        ---------
 
-            out: list of strings: 
+        - out: list of strings: 
             This is a list that contains the category names that can be used in the 
             export function.
+
         '''
         
         if measurement_name == 'all':
@@ -208,8 +214,9 @@ class Downloader:
         that can be downloaded from minder.
 
         Returns
+        ---------
 
-            out: list of strings: 
+        - out: list of strings: 
             This is a list that contains the names of the sets of measurements.
 
         '''
@@ -225,8 +232,9 @@ class Downloader:
         file token_real.json after running the token_save function in settings.
 
         Returns
+        ---------
         
-            token: string: 
+        - token: string: 
             This returns the token in the format that can be used in the api call.
 
         '''

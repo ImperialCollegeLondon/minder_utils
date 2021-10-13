@@ -11,13 +11,18 @@ from .formatting.format_util import y_to_categorical
 
 def run_default(reload_weekly=False, reload_all=False):
     '''
-    An example function for loading data and evaluating methods
+    An example function for loading data and evaluating methods on the activity data
+    with UTIs as labels.
     
     Arguments
+    ---------
 
-        reload_weekly: bool: Download the previous week's data.
-        
-        reload_all: bool: Download all data.
+    - reload_weekly: bool: 
+        Download the previous week's data.
+    
+    - reload_all: bool: 
+        Download all data.
+
     '''
     loader = Weekly_dataloader(num_days_extended=5)
     loader.load_data(reload_weekly, reload_all)
@@ -55,13 +60,17 @@ def run_default(reload_weekly=False, reload_all=False):
 
 def load_data_default(reload_weekly=False, reload_all=False):
     '''
-    An example function that downloads and processes the data.
+    An example function that downloads and processes the activity data.
     
     Arguments:
+    ---------
 
-        reload_weekly: bool: Download the previous week's data.
+    - reload_weekly: bool: 
+        Download the previous week's data.
+
+    - reload_all: bool: 
+        Download all data.
     
-        reload_all: bool: Download all data.
     '''
 
     loader = Weekly_dataloader(num_days_extended=5)

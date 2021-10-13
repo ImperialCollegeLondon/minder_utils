@@ -10,12 +10,9 @@ def token_save(token):
 
     Arguments
     ---------
-        token: string
-            This is the user token that can be used to access minder.
 
-    Returns
-    ---------   
-        None
+    - token: string:
+        This is the user token that can be used to access minder.
 
     '''
     token_dict = {"token": "Bearer {}".format(token)}
@@ -35,15 +32,13 @@ def set_data_dir(path):
 
     Arguments
     ---------
-        path: string
-            Please supply a string value that contains the relative path from your current
-            working directory to the folder containing the data.
-            For example: './data/'
-    
-    Returns
-    ---------   
-        None
-        
+
+    - path: string:
+        Please supply a string value that contains the relative path from your current
+        working directory to the folder containing the data.
+        For example: './data/'.
+
+
     '''
 
     def ensure_folder(path):
