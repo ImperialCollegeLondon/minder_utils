@@ -1,4 +1,13 @@
-# Byte-compiled / optimized / DLL files
+-.idea
+**/data
+**/.DS_Store
+**/__pycache__/
+**/.ipynb_checkpoints/
+**/minder_utils.egg-info/
+**/download/token_real.json
+**/results
+**/formatting/data_path.txt
+-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -138,6 +147,3 @@ dmypy.json
 cython_debug/
 
 data
-**/.DS_Store
-results
-.idea
