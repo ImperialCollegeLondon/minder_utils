@@ -95,6 +95,8 @@ class Downloader:
             
             if response['status'] == 202:
                 response = requests.get(job_id, headers=self.params).json()
+                # the following waits for x seconds and runs an animation in the 
+                # mean time to make sure the user doesn't think the code is broken
                 progress_spinner(5, 'Waiting for the sever to complete the job', new_line_after = False)
                 
             elif response['status'] == 500:
