@@ -1,7 +1,7 @@
 import os
+from pathlib import Path
 
-
-p = os.path.join(os.path.dirname(__file__), 'confidential/')
+p = Path(os.path.join(os.path.dirname(__file__), 'confidential/'))
 if not p.exists():
 	os.mkdir(p)
 
