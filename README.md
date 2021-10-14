@@ -49,6 +49,7 @@ conda env create -f environment.yml
 ```
  
 ## Overview
+NOTE: the time in the dataframe is UTC, which in the summer is 1 hour earlier then local patient time.
  1. access the research portal and activate an access token
  2. Copy and paste your token into [Getting Started.ipynb](./Getting%20Started.ipynb).
 
