@@ -50,10 +50,10 @@ conda env create -f environment.yml
  
 ## Overview
  1. access the research portal and activate an access token
- 2. Copy and paste your token into download/token.json. 
+ 2. Copy and paste your token into [Getting Started.ipynb](./Getting%20Started.ipynb).
 
 Currently, the script can
- 1. Download the data ```python main.py -download True``` (Imperial VPN and access token is necessary).
+ 1. Download the data
  2. Categorize the data ```python main.py -formatting True```. Will return an object with the following attributes
   - physiological_data, the values will be averaged by date.
   - activity_data
@@ -65,6 +65,7 @@ The weekly_loader in the 'scripts' folder supports download the activity data we
  - put the data in a specific format
  - normalise and save the data
 
+Please check the [Instruction.ipynb](./Instruction.ipynb) for usage.
 
 ## Usage
 **Download**
@@ -85,31 +86,28 @@ The weekly_loader in the 'scripts' folder supports download the activity data we
 Currently the script supports activity data only,
  1. First time
 ```
-from scirpts.weekly_loader import Weekly_dataloader
-loader = Weekly_dataloader(num_days_extended=5)
-loader.load_data(reload_weekly=True, reload_all=False)
+from minder_utils.scirpts.weekly_loader import Weekly_dataloader
+loader = Weekly_dataloader()
+loader.initialise()
 ```
  2. Reload the latest weekly data
 ```
-loader.load_data(reload_weekly=True, reload_all=False)
+loader.refresh()
 ```
  3. To access the data, you can use the following script
 ```
-# Previous data
-unlabelled = np.load(os.path.join(loader.previous_data, 'unlabelled.npy')) # Unlabelled activity data
-X = np.load(os.path.join(loader.previous_data, 'X.npy')) # labelled UTI
-y = np.load(os.path.join(loader.previous_data, 'y.npy')) # label
-label_p_ids = np.load(os.path.join(loader.previous_data, 'label_ids.npy'))
+unlabelled = np.load(os.path.join(loader.previous_data, 'unlabelled.npy'), allow_pickle=True)
+X = np.load(os.path.join(loader.previous_data, 'X.npy'), allow_pickle=True)
+y = np.load(os.path.join(loader.previous_data, 'y.npy'), allow_pickle=True)
 
-# Weekly data
-weekly_data = np.load(os.path.join(loader.weekly_data, 'unlabelled.npy'))
-p_ids = np.load(os.path.join(loader.weekly_data, 'patient_id.npy'))
-dates = np.load(os.path.join(loader.weekly_data, 'dates.npy'))
+weekly_data = np.load(os.path.join(loader.current_data, 'unlabelled.npy'), allow_pickle=True)
+p_ids = np.load(os.path.join(loader.current_data, 'patient_id.npy'), allow_pickle=True)
+dates = np.load(os.path.join(loader.current_data, 'dates.npy'), allow_pickle=True)
 ```
 
-Currently the data will be formated into (N * 3 * 8 * 19), where N is the number of samples, 3 * 8 is 24 hours per day (the sensor readings will be aggregated hourly), 19 is the number of sensors. The 19 sensors are:
+Currently the data will be formated into (N * 3 * 8 * 18), where N is the number of samples, 3 * 8 is 24 hours per day (the sensor readings will be aggregated hourly), 19 is the number of sensors. The 19 sensors are:
 ```
-['WC1', 'back door', 'bathroom1', 'bedroom1', 'cellar',
+['WC1', 'back door', 'bathroom1', 'bedroom1',
 'conservatory', 'dining room', 'fridge door', 'front door',
 'hallway', 'iron', 'kettle', 'kitchen', 'living room',
 'lounge', 'main door', 'microwave', 'multi', 'office']
