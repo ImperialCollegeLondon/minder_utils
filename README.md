@@ -68,54 +68,7 @@ The weekly_loader in the 'scripts' folder supports download the activity data we
 
 Please check the [Instruction.ipynb](./Instruction.ipynb) for usage.
 
-## Usage
-**Download**
- 1. Download the specific data
- ```
- from download.download import Downloader
- Downloader.export(since='2021-10-01', reload=True, categories=['procedure'], save_path='./data/raw_data/')
- ```
- 2. Download all the data
- ```
- Downloader.export(categories='all')
- ```
- Note: If you would like to download the data you downloaded before, set the reload to False
- ```
- Downloader.export(reload=False)
- ```
-**Download weekly**
-Currently the script supports activity data only,
- 1. First time
-```
-from minder_utils.scirpts.weekly_loader import Weekly_dataloader
-loader = Weekly_dataloader()
-loader.initialise()
-```
- 2. Reload the latest weekly data
-```
-loader.refresh()
-```
- 3. To access the data, you can use the following script
-```
-unlabelled = np.load(os.path.join(loader.previous_data, 'unlabelled.npy'), allow_pickle=True)
-X = np.load(os.path.join(loader.previous_data, 'X.npy'), allow_pickle=True)
-y = np.load(os.path.join(loader.previous_data, 'y.npy'), allow_pickle=True)
-
-weekly_data = np.load(os.path.join(loader.current_data, 'unlabelled.npy'), allow_pickle=True)
-p_ids = np.load(os.path.join(loader.current_data, 'patient_id.npy'), allow_pickle=True)
-dates = np.load(os.path.join(loader.current_data, 'dates.npy'), allow_pickle=True)
-```
-
-Currently the data will be formated into (N * 3 * 8 * 18), where N is the number of samples, 3 * 8 is 24 hours per day (the sensor readings will be aggregated hourly), 19 is the number of sensors. The 19 sensors are:
-```
-['WC1', 'back door', 'bathroom1', 'bedroom1',
-'conservatory', 'dining room', 'fridge door', 'front door',
-'hallway', 'iron', 'kettle', 'kitchen', 'living room',
-'lounge', 'main door', 'microwave', 'multi', 'office']
-
-```
-
-Please share your ideas/code of formatting the data (activity, environmental, physiological, questionary), data visualisation or any other ideas with me. I will organise the code so everyone can use it.
+Please share your ideas/code of formatting the data (activity, environmental, physiological, questionary), data visualisation or any other ideas with us. We will organise the code and share to others.
 
 ## TODO
 
