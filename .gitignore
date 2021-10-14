@@ -1,6 +1,7 @@
 -.idea
 **/data
 **/.DS_Store
+**/.idea
 **/__pycache__/
 **/.ipynb_checkpoints/
 **/minder_utils.egg-info/
