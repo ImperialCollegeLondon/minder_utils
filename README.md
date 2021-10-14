@@ -1,5 +1,6 @@
 # Download and process the DRI data
 
+For documentation, please see: [minder_utils documentation](https://minder-utils.github.io).
 
 ## Installation Instructions:
 
