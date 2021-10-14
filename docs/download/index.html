@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>minder_utils.download API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>minder_utils.download</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from .download import *
+__all__ = [&#39;Downloader&#39;]</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="minder_utils.download.download" href="download.html">minder_utils.download.download</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="minder_utils.download.Downloader"><code class="flex name class">
+<span>class <span class="ident">Downloader</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class allows you to download and save the data from minder. Make sure that you
+have internally saved your token before using this class (see the
+<code>Getting Started.ipynb</code> guide).</p>
+<p><code>Example</code></p>
+<pre><code>from minder_utils.download import Downloader
+dl = Downloader()
+category_list = dl.get_category_names('activity')
+
+dl.export(categories = category_list, 
+          since= '2021-10-05', 
+          save_path='./data/')
+
+</code></pre>
+<p>This would download all of the activity data from the 5th October 2021, and save it
+as a csv in the directory <code>'./data/'</code></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Downloader:
+    &#39;&#39;&#39;
+    This class allows you to download and save the data from minder. Make sure that you 
+    have internally saved your token before using this class (see the 
+    ```Getting Started.ipynb``` guide).
+    
+    ``Example``
+    
+    
+    ```
+    from minder_utils.download import Downloader
+    dl = Downloader()
+    category_list = dl.get_category_names(&#39;activity&#39;)
+    
+    dl.export(categories = category_list, 
+              since= &#39;2021-10-05&#39;, 
+              save_path=&#39;./data/&#39;)
+
+    ```
+    This would download all of the activity data from the 5th October 2021, and save it
+    as a csv in the directory ```&#39;./data/&#39;```
+
+    &#39;&#39;&#39;
+    def __init__(self):
+        self.url = &#39;https://research.minder.care/api/&#39;
+        self.params = {&#39;Authorization&#39;: self.token(), &#39;Content-Type&#39;: &#39;application/json&#39;}
+
+    def get_info(self):
+        &#39;&#39;&#39;
+        This function returns the available datasets on minder in the form of a
+        dictionary
+
+        Returns
+        ---------
+
+        - _: dict: 
+            This returns a dictionary of the available datasets.
+        &#39;&#39;&#39;
+        try:
+            return requests.get(self.url + &#39;info/datasets&#39;, headers=self.params).json()
+        except json.decoder.JSONDecodeError:
+            print(&#39;Get response &#39;, requests.get(self.url + &#39;info/datasets&#39;, headers=self.params))
+
+    def _export_request(self, categories=&#39;all&#39;, since=None):
+        &#39;&#39;&#39;
+        This is an internal function that makes the request to download the data.
+
+        Arguments
+        ---------
+
+        - categories: list or string: 
+            If a list, this is the datasets that will be downloaded. Please use the
+            dataset names that can be returned by using the get_category_names function.
+            If the string &#39;all&#39; is supplied, this function will return all of the data. This
+            is not good! There should be a good reason to do this.
+
+        - since: valid input to pd.to_datetime(.): 
+            This is the date and time from which the data will be loaded.
+
+        &#39;&#39;&#39;
+
+        print(&#39;Deleting Existing export request&#39;)
+        # previously_requests = requests.get(self.url + &#39;export&#39;, headers=self.params).json()
+        # for job in previously_requests:
+        #     response = requests.delete(self.url + &#39;export/&#39; + job[&#39;id&#39;], headers=self.params)
+        #     if response.status_code == 200:
+        #         print(&#39;Job ID &#39;, job[&#39;id&#39;], &#39;is successfully deleted&#39;, response.text)
+        #     else:
+        #         print(&#39;Job ID &#39;, job[&#39;id&#39;], &#39;is NOT deleted. Response code &#39;, response.status_code)
+        print(&#39;Creating new export request&#39;)
+        export_keys = {&#39;datasets&#39;: {}}
+        if since is not None:
+            since = pd.to_datetime(since)
+            export_keys[&#39;since&#39;] = since.strftime(&#39;%Y-%m-%dT%H:%M:%S.000Z&#39;)
+        info = self.get_info()[&#39;Categories&#39;]
+        for key in info:
+            for category in info[key]:
+                if category in categories or categories == &#39;all&#39;:
+                    export_keys[&#39;datasets&#39;][category] = {}
+        export_keys[&#39;datasets&#39;][&#39;device_types&#39;] = {}
+        print(&#39;Exporting the &#39;, export_keys[&#39;datasets&#39;])
+        schedule_job = requests.post(self.url + &#39;export&#39;, data=json.dumps(export_keys), headers=self.params)
+        job_id = schedule_job.headers[&#39;Content-Location&#39;]
+        response = requests.get(job_id, headers=self.params).json()
+        waiting = True
+        while waiting:
+            
+            if response[&#39;status&#39;] == 202:
+                response = requests.get(job_id, headers=self.params).json()
+                # the following waits for x seconds and runs an animation in the 
+                # mean time to make sure the user doesn&#39;t think the code is broken
+                progress_spinner(5, &#39;Waiting for the sever to complete the job&#39;, new_line_after = False)
+                
+            elif response[&#39;status&#39;] == 500:
+                sys.stdout.write(&#39;\r&#39;)
+                sys.stdout.write(&#34;Request failed&#34;)
+                sys.stdout.flush()
+                waiting = False
+            else:
+                sys.stdout.write(&#39;\n&#39;)
+                print(&#34;Job is completed, start to download the data&#34;)
+                waiting = False
+
+    def export(self, since=None, reload=True, categories=&#39;all&#39;, save_path=&#39;./data/raw_data/&#39;):
+        &#39;&#39;&#39;
+        This is a function that is able to download the data and save it as a csv in save_path.
+
+        Note that ```categories``` refers to the datasets. If you want to get the categories
+        for a given set of measurements (ie: activity, care, vital signs, etc) please use
+        the method ```.get_category_names(&#39;measurement_name&#39;)```. Alternatively, if you want to view all of the
+        available datasets, please use the method ```.get_category_names(&#39;all&#39;)```
+        
+
+        Arguments
+        ---------
+
+        - since: valid input to pd.to_datetime(.): 
+            This is the date and time from which the data will be loaded.
+
+        - reload: bool: 
+            This value determines whether an export request should be sent. 
+            In most cases, this should be true, unless you want to download
+            the data from a previously run request.
+
+        - categories: list or string: 
+            If a list, this is the datasets that will be downloaded. Please use the
+            dataset names that can be returned by using the get_category_names function.
+            If the string &#39;all&#39; is supplied, this function will return all of the data. This
+            is not good! There should be a good reason to do this.
+
+        - save_path: string: 
+            This is the save path for the data that is downloaded from minder.
+
+        &#39;&#39;&#39;
+        p = Path(save_path)
+        if not p.exists():
+            print(&#39;Target directory does not exist, creating a new folder&#39;)
+            p.mkdir()
+        if reload:
+            self._export_request(categories, since)
+
+        data = requests.get(self.url + &#39;export&#39;, headers=self.params).json()
+        export_index = -1
+        if not reload:
+            if len(data) &gt; 1:
+                print(&#39;Multiple export requests exist, please choose one to download&#39;)
+                for idx, job in enumerate(data):
+                    print(&#39;Job {} &#39;.format(idx).center(50, &#39;=&#39;))
+                    print(&#39;ID: &#39;, job[&#39;id&#39;])
+                    print(&#39;Transaction Time&#39;, job[&#39;jobRecord&#39;][&#39;transactionTime&#39;])
+                    print(&#39;Export sensors: &#39;, end=&#39;&#39;)
+                    for record in job[&#39;jobRecord&#39;][&#39;output&#39;]:
+                        print(record[&#39;type&#39;], end=&#39; &#39;)
+                    print(&#39;&#39;)
+                export_index = int(input(&#39;Enter the index of the job ...&#39;))
+                if export_index not in range(len(data)):
+                    print(&#39;Not a valid input&#39;)
+                    export_index = int(input(&#39;Enter the index of the job ...&#39;))
+        print(&#39;Start to export job&#39;)
+        for idx, record in enumerate(data[export_index][&#39;jobRecord&#39;][&#39;output&#39;]):
+            print(&#39;Exporting {}/{}&#39;.format(idx + 1, len(data[export_index][&#39;jobRecord&#39;][&#39;output&#39;])).ljust(20, &#39; &#39;),
+                  str(record[&#39;type&#39;]).ljust(20, &#39; &#39;), end=&#39; &#39;)
+            content = requests.get(record[&#39;url&#39;], headers=self.params)
+            if content.status_code != 200:
+                print(&#39;Fail, Response code {}&#39;.format(content.status_code))
+            else:
+                pd.read_csv(io.StringIO(content.text)).to_csv(save_path + record[&#39;type&#39;] + &#39;.csv&#39;)
+                print(&#39;Success&#39;)
+    
+    def get_category_names(self, measurement_name = &#39;all&#39;):
+        &#39;&#39;&#39;
+        This function allows you to get the category names from a given measurement name.
+
+        Arguments
+        ---------
+
+        - measurement_name: str: 
+            This is the name of the measurement that you want to get the categories for.
+            The default &#39;all&#39; returns all the possible measurement names.
+
+        Returns
+        ---------
+
+        - out: list of strings: 
+            This is a list that contains the category names that can be used in the 
+            export function.
+
+        &#39;&#39;&#39;
+        
+        if measurement_name == &#39;all&#39;:
+            out = self.get_info()[&#39;Categories&#39;].values()
+
+        else:
+            out = self.get_info()[&#39;Categories&#39;][measurement_name].keys()
+        
+        return list(out)
+
+    def get_measurement_names(self):
+        &#39;&#39;&#39;
+        Please do not use this function. It is a legacy function and will be deleted in the 
+        future.
+        &#39;&#39;&#39;
+        return self.get_group_names()
+
+    def get_group_names(self):
+        &#39;&#39;&#39;
+        This function allows you to view the names of the sets of measurements
+        that can be downloaded from minder.
+
+        Returns
+        ---------
+
+        - out: list of strings: 
+            This is a list that contains the names of the sets of measurements.
+
+        &#39;&#39;&#39;
+        
+        out = self.get_info()[&#39;Categories&#39;].keys()
+        
+        return list(out)
+
+    @staticmethod
+    def token():
+        &#39;&#39;&#39;
+        This function returns the current user token. This is the token that is saved in the 
+        file token_real.json after running the token_save function in settings.
+
+        Returns
+        ---------
+        
+        - token: string: 
+            This returns the token in the format that can be used in the api call.
+
+        &#39;&#39;&#39;
+        token_dir = os.path.join(os.path.dirname(__file__), &#39;token_real.json&#39;)
+        with open(token_dir) as json_file:
+            api_keys = json.load(json_file)  
+        #with open(&#39;./token_real.json&#39;, &#39;r&#39;) as f:
+            #api_keys = json.loads(f.read())
+        return api_keys[&#39;token&#39;]</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="minder_utils.download.Downloader.token"><code class="name flex">
+<span>def <span class="ident">token</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This function returns the current user token. This is the token that is saved in the
+file token_real.json after running the token_save function in settings.</p>
+<h2 id="returns">Returns</h2>
+<ul>
+<li>token: string:
+This returns the token in the format that can be used in the api call.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def token():
+    &#39;&#39;&#39;
+    This function returns the current user token. This is the token that is saved in the 
+    file token_real.json after running the token_save function in settings.
+
+    Returns
+    ---------
+    
+    - token: string: 
+        This returns the token in the format that can be used in the api call.
+
+    &#39;&#39;&#39;
+    token_dir = os.path.join(os.path.dirname(__file__), &#39;token_real.json&#39;)
+    with open(token_dir) as json_file:
+        api_keys = json.load(json_file)  
+    #with open(&#39;./token_real.json&#39;, &#39;r&#39;) as f:
+        #api_keys = json.loads(f.read())
+    return api_keys[&#39;token&#39;]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="minder_utils.download.Downloader.export"><code class="name flex">
+<span>def <span class="ident">export</span></span>(<span>self, since=None, reload=True, categories='all', save_path='./data/raw_data/')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is a function that is able to download the data and save it as a csv in save_path.</p>
+<p>Note that <code>categories</code> refers to the datasets. If you want to get the categories
+for a given set of measurements (ie: activity, care, vital signs, etc) please use
+the method <code>.get_category_names('measurement_name')</code>. Alternatively, if you want to view all of the
+available datasets, please use the method <code>.get_category_names('all')</code></p>
+<h2 id="arguments">Arguments</h2>
+<ul>
+<li>
+<p>since: valid input to pd.to_datetime(.):
+This is the date and time from which the data will be loaded.</p>
+</li>
+<li>
+<p>reload: bool:
+This value determines whether an export request should be sent.
+In most cases, this should be true, unless you want to download
+the data from a previously run request.</p>
+</li>
+<li>
+<p>categories: list or string:
+If a list, this is the datasets that will be downloaded. Please use the
+dataset names that can be returned by using the get_category_names function.
+If the string 'all' is supplied, this function will return all of the data. This
+is not good! There should be a good reason to do this.</p>
+</li>
+<li>
+<p>save_path: string:
+This is the save path for the data that is downloaded from minder.</p>
+</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def export(self, since=None, reload=True, categories=&#39;all&#39;, save_path=&#39;./data/raw_data/&#39;):
+    &#39;&#39;&#39;
+    This is a function that is able to download the data and save it as a csv in save_path.
+
+    Note that ```categories``` refers to the datasets. If you want to get the categories
+    for a given set of measurements (ie: activity, care, vital signs, etc) please use
+    the method ```.get_category_names(&#39;measurement_name&#39;)```. Alternatively, if you want to view all of the
+    available datasets, please use the method ```.get_category_names(&#39;all&#39;)```
+    
+
+    Arguments
+    ---------
+
+    - since: valid input to pd.to_datetime(.): 
+        This is the date and time from which the data will be loaded.
+
+    - reload: bool: 
+        This value determines whether an export request should be sent. 
+        In most cases, this should be true, unless you want to download
+        the data from a previously run request.
+
+    - categories: list or string: 
+        If a list, this is the datasets that will be downloaded. Please use the
+        dataset names that can be returned by using the get_category_names function.
+        If the string &#39;all&#39; is supplied, this function will return all of the data. This
+        is not good! There should be a good reason to do this.
+
+    - save_path: string: 
+        This is the save path for the data that is downloaded from minder.
+
+    &#39;&#39;&#39;
+    p = Path(save_path)
+    if not p.exists():
+        print(&#39;Target directory does not exist, creating a new folder&#39;)
+        p.mkdir()
+    if reload:
+        self._export_request(categories, since)
+
+    data = requests.get(self.url + &#39;export&#39;, headers=self.params).json()
+    export_index = -1
+    if not reload:
+        if len(data) &gt; 1:
+            print(&#39;Multiple export requests exist, please choose one to download&#39;)
+            for idx, job in enumerate(data):
+                print(&#39;Job {} &#39;.format(idx).center(50, &#39;=&#39;))
+                print(&#39;ID: &#39;, job[&#39;id&#39;])
+                print(&#39;Transaction Time&#39;, job[&#39;jobRecord&#39;][&#39;transactionTime&#39;])
+                print(&#39;Export sensors: &#39;, end=&#39;&#39;)
+                for record in job[&#39;jobRecord&#39;][&#39;output&#39;]:
+                    print(record[&#39;type&#39;], end=&#39; &#39;)
+                print(&#39;&#39;)
+            export_index = int(input(&#39;Enter the index of the job ...&#39;))
+            if export_index not in range(len(data)):
+                print(&#39;Not a valid input&#39;)
+                export_index = int(input(&#39;Enter the index of the job ...&#39;))
+    print(&#39;Start to export job&#39;)
+    for idx, record in enumerate(data[export_index][&#39;jobRecord&#39;][&#39;output&#39;]):
+        print(&#39;Exporting {}/{}&#39;.format(idx + 1, len(data[export_index][&#39;jobRecord&#39;][&#39;output&#39;])).ljust(20, &#39; &#39;),
+              str(record[&#39;type&#39;]).ljust(20, &#39; &#39;), end=&#39; &#39;)
+        content = requests.get(record[&#39;url&#39;], headers=self.params)
+        if content.status_code != 200:
+            print(&#39;Fail, Response code {}&#39;.format(content.status_code))
+        else:
+            pd.read_csv(io.StringIO(content.text)).to_csv(save_path + record[&#39;type&#39;] + &#39;.csv&#39;)
+            print(&#39;Success&#39;)</code></pre>
+</details>
+</dd>
+<dt id="minder_utils.download.Downloader.get_category_names"><code class="name flex">
+<span>def <span class="ident">get_category_names</span></span>(<span>self, measurement_name='all')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This function allows you to get the category names from a given measurement name.</p>
+<h2 id="arguments">Arguments</h2>
+<ul>
+<li>measurement_name: str:
+This is the name of the measurement that you want to get the categories for.
+The default 'all' returns all the possible measurement names.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<ul>
+<li>out: list of strings:
+This is a list that contains the category names that can be used in the
+export function.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_category_names(self, measurement_name = &#39;all&#39;):
+    &#39;&#39;&#39;
+    This function allows you to get the category names from a given measurement name.
+
+    Arguments
+    ---------
+
+    - measurement_name: str: 
+        This is the name of the measurement that you want to get the categories for.
+        The default &#39;all&#39; returns all the possible measurement names.
+
+    Returns
+    ---------
+
+    - out: list of strings: 
+        This is a list that contains the category names that can be used in the 
+        export function.
+
+    &#39;&#39;&#39;
+    
+    if measurement_name == &#39;all&#39;:
+        out = self.get_info()[&#39;Categories&#39;].values()
+
+    else:
+        out = self.get_info()[&#39;Categories&#39;][measurement_name].keys()
+    
+    return list(out)</code></pre>
+</details>
+</dd>
+<dt id="minder_utils.download.Downloader.get_group_names"><code class="name flex">
+<span>def <span class="ident">get_group_names</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This function allows you to view the names of the sets of measurements
+that can be downloaded from minder.</p>
+<h2 id="returns">Returns</h2>
+<ul>
+<li>out: list of strings:
+This is a list that contains the names of the sets of measurements.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_group_names(self):
+    &#39;&#39;&#39;
+    This function allows you to view the names of the sets of measurements
+    that can be downloaded from minder.
+
+    Returns
+    ---------
+
+    - out: list of strings: 
+        This is a list that contains the names of the sets of measurements.
+
+    &#39;&#39;&#39;
+    
+    out = self.get_info()[&#39;Categories&#39;].keys()
+    
+    return list(out)</code></pre>
+</details>
+</dd>
+<dt id="minder_utils.download.Downloader.get_info"><code class="name flex">
+<span>def <span class="ident">get_info</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This function returns the available datasets on minder in the form of a
+dictionary</p>
+<h2 id="returns">Returns</h2>
+<ul>
+<li>_: dict:
+This returns a dictionary of the available datasets.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_info(self):
+    &#39;&#39;&#39;
+    This function returns the available datasets on minder in the form of a
+    dictionary
+
+    Returns
+    ---------
+
+    - _: dict: 
+        This returns a dictionary of the available datasets.
+    &#39;&#39;&#39;
+    try:
+        return requests.get(self.url + &#39;info/datasets&#39;, headers=self.params).json()
+    except json.decoder.JSONDecodeError:
+        print(&#39;Get response &#39;, requests.get(self.url + &#39;info/datasets&#39;, headers=self.params))</code></pre>
+</details>
+</dd>
+<dt id="minder_utils.download.Downloader.get_measurement_names"><code class="name flex">
+<span>def <span class="ident">get_measurement_names</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Please do not use this function. It is a legacy function and will be deleted in the
+future.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_measurement_names(self):
+    &#39;&#39;&#39;
+    Please do not use this function. It is a legacy function and will be deleted in the 
+    future.
+    &#39;&#39;&#39;
+    return self.get_group_names()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="minder_utils" href="../index.html">minder_utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="minder_utils.download.download" href="download.html">minder_utils.download.download</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="minder_utils.download.Downloader" href="#minder_utils.download.Downloader">Downloader</a></code></h4>
+<ul class="">
+<li><code><a title="minder_utils.download.Downloader.export" href="#minder_utils.download.Downloader.export">export</a></code></li>
+<li><code><a title="minder_utils.download.Downloader.get_category_names" href="#minder_utils.download.Downloader.get_category_names">get_category_names</a></code></li>
+<li><code><a title="minder_utils.download.Downloader.get_group_names" href="#minder_utils.download.Downloader.get_group_names">get_group_names</a></code></li>
+<li><code><a title="minder_utils.download.Downloader.get_info" href="#minder_utils.download.Downloader.get_info">get_info</a></code></li>
+<li><code><a title="minder_utils.download.Downloader.get_measurement_names" href="#minder_utils.download.Downloader.get_measurement_names">get_measurement_names</a></code></li>
+<li><code><a title="minder_utils.download.Downloader.token" href="#minder_utils.download.Downloader.token">token</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

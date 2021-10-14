@@ -22,7 +22,10 @@ class Downloader:
     from minder_utils.download import Downloader
     dl = Downloader()
     category_list = dl.get_category_names('activity')
-    dl.export(categories = category_list, since= '2021-10-05', save_path='./data/')
+    
+    dl.export(categories = category_list, 
+              since= '2021-10-05', 
+              save_path='./data/')
 
     ```
     This would download all of the activity data from the 5th October 2021, and save it
