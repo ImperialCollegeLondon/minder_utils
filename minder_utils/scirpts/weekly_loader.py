@@ -157,12 +157,15 @@ class Weekly_dataloader:
     @staticmethod
     def get_dates():
         '''
-        This function returns the current dates.
+        This function returns the current dates saved in the configurations folder.
+        This is an internal function.
 
         Returns
         ---------
 
         - dates: dict:
+            This dictionary holds the state ('gap', 'current', etc) and the dates.
+
         '''
         with open(dates_path) as json_file:
             date_dict = json.load(json_file)

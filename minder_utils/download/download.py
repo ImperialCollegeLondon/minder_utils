@@ -251,6 +251,22 @@ class Downloader:
 
     @staticmethod
     def convert_to_ISO(date):
+        '''
+        Converts the date to ISO.
+
+        Arguments
+        ---------
+        
+        - data: valid input to pd.to_datetime(.):
+            This is the date that you want to convert.
+
+        Returns
+        ---------
+
+        - out: date:
+            This is the date converted to ISO.
+
+        '''
         date = pd.to_datetime(date)
         return date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
