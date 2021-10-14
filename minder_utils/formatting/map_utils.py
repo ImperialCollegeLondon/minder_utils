@@ -1,7 +1,8 @@
 import pandas as pd
 import json
-import os
+from minder_utils.configurations import data_path
 import importlib.resources as pkg_resources
+
 
 def map_raw_ids(p_id, df=False):
     """
@@ -9,7 +10,7 @@ def map_raw_ids(p_id, df=False):
     :param df:
     :return:
     """
-    path_dir = os.path.join(os.path.dirname(__file__), 'data_path.txt')
+    path_dir = data_path
     with open(path_dir, 'r') as file_read:
         path = file_read.read()
 
@@ -30,7 +31,7 @@ def map_numeric_ids(p_id, df=False):
     :param df:
     :return:
     """
-    path_dir = os.path.join(os.path.dirname(__file__), 'data_path.txt')
+    path_dir = data_path
     with open(path_dir, 'r') as file_read:
         path = file_read.read()
 

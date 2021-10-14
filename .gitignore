@@ -7,6 +7,7 @@
 **/minder_utils.egg-info/
 **/download/token_real.json
 **/results
+**/confidential
 **/formatting/data_path.txt
 -# Byte-compiled / optimized / DLL files
 __pycache__/

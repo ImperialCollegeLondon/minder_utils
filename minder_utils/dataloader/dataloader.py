@@ -39,7 +39,7 @@ class Dataloader:
         self.transfer_sensors = ['back door', 'bathroom1', 'bedroom1', 'dining room',
                                  'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
                                  'living room', 'lounge', 'microwave', 'study', 'toaster']
-        self.select_sensors = ['WC1', 'back door', 'bathroom1', 'bedroom1', 'cellar',
+        self.select_sensors = ['WC1', 'back door', 'bathroom1', 'bedroom1',
                                'conservatory', 'dining room', 'fridge door', 'front door',
                                'hallway', 'iron', 'kettle', 'kitchen', 'living room',
                                'lounge', 'main door', 'microwave', 'multi', 'office']

@@ -3,11 +3,11 @@ import json
 import pandas as pd
 import io
 from pathlib import Path
-import time
-import os
 import importlib.resources as pkg_resources
 import sys
 from ..util import progress_spinner
+from minder_utils.configurations import token_path
+
 
 class Downloader:
     '''
@@ -49,7 +49,7 @@ class Downloader:
         except json.decoder.JSONDecodeError:
             print('Get response ', requests.get(self.url + 'info/datasets', headers=self.params))
 
-    def _export_request(self, categories='all', since=None):
+    def _export_request(self, categories='all', since=None, until=None):
         '''
         This is an internal function that makes the request to download the data.
 
@@ -67,7 +67,7 @@ class Downloader:
 
         '''
 
-        print('Deleting Existing export request')
+        # print('Deleting Existing export request')
         # previously_requests = requests.get(self.url + 'export', headers=self.params).json()
         # for job in previously_requests:
         #     response = requests.delete(self.url + 'export/' + job['id'], headers=self.params)
@@ -78,15 +78,16 @@ class Downloader:
         print('Creating new export request')
         export_keys = {'datasets': {}}
         if since is not None:
-            since = pd.to_datetime(since)
-            export_keys['since'] = since.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+            export_keys['since'] = self.convert_to_ISO(since)
+        if until is not None:
+            export_keys['until'] = self.convert_to_ISO(until)
         info = self.get_info()['Categories']
         for key in info:
             for category in info[key]:
                 if category in categories or categories == 'all':
                     export_keys['datasets'][category] = {}
-        export_keys['datasets']['device_types'] = {}
         print('Exporting the ', export_keys['datasets'])
+        print('From ', since, 'to', until)
         schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
         job_id = schedule_job.headers['Content-Location']
         response = requests.get(job_id, headers=self.params).json()
@@ -97,7 +98,7 @@ class Downloader:
                 response = requests.get(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
-                progress_spinner(5, 'Waiting for the sever to complete the job', new_line_after = False)
+                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after = False)
                 
             elif response['status'] == 500:
                 sys.stdout.write('\r')
@@ -109,7 +110,7 @@ class Downloader:
                 print("Job is completed, start to download the data")
                 waiting = False
 
-    def export(self, since=None, reload=True, categories='all', save_path='./data/raw_data/'):
+    def export(self, since=None, until=None, reload=True, categories='all', save_path='./data/raw_data/'):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -145,7 +146,7 @@ class Downloader:
             print('Target directory does not exist, creating a new folder')
             p.mkdir()
         if reload:
-            self._export_request(categories, since)
+            self._export_request(categories=categories, since=since, until=until)
 
         data = requests.get(self.url + 'export', headers=self.params).json()
         export_index = -1
@@ -161,7 +162,7 @@ class Downloader:
                         print(record['type'], end=' ')
                     print('')
                 export_index = int(input('Enter the index of the job ...'))
-                if export_index not in range(len(data)):
+                while export_index not in range(len(data)):
                     print('Not a valid input')
                     export_index = int(input('Enter the index of the job ...'))
         print('Start to export job')
@@ -172,7 +173,8 @@ class Downloader:
             if content.status_code != 200:
                 print('Fail, Response code {}'.format(content.status_code))
             else:
-                pd.read_csv(io.StringIO(content.text)).to_csv(save_path + record['type'] + '.csv')
+                pd.read_csv(io.StringIO(content.text)).to_csv(save_path + record['type'] + '.csv', mode='a',
+                                                              header=not Path(save_path + record['type'] + '.csv').exists())
                 print('Success')
     
     def get_category_names(self, measurement_name = 'all'):
@@ -240,12 +242,17 @@ class Downloader:
             This returns the token in the format that can be used in the api call.
 
         '''
-        token_dir = os.path.join(os.path.dirname(__file__), 'token_real.json')
+        token_dir = token_path
         with open(token_dir) as json_file:
             api_keys = json.load(json_file)  
         #with open('./token_real.json', 'r') as f:
             #api_keys = json.loads(f.read())
         return api_keys['token']
+
+    @staticmethod
+    def convert_to_ISO(date):
+        date = pd.to_datetime(date)
+        return date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
 
 if __name__ == '__main__':

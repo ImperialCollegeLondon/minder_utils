@@ -3,10 +3,11 @@ import numpy as np
 import os
 import importlib.resources as pkg_resources
 from importlib.machinery import SourceFileLoader
+from minder_utils.configurations import data_path
 
 
 # import python function from path:
-path_dir = os.path.join(os.path.dirname(__file__), 'data_path.txt')
+path_dir = data_path
 with open(path_dir, 'r') as file_read:
     path = file_read.read()
 dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
@@ -35,7 +36,6 @@ def standardise_activity_data(df):
                               values='value').reset_index()
     table_df = table_df.replace(np.nan, 0)
     
-    path_dir = os.path.join(os.path.dirname(__file__), 'data_path.txt')
     with open(path_dir, 'r') as file_read:
         uti_folder_path = file_read.read()
 

@@ -1,10 +1,18 @@
 from pathlib import Path
 import sys
 import time
+import os
+import shutil
 
 
 def save_mkdir(path):
     Path(path).mkdir(parents=True, exist_ok=True)
+
+
+def delete_dir(dirpath):
+    if os.path.exists(dirpath) and os.path.isdir(dirpath):
+        print('Deleting existing directory: ', dirpath)
+        shutil.rmtree(dirpath)
 
 
 rocket_base_string = '[---------]'

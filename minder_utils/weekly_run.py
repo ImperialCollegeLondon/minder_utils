@@ -83,7 +83,5 @@ def load_data_default(reload_weekly=False, reload_all=False):
     return
 
 
-
-
 if __name__ == '__main__':
     run_default()

@@ -3,11 +3,11 @@ import os
 from .map_utils import map_numeric_ids, map_url_to_flag
 from importlib.machinery import SourceFileLoader
 from ..download.download import Downloader
+from minder_utils.configurations import data_path
 
 
 # import python function from path:
-path_dir = os.path.join(os.path.dirname(__file__), 'data_path.txt')
-with open(path_dir, 'r') as file_read:
+with open(data_path, 'r') as file_read:
     path = file_read.read()
 dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
 from dri_data_util_validate import validated_date
