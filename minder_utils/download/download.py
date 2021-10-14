@@ -5,9 +5,10 @@ import io
 from pathlib import Path
 import importlib.resources as pkg_resources
 import sys
+import os
 from ..util import progress_spinner
 from minder_utils.configurations import token_path
-
+import numpy as np
 
 class Downloader:
     '''
@@ -124,23 +125,35 @@ class Downloader:
         ---------
 
         - since: valid input to pd.to_datetime(.): 
-            This is the date and time from which the data will be loaded.
+            This is the date and time from which the data will be loaded. If ```None```,
+            the earliest possible date is used.
+            Default: ```None```
+
+        - until: valid input to pd.to_datetime(.): 
+            This is the date and time to which the data will be loaded up until. If ```None```,
+            the latest possible date is used.
+            Default: ```None```
 
         - reload: bool: 
             This value determines whether an export request should be sent. 
-            In most cases, this should be true, unless you want to download
+            In most cases, this should be ```True```, unless you want to download
             the data from a previously run request.
+            Default: ```True```
 
         - categories: list or string: 
             If a list, this is the datasets that will be downloaded. Please use the
             dataset names that can be returned by using the get_category_names function.
             If the string 'all' is supplied, this function will return all of the data. This
             is not good! There should be a good reason to do this.
+            Default: ```'all'```
 
         - save_path: string: 
             This is the save path for the data that is downloaded from minder.
+            Default: ```'./data/raw_data/'```
 
         '''
+
+
         p = Path(save_path)
         if not p.exists():
             print('Target directory does not exist, creating a new folder')
@@ -228,6 +241,52 @@ class Downloader:
         out = self.get_info()['Categories'].keys()
         
         return list(out)
+
+    def refresh(self, until=None, categories = None, save_path='./data/raw_data/'):
+        '''
+        This function allows for the user to refresh the data currently saved in the 
+        save path. It will download the data missing between the saved files and the
+        ```until``` argument.
+
+        Arguments
+        ---------
+
+         - until: valid input to pd.to_datetime(.): 
+            This is the date and time to which the data will be loaded up until. If ```None```,
+            the latest possible date is used.
+            Default: ```None```
+
+        - categories: list or string: 
+            If a list, this is the datasets that will be downloaded. Please use the
+            dataset names that can be returned by using the get_category_names function.
+            If the string 'all' is supplied, this function will return all of the data. This
+            is not good! There should be a good reason to do this.
+
+        - save_path: string: 
+            This is the save path for the data that is downloaded from minder.
+            Default: ```'./data/raw_data/'```
+        
+
+        '''
+
+        if categories is None:
+            raise TypeError('Please supply at least one category...')
+        if type(categories) == str:
+            categories = [categories]
+
+        for category in categories:
+            file_path = os.path.join(save_path, category)
+            p = Path(file_path)
+            if not p.exists():
+                since = None
+            else:
+                data = pd.read_csv(file_path + '.csv')
+                since = pd.to_datetime(data[['start_date']].iloc[-1,0])
+            
+            self.export(since=since, until=until, reload=True, 
+                    categories=category, save_path=save_path)
+
+        return
 
     @staticmethod
     def token():
