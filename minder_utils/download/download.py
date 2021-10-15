@@ -125,9 +125,9 @@ class Downloader:
             and until as values in a tuple.
             For example:
             ```
-            { category         : (since, until),
-             'raw_activity_pir': ('2021-10-06','2021-10-10'),
-             'raw_door_sensor' : ('2021-10-06','2021-10-10')}
+            { category         : (since                       , until),
+             'raw_activity_pir': (pd.to_datetime('2021-10-06'), pd.to_datetime('2021-10-10')),
+             'raw_door_sensor' : (pd.to_datetime('2021-10-06'), pd.to_datetime('2021-10-10'))}
             ```
 
         '''
@@ -282,61 +282,7 @@ class Downloader:
                                                               header=not Path(save_path + record['type'] + '.csv').exists())
                 print('Success')
     
-    def get_category_names(self, measurement_name = 'all'):
-        '''
-        This function allows you to get the category names from a given measurement name.
-
-        Arguments
-        ---------
-
-        - measurement_name: str: 
-            This is the name of the measurement that you want to get the categories for.
-            The default 'all' returns all the possible measurement names.
-
-        Returns
-        ---------
-
-        - out: list of strings: 
-            This is a list that contains the category names that can be used in the 
-            export function.
-
-        '''
-        
-        if measurement_name == 'all':
-            out = []
-            for value in self.get_info()['Categories'].values():
-                out.extend(list(value.keys()))
-
-        else:
-            out = list(self.get_info()['Categories'][measurement_name].keys())
-        
-        return out
-
-    def get_measurement_names(self):
-        '''
-        Please do not use this function. It is a legacy function and will be deleted in the 
-        future.
-        '''
-        return self.get_group_names()
-
-    def get_group_names(self):
-        '''
-        This function allows you to view the names of the sets of measurements
-        that can be downloaded from minder.
-
-        Returns
-        ---------
-
-        - out: list of strings: 
-            This is a list that contains the names of the sets of measurements.
-
-        '''
-        
-        out = self.get_info()['Categories'].keys()
-        
-        return list(out)
-
-    def refresh(self, until=None, categories = None, save_path='./data/raw_data/'):
+    def refresh(self, until=None, categories=None, save_path='./data/raw_data/'):
         '''
         This function allows for the user to refresh the data currently saved in the 
         save path. It will download the data missing between the saved files and the
@@ -353,6 +299,7 @@ class Downloader:
         - categories: list or string: 
             If a list, this is the datasets that will be downloaded. Please use the
             dataset names that can be returned by using the get_category_names function.
+            If a string is given, only this dataset will be refreshed.
 
         - save_path: string: 
             This is the save path for the data that is downloaded from minder.
@@ -412,6 +359,62 @@ class Downloader:
         print('Success')
 
         return
+
+    def get_category_names(self, measurement_name = 'all'):
+        '''
+        This function allows you to get the category names from a given measurement name.
+
+        Arguments
+        ---------
+
+        - measurement_name: str: 
+            This is the name of the measurement that you want to get the categories for.
+            The default 'all' returns all the possible measurement names.
+
+        Returns
+        ---------
+
+        - out: list of strings: 
+            This is a list that contains the category names that can be used in the 
+            export function.
+
+        '''
+        
+        if measurement_name == 'all':
+            out = []
+            for value in self.get_info()['Categories'].values():
+                out.extend(list(value.keys()))
+
+        else:
+            out = list(self.get_info()['Categories'][measurement_name].keys())
+        
+        return out
+
+    def get_measurement_names(self):
+        '''
+        Please do not use this function. It is a legacy function and will be deleted in the 
+        future.
+        '''
+        return self.get_group_names()
+
+    def get_group_names(self):
+        '''
+        This function allows you to view the names of the sets of measurements
+        that can be downloaded from minder.
+
+        Returns
+        ---------
+
+        - out: list of strings: 
+            This is a list that contains the names of the sets of measurements.
+
+        '''
+        
+        out = self.get_info()['Categories'].keys()
+        
+        return list(out)
+
+
 
     @staticmethod
     def token():
