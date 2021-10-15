@@ -9,6 +9,7 @@ import os
 from ..util import progress_spinner
 from minder_utils.configurations import token_path
 import numpy as np
+import datetime
 
 class Downloader:
     '''
@@ -99,7 +100,7 @@ class Downloader:
                 response = requests.get(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
-                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after = False)
+                progress_spinner(3, 'Waiting for the sever to complete the job', new_line_after = False)
                 
             elif response['status'] == 500:
                 sys.stdout.write('\r')
@@ -110,6 +111,97 @@ class Downloader:
                 sys.stdout.write('\n')
                 print("Job is completed, start to download the data")
                 waiting = False
+
+    def _export_request_parallel(self,export_dict):
+        '''
+        This function allows the user to make parallel export requests. This is useful 
+        when the requests have difference since and until dates for the different datasets in 
+        the categories.
+        
+        Arguments
+        ---------
+        - export_dict: dictionary:
+            This dictionary contains the categories to be downloaded as keys, with the since
+            and until as values in a tuple.
+            For example:
+            ```
+            { category         : (since, until),
+             'raw_activity_pir': ('2021-10-06','2021-10-10'),
+             'raw_door_sensor' : ('2021-10-06','2021-10-10')}
+            ```
+
+        '''
+        categories_list = list(export_dict.keys())
+        
+        available_categories_list = self.get_category_names(measurement_name = 'all')
+
+        for category in categories_list:
+            if not category in available_categories_list:
+                raise TypeError('Category {} is not available to download. Please check the name.'.format(category))
+
+        print('Creating new parallel export requests')
+        
+
+        # the following creates a list of export keys to be called by the API
+        export_key_list = {}
+        for category in categories_list:
+            since = export_dict[category][0]
+            until = export_dict[category][1]
+            export_keys = {'datasets': {category: {}}}
+            if not since is None: 
+                export_keys['since'] = self.convert_to_ISO(since)
+            if not until is None:
+                export_keys['until'] = self.convert_to_ISO(until)
+            
+            export_key_list[category] = export_keys
+
+        # scheduling jobs for each of the requests:
+        request_url_dict = {}
+        schedule_job_dict = {}
+        for category in categories_list:
+            export_keys = export_key_list[category]
+            schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
+            schedule_job_dict[category] = schedule_job
+            request_url = schedule_job.headers['Content-Location']
+            request_url_dict[category] = request_url
+        
+        # checking whether the jobs have been completed:
+        waiting = True
+        waiting_for = {category: True for category in categories_list}
+        job_id_dict = {}
+        while waiting:
+            for category in categories_list:
+                if not waiting_for[category]:
+                    continue
+
+                request_url = request_url_dict[category]
+                response = requests.get(request_url, headers=self.params).json()
+                job_id_dict[category] = response['id']
+
+                if response['status'] == 202:
+                    waiting_for[category] = True
+
+                elif response['status'] == 500:
+                    sys.stdout.write('\r')
+                    sys.stdout.write("Request failed for category {}".format(category))
+                    sys.stdout.flush()
+                    waiting_for[category] = False
+
+                else:
+                    waiting_for[category] = False
+
+            # if we are no longer waiting for a job to complete, move onto the downloads
+            if True in list(waiting_for.values()):
+                progress_spinner(3, 'Waiting for the sever to complete the job', new_line_after = False)
+            else:
+                sys.stdout.write('\n')
+                sys.stdout.write("The server has finished processing the requests")
+                sys.stdout.flush()
+                sys.stdout.write('\n')
+                waiting = False
+
+
+        return job_id_dict
 
     def export(self, since=None, until=None, reload=True, categories='all', save_path='./data/raw_data/'):
         '''
@@ -211,12 +303,14 @@ class Downloader:
         '''
         
         if measurement_name == 'all':
-            out = self.get_info()['Categories'].values()
+            out = []
+            for value in self.get_info()['Categories'].values():
+                out.extend(list(value.keys()))
 
         else:
-            out = self.get_info()['Categories'][measurement_name].keys()
+            out = list(self.get_info()['Categories'][measurement_name].keys())
         
-        return list(out)
+        return out
 
     def get_measurement_names(self):
         '''
@@ -259,8 +353,6 @@ class Downloader:
         - categories: list or string: 
             If a list, this is the datasets that will be downloaded. Please use the
             dataset names that can be returned by using the get_category_names function.
-            If the string 'all' is supplied, this function will return all of the data. This
-            is not good! There should be a good reason to do this.
 
         - save_path: string: 
             This is the save path for the data that is downloaded from minder.
@@ -274,17 +366,50 @@ class Downloader:
         if type(categories) == str:
             categories = [categories]
 
+        export_dict = {}
+        
+        print('Checking current files...')
+        last_rows = {}
         for category in categories:
             file_path = os.path.join(save_path, category)
-            p = Path(file_path)
+            p = Path(file_path + '.csv')
             if not p.exists():
                 since = None
             else:
                 data = pd.read_csv(file_path + '.csv')
-                since = pd.to_datetime(data[['start_date']].iloc[-1,0])
+                # add the following to avoid a duplicate of the last and first row
+                last_rows[category] = data[['start_date', 'id']].iloc[-1,:].to_numpy()
+                since = pd.to_datetime(data[['start_date']].iloc[-1,0]) + datetime.timedelta(milliseconds=50)
             
-            self.export(since=since, until=until, reload=True, 
-                    categories=category, save_path=save_path)
+            export_dict[category] = (since, until)
+
+        
+        job_id_dict = self._export_request_parallel(export_dict = export_dict)
+
+        data = requests.get(self.url + 'export', headers=self.params).json()
+
+        for category in categories:
+            job_id = job_id_dict[category]
+            for previous_job in data[::-1]:
+                if previous_job['id'] == job_id:
+                    output = previous_job['jobRecord']['output']
+                    break
+            
+            for data_chunk in output:
+                content = requests.get(data_chunk['url'], headers=self.params)
+                if content.status_code != 200:
+                    print('Fail, Response code {} for category {}'.format(content.status_code, category))
+                else:
+                    current_data = pd.read_csv(io.StringIO(content.text))
+                    # checking whether the first line is a duplicate of the end of the previous file
+                    if np.all(current_data[['start_date', 'id']].iloc[0,:] == last_rows[category]):
+                        current_data.iloc[1:,:].to_csv(save_path + category + '.csv', mode='a',
+                                            header=not Path(save_path + category + '.csv').exists())
+                    else:    
+                        current_data.to_csv(save_path + category + '.csv', mode='a',
+                                            header=not Path(save_path + category + '.csv').exists())
+        
+        print('Success')
 
         return
 
