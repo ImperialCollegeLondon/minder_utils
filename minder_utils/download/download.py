@@ -390,12 +390,6 @@ class Downloader:
         
         return out
 
-    def get_measurement_names(self):
-        '''
-        Please do not use this function. It is a legacy function and will be deleted in the 
-        future.
-        '''
-        return self.get_group_names()
 
     def get_group_names(self):
         '''
