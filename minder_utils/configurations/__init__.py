@@ -1,4 +1,10 @@
 import os
+from pathlib import Path
+
+p = Path(os.path.join(os.path.dirname(__file__), 'confidential/'))
+if not p.exists():
+	os.mkdir(p)
+
 
 data_path = os.path.join(os.path.dirname(__file__), 'confidential/data_path.txt')
 token_path = os.path.join(os.path.dirname(__file__), 'confidential/token_real.json')
