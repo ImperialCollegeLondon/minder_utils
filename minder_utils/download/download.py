@@ -100,7 +100,7 @@ class Downloader:
                 response = requests.get(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
-                progress_spinner(3, 'Waiting for the sever to complete the job', new_line_after = False)
+                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after = False)
                 
             elif response['status'] == 500:
                 sys.stdout.write('\r')
@@ -192,7 +192,7 @@ class Downloader:
 
             # if we are no longer waiting for a job to complete, move onto the downloads
             if True in list(waiting_for.values()):
-                progress_spinner(3, 'Waiting for the sever to complete the job', new_line_after = False)
+                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after = False)
             else:
                 sys.stdout.write('\n')
                 sys.stdout.write("The server has finished processing the requests")
