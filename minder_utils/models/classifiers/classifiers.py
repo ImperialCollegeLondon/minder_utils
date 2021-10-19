@@ -6,7 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn import tree
 from sklearn.neighbors import KNeighborsClassifier
-from ...formatting.format_util import y_to_categorical
+from minder_utils.formatting.format_util import y_to_categorical
 
 
 class Classifiers:
@@ -17,7 +17,7 @@ class Classifiers:
         self.epochs = 50
         self.batch_size = 10
 
-    def re_initialise(self):
+    def reset(self):
         self.model = getattr(self, self.model_type)()
 
     def nn(self):

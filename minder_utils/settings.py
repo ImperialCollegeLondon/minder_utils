@@ -60,7 +60,7 @@ def dates_save(refresh=False):
     if you wanted to only download the data between your last download settings and 
     now, you would use ```refresh=False```.
 
-    These settings only affect the ```minder_utils.scirpts.weekly_loader.Weekly_dataloader```
+    These settings only affect the ```minder_utils.scripts.weekly_loader.Weekly_dataloader```
     class.
 
     Arguments

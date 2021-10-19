@@ -11,6 +11,7 @@ import json
 from ..settings import dates_save
 import pandas as pd
 from minder_utils.configurations import dates_path
+from minder_utils.configurations import config
 
 
 class Weekly_dataloader:
@@ -26,13 +27,17 @@ class Weekly_dataloader:
             - physiological data: #TODO
     """
 
-    def __init__(self, data_type='activity', save_dir=os.path.join('data', 'weekly_test'), num_days_extended=3):
+    def __init__(self, categories=None, save_dir=os.path.join('data', 'weekly_test'), num_days_extended=3):
         '''
 
         @param data_type: activity, #TODO environmental, physiological
         @param num_days_extended: for uti only, how many consecutive days to be labelled
         '''
-        self.data_type = data_type
+        default_categories = ['activity', 'environmental', 'physiological']
+        self.categories = default_categories if categories is None else categories
+        assert all(data_type in default_categories for data_type in categories), 'available categories: ' \
+                                                                                 'activity, environmental, ' \
+                                                                                 'physiological'
         self.num_days_extended = num_days_extended
         self.downloader = Downloader()
         self.default_dir = save_dir
@@ -65,7 +70,7 @@ class Weekly_dataloader:
             delete_dir(os.path.join(self.default_dir, folder, 'npy'))
             save_mkdir(os.path.join(self.default_dir, folder, 'csv'))
             save_mkdir(os.path.join(self.default_dir, folder, 'npy'))
-            self.download(folder, 'activity', include_devices=True)
+            self.download(folder, include_devices=True)
             self.format(folder)
 
     def check_exist(self, path):
@@ -94,17 +99,17 @@ class Weekly_dataloader:
             else:
                 print(data_type, folder_type, 'has been processed')
 
-    def download(self, period, data_type='activity', include_devices=False):
-        categories = {
-            'activity': ['raw_door_sensor', 'raw_appliance_use', 'raw_activity_pir']
-        }
+    def download(self, period, include_devices=False):
+        categories = []
+        for data_type in self.categories:
+            categories.extend(config[data_type]['type'].copy())
         if include_devices:
-            categories[data_type].append('device_types')
+            categories.append('device_types')
         date_dict = self.get_dates()
         self.downloader.export(since=date_dict[period]['since'], until=date_dict[period]['until'], reload=True,
                                save_path=os.path.join(self.default_dir, 'previous' if period == 'gap' else period,
                                                       'csv/'),
-                               categories=categories[data_type])
+                               categories=categories)
 
     def format(self, period):
         loader = Formatting(os.path.join(self.default_dir, period, 'csv'))

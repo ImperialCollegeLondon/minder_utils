@@ -20,11 +20,15 @@ def iter_dir(directory, endwith='.csv', split=True):
     return filenames
 
 
-def y_to_categorical(y):
+def y_to_categorical(y, smooth=False):
     positives = y > 0
     labels = np.zeros((y.shape[0], 2))
-    labels[:, 1][positives.reshape(-1, )] = y[y > 0]
-    labels[:, 0][~positives.reshape(-1, )] = np.abs(y[y < 0])
+    if smooth:
+        labels[:, 1][positives.reshape(-1, )] = y[y > 0]
+        labels[:, 0][~positives.reshape(-1, )] = np.abs(y[y < 0])
+    else:
+        labels[:, 1][positives.reshape(-1, )] = 1
+        labels[:, 0][~positives.reshape(-1, )] = 1
     return labels
 
 
@@ -45,10 +49,10 @@ def normalise(X, technique='l2'):
     elif technique in ['l1', 'l2', 'max']:
         X = X.reshape(X.shape[0], -1)
         X = Normalizer(technique).fit_transform(X.transpose(1, 0)).transpose(0, 1)
-        #for i in range(X.shape[2]):
-            # data = X[:, i].reshape(-1, 1)
-            # X[:, i] = Normalizer(technique).fit_transform(data).reshape(-1)
-         #   X[:, :, i] = Normalizer(technique).fit_transform(X[:, :, i])
+        # for i in range(X.shape[2]):
+        # data = X[:, i].reshape(-1, 1)
+        # X[:, i] = Normalizer(technique).fit_transform(data).reshape(-1)
+        #   X[:, :, i] = Normalizer(technique).fit_transform(X[:, :, i])
     return X
 
 

@@ -2,6 +2,7 @@ from .format_util import iter_dir
 import pandas as pd
 import os
 import time
+from minder_utils.configurations import config
 
 
 class Formatting:
@@ -15,45 +16,21 @@ class Formatting:
         self.path = path
         self.device_type = \
         pd.read_csv(os.path.join(self.path, 'device_types.csv'))[['id', 'type']].set_index('id').to_dict()['type']
-        self.config = {
-            'physiological_data': {
-                'type': ['raw_body_weight', 'raw_skin_temperature',
-                         'raw_body_temperature', 'raw_body_muscle_mass',
-                         'raw_heart_rate', 'raw_oxygen_saturation',
-                         'raw_total_body_fat', 'raw_body_mass_index',
-                         'raw_blood_pressure', 'raw_total_body_water',
-                         'raw_total_bone_mass'],
-                'columns': ['id', 'time', 'type', 'value', 'unit']
-            },
-            'activity_data': {
-                'type': ['raw_door_sensor', 'raw_appliance_use', 'raw_activity_pir'],
-                'columns': ['id', 'time', 'location', 'value']
-            },
-            'environmental_data': {
-                'type': ['raw_ambient_temperature', 'raw_light'],
-                'columns': ['id', 'time', 'location', 'type', 'value', 'unit']
-            },
-            'individuals': {
-                'text': ['homes', 'raw_sleep_mat', 'raw_behavioural',
-                         'procedure', 'observation_notes', 'encounter',
-                         'issue'],
-                'measure': ['raw_sleep_event', 'raw_wearable_walking']
-            }
-        }
-        self.physiological_data = pd.DataFrame(columns=self.config['physiological_data']['columns'])
-        self.activity_data = pd.DataFrame(columns=self.config['activity_data']['columns'])
-        self.environmental_data = pd.DataFrame(columns=self.config['environmental_data']['columns'])
+        self.config = config
+        self.physiological_data = pd.DataFrame(columns=self.config['physiological']['columns'])
+        self.activity_data = pd.DataFrame(columns=self.config['activity']['columns'])
+        self.environmental_data = pd.DataFrame(columns=self.config['environmental']['columns'])
         self.process_data()
 
     def process_data(self):
         for name in iter_dir(self.path):
             start_time = time.time()
             print('Processing: {}'.format(name).ljust(50, ' '), end='')
-            if name in self.config['physiological_data']['type']:
+            if name in self.config['physiological']['type']:
                 self.process_physiological_data(name)
-            elif name in self.config['activity_data']['type']:
+            elif name in self.config['activity']['type']:
                 self.process_activity_data(name)
-            elif name in self.config['environmental_data']['type']:
+            elif name in self.config['environmental']['type']:
                 self.process_environmental_data(name)
             elif name in self.config['individuals']['text'] or name in self.config['individuals']['measure']:
                 print('TODO')
@@ -82,7 +59,7 @@ class Formatting:
         data.start_date = pd.to_datetime(data.start_date).dt.date
         data = data[col_filter]
         data = data.groupby(['patient_id', 'start_date', 'device_type', 'unit']).mean().reset_index()
-        data.columns = self.config['physiological_data']['columns']
+        data.columns = self.config['physiological']['columns']
         self.physiological_data = self.physiological_data.append(data)
 
     def process_activity_data(self, name):
@@ -101,7 +78,7 @@ class Formatting:
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
         data = data[data['location_name'] != 'location_name']
         data = getattr(self, 'process_' + name)(data)[col_filter]
-        data.columns = self.config['activity_data']['columns']
+        data.columns = self.config['activity']['columns']
         self.activity_data = self.activity_data.append(data)
 
     def process_environmental_data(self, name):
@@ -122,7 +99,7 @@ class Formatting:
         data.loc[:, 'device_type'] = data.device_type.map(self.device_type)
         data.value = data.value.astype(float)
         data = data.groupby(['patient_id', 'start_date', 'location_name', 'device_type', 'unit']).mean().reset_index()
-        data.columns = self.config['environmental_data']['columns']
+        data.columns = self.config['environmental']['columns']
         self.environmental_data = self.environmental_data.append(data)
 
     def process_raw_door_sensor(self, data):

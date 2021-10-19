@@ -11,6 +11,7 @@ from minder_utils.configurations import token_path
 import numpy as np
 import datetime
 
+
 class Downloader:
     '''
     This class allows you to download and save the data from minder. Make sure that you 
@@ -31,6 +32,7 @@ class Downloader:
     as a csv in the directory ```'./data/'```
 
     '''
+
     def __init__(self):
         self.url = 'https://research.minder.care/api/'
         self.params = {'Authorization': self.token(), 'Content-Type': 'application/json'}
@@ -95,13 +97,13 @@ class Downloader:
         response = requests.get(job_id, headers=self.params).json()
         waiting = True
         while waiting:
-            
+
             if response['status'] == 202:
                 response = requests.get(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
-                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after = False)
-                
+                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after=False)
+
             elif response['status'] == 500:
                 sys.stdout.write('\r')
                 sys.stdout.write("Request failed")
@@ -112,7 +114,7 @@ class Downloader:
                 print("Job is completed, start to download the data")
                 waiting = False
 
-    def _export_request_parallel(self,export_dict):
+    def _export_request_parallel(self, export_dict):
         '''
         This function allows the user to make parallel export requests. This is useful 
         when the requests have difference since and until dates for the different datasets in 
@@ -132,15 +134,14 @@ class Downloader:
 
         '''
         categories_list = list(export_dict.keys())
-        
-        available_categories_list = self.get_category_names(measurement_name = 'all')
+
+        available_categories_list = self.get_category_names(measurement_name='all')
 
         for category in categories_list:
             if not category in available_categories_list:
                 raise TypeError('Category {} is not available to download. Please check the name.'.format(category))
 
         print('Creating new parallel export requests')
-        
 
         # the following creates a list of export keys to be called by the API
         export_key_list = {}
@@ -148,11 +149,11 @@ class Downloader:
             since = export_dict[category][0]
             until = export_dict[category][1]
             export_keys = {'datasets': {category: {}}}
-            if not since is None: 
+            if not since is None:
                 export_keys['since'] = self.convert_to_ISO(since)
             if not until is None:
                 export_keys['until'] = self.convert_to_ISO(until)
-            
+
             export_key_list[category] = export_keys
 
         # scheduling jobs for each of the requests:
@@ -164,7 +165,7 @@ class Downloader:
             schedule_job_dict[category] = schedule_job
             request_url = schedule_job.headers['Content-Location']
             request_url_dict[category] = request_url
-        
+
         # checking whether the jobs have been completed:
         waiting = True
         waiting_for = {category: True for category in categories_list}
@@ -192,14 +193,13 @@ class Downloader:
 
             # if we are no longer waiting for a job to complete, move onto the downloads
             if True in list(waiting_for.values()):
-                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after = False)
+                progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after=False)
             else:
                 sys.stdout.write('\n')
                 sys.stdout.write("The server has finished processing the requests")
                 sys.stdout.flush()
                 sys.stdout.write('\n')
                 waiting = False
-
 
         return job_id_dict
 
@@ -245,7 +245,6 @@ class Downloader:
 
         '''
 
-
         p = Path(save_path)
         if not p.exists():
             print('Target directory does not exist, creating a new folder')
@@ -279,9 +278,10 @@ class Downloader:
                 print('Fail, Response code {}'.format(content.status_code))
             else:
                 pd.read_csv(io.StringIO(content.text)).to_csv(save_path + record['type'] + '.csv', mode='a',
-                                                              header=not Path(save_path + record['type'] + '.csv').exists())
+                                                              header=not Path(
+                                                                  save_path + record['type'] + '.csv').exists())
                 print('Success')
-    
+
     def refresh(self, until=None, categories=None, save_path='./data/raw_data/'):
         '''
         This function allows for the user to refresh the data currently saved in the 
@@ -314,7 +314,7 @@ class Downloader:
             categories = [categories]
 
         export_dict = {}
-        
+
         print('Checking current files...')
         last_rows = {}
         for category in categories:
@@ -325,13 +325,12 @@ class Downloader:
             else:
                 data = pd.read_csv(file_path + '.csv')
                 # add the following to avoid a duplicate of the last and first row
-                last_rows[category] = data[['start_date', 'id']].iloc[-1,:].to_numpy()
-                since = pd.to_datetime(data[['start_date']].iloc[-1,0])
-            
+                last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
+                since = pd.to_datetime(data[['start_date']].iloc[-1, 0])
+
             export_dict[category] = (since, until)
 
-        
-        job_id_dict = self._export_request_parallel(export_dict = export_dict)
+        job_id_dict = self._export_request_parallel(export_dict=export_dict)
 
         data = requests.get(self.url + 'export', headers=self.params).json()
 
@@ -341,7 +340,7 @@ class Downloader:
                 if previous_job['id'] == job_id:
                     output = previous_job['jobRecord']['output']
                     break
-            
+
             for data_chunk in output:
                 content = requests.get(data_chunk['url'], headers=self.params)
                 if content.status_code != 200:
@@ -349,18 +348,19 @@ class Downloader:
                 else:
                     current_data = pd.read_csv(io.StringIO(content.text))
                     # checking whether the first line is a duplicate of the end of the previous file
-                    if np.all(current_data[['start_date', 'id']].iloc[0,:] == last_rows[category]):
-                        current_data.iloc[1:,:].reset_index(drop=True).to_csv(save_path + category + '.csv', mode='a',
-                                            header=not Path(save_path + category + '.csv').exists())
-                    else:    
+                    if np.all(current_data[['start_date', 'id']].iloc[0, :] == last_rows[category]):
+                        current_data.iloc[1:, :].reset_index(drop=True).to_csv(save_path + category + '.csv', mode='a',
+                                                                               header=not Path(
+                                                                                   save_path + category + '.csv').exists())
+                    else:
                         current_data.to_csv(save_path + category + '.csv', mode='a',
                                             header=not Path(save_path + category + '.csv').exists())
-        
+
         print('Success')
 
         return
 
-    def get_category_names(self, measurement_name = 'all'):
+    def get_category_names(self, measurement_name='all'):
         '''
         This function allows you to get the category names from a given measurement name.
 
@@ -379,7 +379,7 @@ class Downloader:
             export function.
 
         '''
-        
+
         if measurement_name == 'all':
             out = []
             for value in self.get_info()['Categories'].values():
@@ -387,9 +387,8 @@ class Downloader:
 
         else:
             out = list(self.get_info()['Categories'][measurement_name].keys())
-        
-        return out
 
+        return out
 
     def get_group_names(self):
         '''
@@ -403,12 +402,10 @@ class Downloader:
             This is a list that contains the names of the sets of measurements.
 
         '''
-        
+
         out = self.get_info()['Categories'].keys()
-        
+
         return list(out)
-
-
 
     @staticmethod
     def token():
@@ -425,9 +422,9 @@ class Downloader:
         '''
         token_dir = token_path
         with open(token_dir) as json_file:
-            api_keys = json.load(json_file)  
-        #with open('./token_real.json', 'r') as f:
-            #api_keys = json.loads(f.read())
+            api_keys = json.load(json_file)
+            # with open('./token_real.json', 'r') as f:
+            # api_keys = json.loads(f.read())
         return api_keys['token']
 
     @staticmethod

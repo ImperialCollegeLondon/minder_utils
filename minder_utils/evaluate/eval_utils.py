@@ -30,7 +30,7 @@ def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, seed=0):
     else:
         test_filter = np.isin(test_y, np.unique(test_y))
     if cat:
-        return X[np.isin(patient_ids, train_ids)], np.argmax(y_to_categorical(y[np.isin(patient_ids, train_ids)]), axis=1), \
+        return X[np.isin(patient_ids, train_ids)], y_to_categorical(y[np.isin(patient_ids, train_ids)]), \
                X[np.isin(patient_ids, test_ids)][test_filter], y_to_categorical(y[np.isin(patient_ids, test_ids)][
                    test_filter])
     return X[np.isin(patient_ids, train_ids)], y[np.isin(patient_ids, train_ids)], \

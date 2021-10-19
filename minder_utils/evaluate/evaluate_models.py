@@ -1,5 +1,5 @@
-from .eval_utils import split_by_ids, get_scores
-from ..formatting.format_util import format_mean_std
+from minder_utils.evaluate.eval_utils import split_by_ids, get_scores
+from minder_utils.formatting.format_util import format_mean_std
 import pandas as pd
 
 

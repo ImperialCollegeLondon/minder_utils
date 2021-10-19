@@ -2,7 +2,7 @@ from .models.feature_extractors.autoencoders import Extractor
 from .models.classifiers.classifiers import Classifiers
 import numpy as np
 import pandas as pd
-from .scirpts.weekly_loader import Weekly_dataloader
+from .scripts.weekly_loader import Weekly_dataloader
 import os
 from .formatting.map_utils import map_raw_ids
 from .evaluate.evaluate_models import evaluate
