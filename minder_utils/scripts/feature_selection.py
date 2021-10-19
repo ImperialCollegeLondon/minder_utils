@@ -7,9 +7,26 @@ import pandas as pd
 
 
 class Feature_Selection:
-    def __init__(self, model):
+    '''
+    This class can help you to choose the best feature selection method for your model.
+
+    To run the script, your model must implement ```reset()``` method, which is to
+    reset the parameters of your model for testing.
+
+    ```Example```
+    ```
+    from minder_utils.scripts.feature_selection import Feature_Selection
+    from minder_utils.models.classifiers import Classifiers
+
+    classifier = Classifiers('nn')
+    feature_select = Feature_Selection(classifier)
+
+    feature_select.evaluate(X, y, p_ids, num_runs=10)
+    ```
+    '''
+    def __init__(self, model, proportion=90):
         self.model = model
-        self.feature_selector = [Supervised_Filter(), Unsupervised_Filter()]
+        self.feature_selector = [Supervised_Filter(proportion=proportion), Unsupervised_Filter()]
 
     def evaluate(self, X, y, p_ids, num_runs=10):
         header = ['Supervision', 'Method', 'Feature selected ({} in total)'.format(X.shape[1]), 'sensitivity', 'specificity', 'acc', 'f1']

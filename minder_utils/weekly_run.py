@@ -1,12 +1,12 @@
-from .models.feature_extractors.autoencoders import Extractor
-from .models.classifiers.classifiers import Classifiers
+from minder_utils.models.feature_extractors.autoencoders import Extractor
+from minder_utils.models.classifiers.classifiers import Classifiers
 import numpy as np
 import pandas as pd
-from .scripts.weekly_loader import Weekly_dataloader
+from minder_utils.scripts.weekly_loader import Weekly_dataloader
 import os
-from .formatting.map_utils import map_raw_ids
-from .evaluate.evaluate_models import evaluate
-from .formatting.format_util import y_to_categorical
+from minder_utils.formatting.map_utils import map_raw_ids
+from minder_utils.evaluate.evaluate_models import evaluate
+from minder_utils.formatting.format_util import y_to_categorical
 
 
 def run_default(reload_weekly=False, reload_all=False):

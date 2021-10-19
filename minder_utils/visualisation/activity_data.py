@@ -4,6 +4,7 @@ import seaborn as sns
 
 sns.set()
 
+'''
 X = np.load('../../data/weekly_test/previous/npy/X.npy')
 sensors = ['WC1', 'back door', 'bathroom1', 'bedroom1',
            'conservatory', 'dining room', 'fridge door', 'front door',
@@ -16,3 +17,4 @@ plt.xticks(np.arange(18), sensors, rotation=90)
 plt.tight_layout()
 plt.savefig('figures/activity_data.png')
 plt.show()
+'''
