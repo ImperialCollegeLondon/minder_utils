@@ -26,7 +26,7 @@ progress_indicator_dict = {'spinning_wheel': ['\\', '|', '/', '-', '\\', '|', '/
 
 def progress_spinner(total_time, statement, new_line_after = True, progress_indicator = 'rocket', time_period = 1):
     '''
-    This function prints a spinning wheel for the length of time given in total_time.
+    This function prints a spinning wheel for the length of time given in ```total_time```.
     This is useful when it is required to wait for some amount of time but the user wants
     to print something. For example, when waiting for a server to complete its job.
 
@@ -34,8 +34,7 @@ def progress_spinner(total_time, statement, new_line_after = True, progress_indi
     ---------
 
     - total_time: int:
-        This is the total number of seconds it takes for the wheel to spin
-        completely.
+        This is the total number of seconds this function will animate for.
     
     - statement: string:
         This is the statement to print before the spinning wheel
@@ -44,7 +43,7 @@ def progress_spinner(total_time, statement, new_line_after = True, progress_indi
         This dictates whether to print a new line when the progress bar is finished.
     
     - progress_indicator: string or list:
-        If string, make sure it is either 'spinning_wheel' or 'rocket'. If it is a 
+        If string, make sure it is either ```'spinning_wheel'``` or ```'rocket'```. If it is a 
         list, the values in the list will be the frames of the animation.
     
     - time_period: float:
