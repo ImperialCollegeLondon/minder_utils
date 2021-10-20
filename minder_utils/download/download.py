@@ -341,10 +341,17 @@ class Downloader:
                     output = previous_job['jobRecord']['output']
                     break
 
-            for data_chunk in output:
+            for n_output, data_chunk in enumerate(output):
                 content = requests.get(data_chunk['url'], headers=self.params)
+                sys.stdout.write('\r')
+                sys.stdout.write("For {}, exporting {}/{}".format(category, n_output+1,len(output)))
+                sys.stdout.flush()
                 if content.status_code != 200:
-                    print('Fail, Response code {} for category {}'.format(content.status_code, category))
+                    sys.stdout.write('\n')
+                    sys.stdout.write('\r')
+                    sys.stdout.write('Fail, Response code {} for category {}'.format(content.status_code, category))
+                    sys.stdout.write('\n')
+                    sys.stdout.flush()
                 else:
                     current_data = pd.read_csv(io.StringIO(content.text))
                     # checking whether the first line is a duplicate of the end of the previous file
@@ -355,6 +362,7 @@ class Downloader:
                     else:
                         current_data.to_csv(save_path + category + '.csv', mode='a',
                                             header=not Path(save_path + category + '.csv').exists())
+            sys.stdout.write('\n')
 
         print('Success')
 
