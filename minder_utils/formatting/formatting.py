@@ -2,7 +2,9 @@ from .format_util import iter_dir
 import pandas as pd
 import os
 import time
+import numpy as np
 from minder_utils.configurations import config
+from minder_utils.download.download import Downloader
 
 
 class Formatting:
@@ -14,6 +16,15 @@ class Formatting:
 
     def __init__(self, path='./data/raw_data/'):
         self.path = path
+
+        categories_check = ['device_types', 'homes', 'patients']
+        if not np.all([os.path.exists(os.path.join(category + '.csv')) for category in categories_check]):
+            print('Downloading required files for formatting')
+            dl = Downloader()
+            dl.export(categories=['device_types', 'homes', 'patients'], 
+                      reload=True, since = None, until = None, save_path=path)
+            print('Required files downloaded')
+
         self.device_type = \
         pd.read_csv(os.path.join(self.path, 'device_types.csv'))[['id', 'type']].set_index('id').to_dict()['type']
         self.config = config
