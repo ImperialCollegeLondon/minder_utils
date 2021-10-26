@@ -277,9 +277,9 @@ class Downloader:
             if content.status_code != 200:
                 print('Fail, Response code {}'.format(content.status_code))
             else:
-                pd.read_csv(io.StringIO(content.text)).to_csv(save_path + record['type'] + '.csv', mode='a',
+                pd.read_csv(io.StringIO(content.text)).to_csv(os.path.join(save_path, record['type'] + '.csv'), mode='a',
                                                               header=not Path(
-                                                                  save_path + record['type'] + '.csv').exists())
+                                                                  os.path.join(save_path, record['type'] + '.csv')).exists())
                 print('Success')
 
     def refresh(self, until=None, categories=None, save_path='./data/raw_data/'):
