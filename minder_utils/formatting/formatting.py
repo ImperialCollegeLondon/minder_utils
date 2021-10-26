@@ -1,10 +1,10 @@
-from .format_util import iter_dir
 import pandas as pd
 import os
 import time
-import numpy as np
 from minder_utils.configurations import config
+from .format_util import iter_dir
 from minder_utils.download.download import Downloader
+import numpy as np
 
 
 class Formatting:
@@ -18,10 +18,10 @@ class Formatting:
         self.path = path
 
         categories_check = ['device_types', 'homes', 'patients']
-        if not np.all([os.path.exists(os.path.join(category + '.csv')) for category in categories_check]):
+        if not np.all([os.path.exists(os.path.join(path, category + '.csv')) for category in categories_check]):
             print('Downloading required files for formatting')
             dl = Downloader()
-            dl.export(categories=['device_types', 'homes', 'patients'], 
+            dl.export(categories=['device_types', 'homes', 'patients'],
                       reload=True, since = None, until = None, save_path=path)
             print('Required files downloaded')
 
@@ -60,7 +60,7 @@ class Formatting:
             data: the data must contains ['patient_id', 'start_date', 'device_type', 'value', 'unit']
         :return: append to the self.physiological_data
         """
-        col_filter = ['patient_id', 'start_date', 'device_type', 'value', 'unit']
+        col_filter = ['patient_id', 'start_date', 'device_type', 'value']
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
         data.loc[:, 'device_type'] = data.device_type.map(self.device_type)
         try:
@@ -69,8 +69,9 @@ class Formatting:
             data.device_type += '->' + name[4:]
         data.start_date = pd.to_datetime(data.start_date).dt.date
         data = data[col_filter]
-        data = data.groupby(['patient_id', 'start_date', 'device_type', 'unit']).mean().reset_index()
+        data = data.groupby(['patient_id', 'start_date', 'device_type']).mean().reset_index()
         data.columns = self.config['physiological']['columns']
+        data.location = data.location.apply(lambda x: x.split('->')[-1])
         self.physiological_data = self.physiological_data.append(data)
 
     def process_activity_data(self, name):
@@ -102,14 +103,14 @@ class Formatting:
             data: the data must contains ['patient_id', 'start_date', 'location_name', 'device_type', 'value', 'unit']
         :return: append to the self.environmental_data
         """
-        col_filter = ['patient_id', 'start_date', 'location_name', 'device_type', 'value', 'unit']
+        col_filter = ['patient_id', 'start_date', 'location_name', 'value']
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
         data = data[data.start_date != 'start_date']
         data.start_date = pd.to_datetime(data.start_date).dt.date
         data = data[col_filter]
-        data.loc[:, 'device_type'] = data.device_type.map(self.device_type)
+        # data.loc[:, 'device_type'] = data.device_type.map(self.device_type)
         data.value = data.value.astype(float)
-        data = data.groupby(['patient_id', 'start_date', 'location_name', 'device_type', 'unit']).mean().reset_index()
+        data = data.groupby(['patient_id', 'start_date', 'location_name']).mean().reset_index()
         data.columns = self.config['environmental']['columns']
         self.environmental_data = self.environmental_data.append(data)
 

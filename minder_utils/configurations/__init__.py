@@ -18,7 +18,7 @@ config = {
                  'raw_total_body_fat', 'raw_body_mass_index',
                  'raw_blood_pressure', 'raw_total_body_water',
                  'raw_total_bone_mass'],
-        'columns': ['id', 'time', 'type', 'value', 'unit']
+        'columns': ['id', 'time', 'location', 'value']
     },
     'activity': {
         'type': ['raw_door_sensor', 'raw_appliance_use', 'raw_activity_pir'],
@@ -26,7 +26,7 @@ config = {
     },
     'environmental': {
         'type': ['raw_ambient_temperature', 'raw_light'],
-        'columns': ['id', 'time', 'location', 'type', 'value', 'unit']
+        'columns': ['id', 'time', 'location', 'value']
     },
     'individuals': {
         'text': ['homes', 'raw_sleep_mat', 'raw_behavioural',

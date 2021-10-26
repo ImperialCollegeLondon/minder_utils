@@ -64,6 +64,16 @@ def standardise_activity_data(df):
     return table_df
 
 
+def standardise_physiological_environmental(df, date_range, shared_id=None):
+    if shared_id is not None:
+        df = df[df.id.isin(shared_id)]
+    df.time = pd.to_datetime(df.time)
+    df = df.groupby(['id', 'location']).apply(lambda x: x.set_index('time')
+                                                                  .resample('D').mean()).reset_index().fillna(0)
+    idx = pd.MultiIndex.from_product((df.id.unique(), date_range, df.location.unique()), names=['id', 'time', 'location'])
+    return df.set_index(['id', 'time', 'location']).reindex(idx, fill_value=0).reset_index()
+
+
 def normalized(a, axis=-1, order=2):
     l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
     l2[l2==0] = 1
