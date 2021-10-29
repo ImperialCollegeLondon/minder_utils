@@ -6,7 +6,7 @@ import numpy as np
 class Supervised_Filter(Feature_selector_template):
     '''
     This class provide a set of supervised feature selection methods.
-    Particularly, it contains a set of filter methods, which will perform separately with the classifier.
+    Particularly, it contains a set of filter methods, which will perform SEPARATELY with the classifier.
 
     Currently, it contains:
         - chi-squared stats
@@ -28,21 +28,21 @@ class Supervised_Filter(Feature_selector_template):
     X = selector.transform(X)
     ```
     '''
-    def __init__(self, model='chi', proportion=90):
+    def __init__(self, model_name='chi', proportion=90):
         '''
         Select a proportion of features
         Args:
             model: method to calculate the score for feature selection
             proportion: percentage of features to keep
         '''
-        super().__init__(model)
+        super().__init__(model_name)
         self.selector = SelectPercentile(self.model, percentile=proportion)
         self.proportion = proportion
 
-    def reset_model(self, model, proportion=None):
+    def reset_model(self, model_name, proportion=None):
         proportion = self.proportion if proportion is None else proportion
-        self.name = self.methods[model]
-        self.model = getattr(self, model)()
+        self.name = self.methods[model_name]
+        self.model = getattr(self, model_name)()
         self.selector = SelectPercentile(self.model, percentile=proportion)
 
     @property

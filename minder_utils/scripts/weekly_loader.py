@@ -29,7 +29,7 @@ class Weekly_dataloader:
     def __init__(self, categories=None, save_dir=os.path.join('data', 'weekly_test'), num_days_extended=3):
         '''
 
-        @param data_type: activity, #TODO environmental, physiological
+        @param data_type: activity, environmental, physiological
         @param num_days_extended: for uti only, how many consecutive days to be labelled
         '''
         self.default_categories = ['activity', 'environmental', 'physiological']
@@ -43,12 +43,16 @@ class Weekly_dataloader:
         save_mkdir(self.default_dir)
 
     @property
-    def previous_data(self):
-        return os.path.join(self.default_dir, 'previous', 'npy')
+    def previous_labelled_data(self):
+        return os.path.join(self.default_dir, 'previous', 'npy', 'labelled')
+
+    @property
+    def previous_unlabelled_data(self):
+        return os.path.join(self.default_dir, 'previous', 'npy', 'unlabelled')
 
     @property
     def current_data(self):
-        return os.path.join(self.default_dir, 'current', 'npy')
+        return os.path.join(self.default_dir, 'current', 'npy', 'unlabelled')
 
     @property
     def current_csv_data(self):
@@ -127,7 +131,10 @@ class Weekly_dataloader:
             np.save(os.path.join(save_path, 'physiological.npy'.format(data_type)), physiological_data)
             np.save(os.path.join(save_path, 'environmental.npy'.format(data_type)), environmental_data)
             np.save(os.path.join(save_path, 'patient_id.npy'), p_ids)
-            np.save(os.path.join(save_path, 'dates.npy'), dates)
+            if data_type == 'labelled':
+                np.save(os.path.join(save_path, 'label.npy'), dates)
+            else:
+                np.save(os.path.join(save_path, 'dates.npy'), dates)
 
     def refresh(self):
         date_dict = self.get_dates()

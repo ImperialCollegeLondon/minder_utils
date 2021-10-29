@@ -22,11 +22,11 @@ class Formatting:
             print('Downloading required files for formatting')
             dl = Downloader()
             dl.export(categories=['device_types', 'homes', 'patients'],
-                      reload=True, since = None, until = None, save_path=path)
+                      reload=True, since=None, until=None, save_path=path)
             print('Required files downloaded')
 
         self.device_type = \
-        pd.read_csv(os.path.join(self.path, 'device_types.csv'))[['id', 'type']].set_index('id').to_dict()['type']
+            pd.read_csv(os.path.join(self.path, 'device_types.csv'))[['id', 'type']].set_index('id').to_dict()['type']
         self.config = config
         self.physiological_data = pd.DataFrame(columns=self.config['physiological']['columns'])
         self.activity_data = pd.DataFrame(columns=self.config['activity']['columns'])
@@ -185,7 +185,6 @@ class Formatting:
         :return:
         """
         return False
-
 
 
 if __name__ == '__main__':

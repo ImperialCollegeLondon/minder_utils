@@ -4,16 +4,16 @@ from abc import ABC, abstractmethod
 class Feature_selector_template(ABC):
     def __init__(self, model):
         self.name = self.methods[model]
-        self.model = getattr(self, model)
+        self.model = getattr(self, model)()
 
     @property
     @abstractmethod
     def methods(self):
         pass
 
-    def reset_model(self, model):
-        self.name = self.methods[model]
-        self.model = getattr(self, model)()
+    def reset_model(self, model_name):
+        self.name = self.methods[model_name]
+        self.model = getattr(self, model_name)()
 
     def get_info(self, verbose=False):
         if verbose:

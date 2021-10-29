@@ -20,7 +20,10 @@ def iter_dir(directory, endwith='.csv', split=True):
     return filenames
 
 
-def y_to_categorical(y, smooth=False):
+def y_to_categorical(y, smooth=False, valid_only=False):
+    if valid_only:
+        mask = np.isin(y, [-1, 1])
+        y = y[mask]
     positives = y > 0
     labels = np.zeros((y.shape[0], 2))
     if smooth:
@@ -29,7 +32,10 @@ def y_to_categorical(y, smooth=False):
     else:
         labels[:, 1][positives.reshape(-1, )] = 1
         labels[:, 0][~positives.reshape(-1, )] = 1
-    return labels
+    if valid_only:
+        return labels, mask
+    else:
+        return labels
 
 
 def normalise(X, technique='l2'):

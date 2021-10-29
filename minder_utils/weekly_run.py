@@ -37,8 +37,8 @@ def run_default(reload_weekly=False, reload_all=False):
     evaluate(Classifiers('knn'), extractor.transform(X, 'cnn'), y, label_p_ids, 10)
 
     weekly_data = np.load(os.path.join(loader.weekly_data, 'unlabelled.npy'))
-    p_ids = np.load(os.path.join(loader.weekly_data, 'patient_id.npy'))
-    dates = np.load(os.path.join(loader.weekly_data, 'dates.npy'), allow_pickle=True)
+    p_ids = np.load(os.path.join(loader.weekly_data, 'label.npy'))
+    dates = np.load(os.path.join(loader.weekly_data, 'patient_id.npy'), allow_pickle=True)
     X = extractor.transform(X, 'cnn')
     weekly_data = extractor.transform(weekly_data, 'cnn')
 

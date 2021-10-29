@@ -24,8 +24,8 @@ class Unsupervised_Filter(Feature_selector_template):
     X = selector.transform(X)
     ```
     '''
-    def __init__(self, model='vt'):
-        super().__init__(model)
+    def __init__(self, model_name='vt'):
+        super().__init__(model_name)
 
     @property
     def methods(self):

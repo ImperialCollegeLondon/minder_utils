@@ -10,7 +10,7 @@ from minder_utils.formatting.format_util import y_to_categorical
 
 
 class Classifiers:
-    def __init__(self, model_type):
+    def __init__(self, model_type='nn'):
         self.model_type = model_type
         self.model = getattr(self, model_type)()
         self.callbacks = [EarlyStopping(monitor='loss', patience=3)]
@@ -20,14 +20,34 @@ class Classifiers:
     def reset(self):
         self.model = getattr(self, self.model_type)()
 
-    def nn(self):
+    @property
+    def methods(self):
+        return {
+            'nn': 'neural network',
+            # 'lstm': 'LSTM',
+            'lr': 'logistic regression',
+            'bayes': 'naive bayesian',
+            'dt': 'decision tree',
+            'knn': 'KNN'
+        }
+
+    def get_info(self, verbose=False):
+        if verbose:
+            print('Available methods:')
+            for idx, key in enumerate(self.methods):
+                print(str(idx).ljust(10, ' '), key.ljust(10, ' '), self.methods[key].ljust(10, ' '))
+        return self.methods
+
+    @staticmethod
+    def nn():
         model = Sequential()
         model.add(Dense(256, activation='relu'))
         model.add(Dense(2, activation='softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
         return model
 
-    def lstm(self):
+    @staticmethod
+    def lstm():
         model = Sequential()
         model.add(LSTM(256, dropout=0.1, recurrent_dropout=0.1))
         model.add(Dense(2, activation='softmax'))
@@ -64,14 +84,21 @@ class Classifiers:
         else:
             return self.model.predict_proba(data)
 
-    def lr(self):
+    @staticmethod
+    def lr():
         return LogisticRegression()
 
-    def bayes(self):
+    @staticmethod
+    def bayes():
         return GaussianNB()
 
-    def dt(self):
+    @staticmethod
+    def dt():
         return tree.DecisionTreeClassifier()
 
-    def knn(self):
+    @staticmethod
+    def knn():
         return KNeighborsClassifier()
+
+    def __name__(self):
+        return self.model_type

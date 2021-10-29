@@ -34,6 +34,6 @@ def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, seed=0):
                X[np.isin(patient_ids, test_ids)][test_filter], y_to_categorical(y[np.isin(patient_ids, test_ids)][
                    test_filter])
     return X[np.isin(patient_ids, train_ids)], y[np.isin(patient_ids, train_ids)], \
-           X[np.isin(patient_ids, test_ids)][test_filter], y[np.isin(patient_ids, test_ids)][test_filter]
+           X[np.isin(patient_ids, test_ids)], y[np.isin(patient_ids, test_ids)]
 
 

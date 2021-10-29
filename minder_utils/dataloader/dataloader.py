@@ -6,6 +6,7 @@ import datetime
 from ..formatting.format_util import normalise as normalized
 from ..formatting.label import label_dataframe
 from minder_utils.formatting.standardisation import standardise_physiological_environmental, standardise_activity_data
+from minder_utils.configurations import config
 
 
 class Dataloader:
@@ -23,12 +24,7 @@ class Dataloader:
         - label_data: Default False. label the data or not. If False, ```get_labelled_data()``` cannot be used.
     """
 
-    def __init__(self, activity, physiological=None, environmental=None,  max_days=3, label_data=False):
-        """
-        csv_file: string or dataframe, the resulting dataframe must contains
-                    [id, time, ..., valid]
-        max_days: the number of days to augment the labelled data
-        """
+    def __init__(self, activity, physiological=None, environmental=None, max_days=3, label_data=False):
         activity = pd.read_csv(activity) if type(activity) == str else activity
         shared_id = None
         for data in [activity, physiological, environmental]:
@@ -41,10 +37,14 @@ class Dataloader:
         activity.loc[:, 'Date'] = activity.time.dt.date
         date_range = pd.date_range(activity.Date.min(), activity.Date.max())
 
-        self.physiological = standardise_physiological_environmental(physiological, date_range, shared_id)\
-            .set_index(['id', 'time']) if physiological is not None else physiological
-        self.environmental = standardise_physiological_environmental(environmental, date_range, shared_id)\
-            .set_index(['id', 'time']) if environmental is not None else environmental
+        self.physiological = standardise_physiological_environmental(physiological, date_range, shared_id) \
+            if physiological is not None else physiological
+        self.environmental = standardise_physiological_environmental(environmental, date_range, shared_id) \
+            if environmental is not None else environmental
+
+        for datatype in ['environmental', 'physiological']:
+            config[datatype]['sort_dict'] = dict(
+                zip(config[datatype]['sensors'], range(len(config[datatype]['sensors']))))
 
         if label_data:
             activity = label_dataframe(activity)
@@ -63,10 +63,7 @@ class Dataloader:
         self.transfer_sensors = ['back door', 'bathroom1', 'bedroom1', 'dining room',
                                  'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
                                  'living room', 'lounge', 'microwave', 'study', 'toaster']
-        self.select_sensors = ['WC1', 'back door', 'bathroom1', 'bedroom1',
-                               'conservatory', 'dining room', 'fridge door', 'front door',
-                               'hallway', 'kettle', 'kitchen', 'living room',
-                               'lounge', 'main door', 'microwave', 'office']
+        self.select_sensors = config['activity']['sensors']
 
     def __len__(self):
         return int(len(self.labelled_df) / 24)
@@ -89,7 +86,8 @@ class Dataloader:
         for i in range(1, self.max_days):
             date = date - datetime.timedelta(1)
             try:
-                outputs.append(self.activity.loc[(p_ids[idx], date), 'Back Door': 'Toaster'].to_numpy().reshape(3, 8, -1))
+                outputs.append(
+                    self.activity.loc[(p_ids[idx], date), 'Back Door': 'Toaster'].to_numpy().reshape(3, 8, -1))
             except KeyError:
                 break
         outputs = np.array(outputs)
@@ -98,7 +96,7 @@ class Dataloader:
 
         return outputs, label
 
-    def get_labelled_data(self, normalise=True):
+    def get_labelled_data(self, normalise=False):
         # get p ids
         p_ids = self.labelled_df.index.get_level_values(0).unique()
         outputs = []
@@ -114,13 +112,13 @@ class Dataloader:
                 for date in dates:
                     # validated data
                     p_date = date
-                    p_data = data.loc[(valid, p_date), self.select_sensors].to_numpy().reshape(3, 8, -1)
+                    p_data = data.loc[(valid, p_date), self.select_sensors].to_numpy()
                     if normalise:
                         p_data = normalized(np.array(p_data)).reshape(3, 8, -1)
                         # p_data = normalized(np.array(p_data))
                     outputs.append(p_data)
-                    phy_data.append(self.get_data(self.physiological, p_ids[idx], p_date))
-                    env_data.append(self.get_data(self.environmental, p_ids[idx], p_date))
+                    phy_data.append(self.get_data(self.physiological, p_ids[idx], p_date, 'physiological'))
+                    env_data.append(self.get_data(self.environmental, p_ids[idx], p_date, 'environmental'))
                     labels.append(int(valid) if valid else -1)
                     patient_ids.append(p_ids[idx])
                     for i in range(1, self.max_days + 1):
@@ -130,10 +128,10 @@ class Dataloader:
                                 p_data = self.activity.loc[(p_ids[idx], f_date), self.select_sensors].to_numpy()
                                 if normalise:
                                     p_data = normalized(np.array(p_data)).reshape(3, 8, -1)
-                                    #p_data = normalized(np.array(p_data), axis=-1).reshape(3, 8, -1)
+                                    # p_data = normalized(np.array(p_data), axis=-1).reshape(3, 8, -1)
                                 outputs.append(p_data)
-                                phy_data.append(self.get_data(self.physiological, p_ids[idx], f_date))
-                                env_data.append(self.get_data(self.environmental, p_ids[idx], f_date))
+                                phy_data.append(self.get_data(self.physiological, p_ids[idx], f_date, 'physiological'))
+                                env_data.append(self.get_data(self.environmental, p_ids[idx], f_date, 'environmental'))
                                 labels.append(self.laplace_smooth(i) * symbol)
                                 patient_ids.append(p_ids[idx])
                             except KeyError:
@@ -145,9 +143,9 @@ class Dataloader:
         label = np.array(labels)
         patient_ids = np.array(patient_ids)
 
-        return outputs, phy_data, env_data, label, patient_ids
+        return outputs, phy_data, env_data, patient_ids, label
 
-    def get_unlabelled_data(self, normalise=True, date=None):
+    def get_unlabelled_data(self, normalise=False, date=None):
         # get p ids
         df = self.activity.reset_index().set_index(['id', 'Date'])
         if date is not None:
@@ -171,8 +169,8 @@ class Dataloader:
                     # p_data = np.array(p_data)
                     # p_data = normalize(p_data, axis=2)
                 outputs.append(p_data)
-                phy_data.append(self.get_data(self.physiological, p_ids[idx], date))
-                env_data.append(self.get_data(self.environmental, p_ids[idx], date))
+                phy_data.append(self.get_data(self.physiological, p_ids[idx], date, 'physiological'))
+                env_data.append(self.get_data(self.environmental, p_ids[idx], date, 'environmental'))
                 outputs_p_ids.append(p_ids[idx])
                 outputs_dates.append(date)
         return np.array(outputs), np.array(phy_data), np.array(env_data), \
@@ -183,7 +181,8 @@ class Dataloader:
         return np.exp(- np.abs(i) / lam) / denominator
 
     @staticmethod
-    def get_data(df, p_id, date):
+    def get_data(df, p_id, date, datatype):
         if df is None:
             return
-        return df.loc[(p_id, date)].sort_values('location')['value'].to_numpy()
+        return df.loc[(p_id, date, config[datatype]['sensors'])] \
+            .sort_values('location', key=lambda x: x.map(config[datatype]['sort_dict']))['value'].to_numpy()
