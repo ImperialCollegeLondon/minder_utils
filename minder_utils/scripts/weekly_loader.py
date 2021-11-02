@@ -35,8 +35,8 @@ class Weekly_dataloader:
         self.default_categories = ['activity', 'environmental', 'physiological']
         self.categories = self.default_categories if categories is None else categories
         assert all(data_type in self.default_categories for data_type in self.categories), 'available categories: ' \
-                                                                                 'activity, environmental, ' \
-                                                                                 'physiological'
+                                                                                           'activity, environmental, ' \
+                                                                                           'physiological'
         self.num_days_extended = num_days_extended
         self.downloader = Downloader()
         self.default_dir = save_dir

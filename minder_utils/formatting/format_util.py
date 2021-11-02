@@ -64,3 +64,7 @@ def normalise(X, technique='l2'):
 
 def format_mean_std(values):
     return str(np.mean(values))[:6] + " +/- " + str(np.std(values))[:6]
+
+
+def flatten(x):
+    return x.reshape(x.shape[0], -1)
