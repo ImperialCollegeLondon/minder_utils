@@ -1,7 +1,7 @@
 import torch
 from minder_utils.models.feature_extractors.simclr.basic import ResNetSimCLR
 from minder_utils.models.feature_extractors.simclr.loss import NTXentLoss
-from minder_utils.models.feature_extractors.simclr import config
+from minder_utils.models import model_config
 from minder_utils.models.utils.early_stopping import EarlyStopping
 import torch.nn.functional as F
 import numpy as np
@@ -16,8 +16,10 @@ class SimCLR(object):
         self.nt_xent_criterion = NTXentLoss(self.device, batch_size=batch_size, temperature=0.5, use_cosine_similarity=True)
         self.early_stop = EarlyStopping()
         self.model = None
+        self.config = model_config.simclr
 
-    def _get_device(self):
+    @staticmethod
+    def _get_device():
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print("Running on:", device)
         return device
@@ -38,7 +40,7 @@ class SimCLR(object):
         return loss
 
     def train(self, train_loader):
-        model = ResNetSimCLR(**config["model"]).to(self.device)
+        model = ResNetSimCLR(**self.config["model"]).to(self.device)
 
         optimizer = torch.optim.Adam(model.parameters(), 3e-4)
 
@@ -49,7 +51,7 @@ class SimCLR(object):
         valid_n_iter = 0
         best_valid_loss = np.inf
 
-        for epoch_counter in range(config['epochs']):
+        for epoch_counter in range(self.config['epochs']):
             if self.early_stop.early_stop:
                 break
             for (xis, xjs), _ in train_loader:

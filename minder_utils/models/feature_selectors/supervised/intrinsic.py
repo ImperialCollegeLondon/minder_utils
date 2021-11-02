@@ -20,25 +20,34 @@ class Intrinsic_selector(Feature_selector_template):
     ```
     '''
 
-    def __init__(self, classifier, model_name, num_features, freeze_classifier=False, discrete=True):
+    def __init__(self, classifier, model_name, num_features, freeze_classifier=False):
         self.classifier = classifier
         self.num_features = num_features
         super().__init__(model_name)
-        self.discrete = discrete
-        self.name = 'discrete_' + self.methods[model_name] if self.discrete else self.methods[model_name]
+        self.name = self.methods[model_name]
         self.early_stop = EarlyStopping()
         self.freeze_classifier = freeze_classifier
+        self.discrete = 'discrete' in model_name
 
     def reset_model(self, model_name, discrete=True):
         self.discrete = discrete
-        self.name = 'discrete_' + self.methods[model_name] if self.discrete else self.methods[model_name]
+        self.name = self.methods[model_name]
         self.model = getattr(self, model_name)()
 
     @property
     def methods(self):
         return {
             'linear': 'linear feature selector',
+            'discrete_linear': 'discrete linear feature selector'
         }
+
+    def linear(self):
+        return nn.Linear(self.num_features, self.num_features, bias=False)
+
+    def discrete_linear(self):
+        return nn.ModuleList([
+            nn.Linear(self.num_features, self.num_features, bias=False),
+            nn.Linear(self.num_features, self.num_features, bias=False)])
 
     def fit(self, dataloader, num_epoch=50):
         parameters = self.model.parameters() if self.freeze_classifier \
@@ -50,13 +59,16 @@ class Intrinsic_selector(Feature_selector_template):
                 break
             for X, y in dataloader:
                 optimiser.zero_grad()
-                features_importance = self.model(X)
                 if self.discrete:
-                    features_importance = F.gumbel_softmax(features_importance, hard=True)
-                features_importance = torch.mean(features_importance, dim=0)
+                    features_importance = torch.stack([self.model[0](X), self.model[1](X)], dim=-1)
+                    features_importance = F.gumbel_softmax(features_importance, dim=-1, hard=True)[:, :, 1]
+                    features_importance = torch.mean(features_importance, dim=0)
+                else:
+                    features_importance = self.model(X)
+                    features_importance = torch.mean(F.softmax(features_importance, dim=1), dim=0)
                 X = X * features_importance
                 outputs = self.classifier(X)
-                loss = criterion(outputs, y)
+                loss = criterion(outputs, y) + torch.sum(features_importance)
                 loss.backward()
                 optimiser.step()
                 print('Epoch: %d / %5d,  Loss: %.3f' %
@@ -71,9 +83,12 @@ class Intrinsic_selector(Feature_selector_template):
         total = 0
         with torch.no_grad():
             for X, y in dataloader:
-                features_importance = self.model(X)
                 if self.discrete:
-                    features_importance = F.softmax(features_importance / T)
+                    features_importance = torch.stack([self.model[0](X), self.model[1](X)], dim=-1)
+                    features_importance = F.softmax(features_importance / T, dim=-1)[:, :, 1]
+                else:
+                    features_importance = self.model(X)
+                    features_importance = F.softmax(features_importance, dim=1)
                 X *= features_importance
                 outputs = self.classifier(X)
                 _, predicted = torch.max(outputs.data, 1)
@@ -86,9 +101,6 @@ class Intrinsic_selector(Feature_selector_template):
     def transform(self, X):
         pass
 
-    def linear(self):
-        return nn.Linear(self.num_features, self.num_features, bias=False)
-
     def __name__(self):
         return 'Supervised Intrinsic Selector', self.name
 
@@ -96,10 +108,11 @@ class Intrinsic_selector(Feature_selector_template):
         importance = []
         with torch.no_grad():
             for X, y in dataloader:
-                features_importance = self.model(X)
                 if self.discrete:
-                    importance.extend(list(F.softmax(features_importance / 1e-5, dim=1).detach().numpy()))
+                    features_importance = torch.stack([self.model[0](X), self.model[1](X)], dim=-1)
+                    importance.extend(list(F.softmax(features_importance / 1e-5, dim=-1).detach().numpy()[:, :, 1]))
                 else:
+                    features_importance = self.model(X)
                     importance.extend(list(F.softmax(features_importance, dim=1).detach().numpy()))
         importance = np.array(importance)
         if datatype == 'activity':
