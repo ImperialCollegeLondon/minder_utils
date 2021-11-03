@@ -1,9 +1,23 @@
 from minder_utils.evaluate.eval_utils import split_by_ids, get_scores
 from minder_utils.formatting.format_util import format_mean_std
+from minder_utils.models.classifiers.classifiers import Classifiers as keras_clf
 import pandas as pd
 
 
 def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True):
+    """
+    This function is used to evaluate the performance of your model
+    Args:
+        model:
+        X:
+        y:
+        p_ids:
+        num_runs:
+        valid_only:
+
+    Returns:
+
+    """
     results, sen, spe, accs, f1s = [], [], [], [], []
     header = ['model', 'sensitivity', 'specificity', 'acc', 'f1']
     for run in range(num_runs):
@@ -21,3 +35,24 @@ def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True):
 
     df_results = pd.DataFrame(results, columns=header)
     return df_results
+
+
+def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True):
+    '''
+    This function is to evaluate your features on the baseline models
+    Args:
+        X:
+        y:
+        p_ids:
+        num_runs:
+        valid_only:
+
+    Returns:
+
+    '''
+    results = []
+    for model_type in keras_clf().get_info():
+        print('Evaluating ', model_type)
+        clf = keras_clf(model_type)
+        results.append(evaluate(clf, X, y, p_ids, valid_only=valid_only, num_runs=num_runs))
+    return pd.concat(results)

@@ -118,4 +118,7 @@ class Intrinsic_selector(Feature_selector_template):
         if datatype == 'activity':
             importance = importance.reshape(importance.shape[0], 24, -1)
             importance = np.sum(importance, axis=1)
-        return np.mean(importance, axis=0)
+        importance -= np.min(importance, axis=1, keepdims=True) - 1e-5
+        importance /= np.max(importance, axis=1, keepdims=True)
+        importance = np.mean(importance, axis=0)
+        return importance

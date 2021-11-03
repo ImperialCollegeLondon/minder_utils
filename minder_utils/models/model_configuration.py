@@ -5,17 +5,19 @@ class Configuration:
     @property
     def simclr(self):
         return {
-            'model': {'base_model': 'resnet18',
-                      'out_dim': 128},
-            'epochs': 50,
+            'model': {'base_model': 'basic',
+                      'out_dim': 64},
+            'epochs': 500,
             'eval_every_n_epochs': 1
         }
 
     @property
     def partial_order(self):
         return {
-            'model': {'base_model': 'resnet18',
-                      'out_dim': 128},
-            'epochs': 50,
-            'eval_every_n_epochs': 1
+            'model': {'base_model': 'basic',
+                      'out_dim': 64},
+            'epochs': 500,
+            'eval_every_n_epochs': 1,
+            'loss': {'delta': 0.5,
+                     'use_cosine_similarity': True}
         }

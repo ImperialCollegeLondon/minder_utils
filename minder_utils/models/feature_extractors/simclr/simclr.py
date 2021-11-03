@@ -5,6 +5,7 @@ from minder_utils.models import model_config
 from minder_utils.models.utils.early_stopping import EarlyStopping
 import torch.nn.functional as F
 import numpy as np
+from minder_utils.models.utils.util import get_device
 
 torch.manual_seed(0)
 
@@ -12,17 +13,11 @@ torch.manual_seed(0)
 class SimCLR(object):
 
     def __init__(self, batch_size):
-        self.device = self._get_device()
+        self.device = get_device()
         self.nt_xent_criterion = NTXentLoss(self.device, batch_size=batch_size, temperature=0.5, use_cosine_similarity=True)
         self.early_stop = EarlyStopping()
         self.model = None
         self.config = model_config.simclr
-
-    @staticmethod
-    def _get_device():
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print("Running on:", device)
-        return device
 
     def _step(self, model, xis, xjs, n_iter):
 

@@ -66,5 +66,7 @@ def format_mean_std(values):
     return str(np.mean(values))[:6] + " +/- " + str(np.std(values))[:6]
 
 
-def flatten(x):
+def flatten(x, last_axis=False):
+    if last_axis:
+        return x.reshape(x.shape[0], x.shape[1], -1)
     return x.reshape(x.shape[0], -1)

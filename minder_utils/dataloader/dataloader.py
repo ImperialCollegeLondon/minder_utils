@@ -99,11 +99,7 @@ class Dataloader:
     def get_labelled_data(self, normalise=False):
         # get p ids
         p_ids = self.labelled_df.index.get_level_values(0).unique()
-        outputs = []
-        labels = []
-        patient_ids = []
-        phy_data = []
-        env_data = []
+        activity_data, uti_labels, patient_ids, physiological_data, environmental_data = [], [], [], [], []
         for idx in range(len(p_ids)):
             # get data of patient
             data = self.labelled_df.loc[p_ids[idx]]
@@ -111,16 +107,17 @@ class Dataloader:
                 dates = data.loc[valid].index.get_level_values(0).unique()
                 for date in dates:
                     # validated data
+                    act_data, labels, patient, phy_data, env_data = [], [], [], [], []
                     p_date = date
                     p_data = data.loc[(valid, p_date), self.select_sensors].to_numpy()
                     if normalise:
                         p_data = normalized(np.array(p_data)).reshape(3, 8, -1)
                         # p_data = normalized(np.array(p_data))
-                    outputs.append(p_data)
+                    act_data.append(p_data)
                     phy_data.append(self.get_data(self.physiological, p_ids[idx], p_date, 'physiological'))
                     env_data.append(self.get_data(self.environmental, p_ids[idx], p_date, 'environmental'))
                     labels.append(int(valid) if valid else -1)
-                    patient_ids.append(p_ids[idx])
+                    patient.append(p_ids[idx])
                     for i in range(1, self.max_days + 1):
                         for symbol in [-1, 1]:
                             f_date = p_date - datetime.timedelta(i) * symbol
@@ -129,21 +126,26 @@ class Dataloader:
                                 if normalise:
                                     p_data = normalized(np.array(p_data)).reshape(3, 8, -1)
                                     # p_data = normalized(np.array(p_data), axis=-1).reshape(3, 8, -1)
-                                outputs.append(p_data)
+                                act_data.append(p_data)
                                 phy_data.append(self.get_data(self.physiological, p_ids[idx], f_date, 'physiological'))
                                 env_data.append(self.get_data(self.environmental, p_ids[idx], f_date, 'environmental'))
                                 labels.append(self.laplace_smooth(i) * symbol)
-                                patient_ids.append(p_ids[idx])
+                                patient.append(p_ids[idx])
                             except KeyError:
                                 break
+                    activity_data.append(act_data)
+                    uti_labels.append(labels)
+                    patient_ids.append(patient)
+                    physiological_data.append(phy_data)
+                    environmental_data.append(env_data)
 
-        outputs = np.array(outputs)
-        phy_data = np.array(phy_data)
-        env_data = np.array(env_data)
-        label = np.array(labels)
+        activity_data = np.array(activity_data)
+        uti_labels = np.array(uti_labels)
         patient_ids = np.array(patient_ids)
+        physiological_data = np.array(physiological_data)
+        environmental_data = np.array(environmental_data)
 
-        return outputs, phy_data, env_data, patient_ids, label
+        return activity_data, physiological_data, environmental_data, patient_ids, uti_labels
 
     def get_unlabelled_data(self, normalise=False, date=None):
         # get p ids
