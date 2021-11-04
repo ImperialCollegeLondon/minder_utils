@@ -41,3 +41,51 @@ def label_dataframe(unlabelled_df):
     return unlabelled_df
 
 
+def label_array(patient_ids, time, save_path = './data/raw_data/'):
+    """
+    This function returns labels given an array of ids and an array of times. Please see the
+    following for the description of the shapes required.
+
+    Arguments
+    ---------
+
+    - patient_ids: array:
+        This is an array containing the patient IDs corresponding to the times in ```time```.
+        This should be of shape (N,1).
+
+    - time: array:
+        This is an array containing the times of events corresponding to the patient IDs 
+        in ```patient_ids```. This should be of shape (N,1).
+
+    Returns
+    ---------
+
+    - labels: array:
+        This is an array containing the labels for UTIs for the given inputs.
+
+    """
+    df_dict = {'id': patient_ids, 'time': pd.to_datetime(time)}
+    unlabelled_df = pd.DataFrame(df_dict)
+    unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
+    
+    try:
+        df = pd.read_csv(save_path + 'procedure.csv')
+    except FileNotFoundError:
+        Downloader().export(categories=['procedure'], save_path = save_path)
+        df = pd.read_csv(save_path + 'procedure.csv')
+    
+    df.notes = df.notes.apply(lambda x: str(x).lower())
+    df = df[df.notes.str.contains('urinalysis') | df.notes.str.contains('uti') | df.notes.str.contains('positive')|df.notes.str.contains('negative')]
+    df = df[['patient_id', 'start_date', 'outcome']]
+    df.columns = ['patient id', 'date', 'valid']
+    df.valid = map_url_to_flag(df.valid)
+    df.date = pd.to_datetime(df.date).dt.date
+    manual_label = validated_date(True)
+    manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
+    label_df = pd.concat([manual_label, df])
+    label_df = label_df.drop_duplicates()
+    label_df['time'] = label_df['patient id'].astype(str) + label_df['date'].astype(str)
+    mapping = label_df[['time', 'valid']].set_index('time').to_dict()['valid']
+    unlabelled_df['valid'] = unlabelled_df['valid'].map(mapping)
+    
+    return unlabelled_df['valid'].values
