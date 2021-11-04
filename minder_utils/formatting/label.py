@@ -55,7 +55,8 @@ def label_array(patient_ids, time, save_path = './data/raw_data/'):
 
     - time: array:
         This is an array containing the times of events corresponding to the patient IDs 
-        in ```patient_ids```. This should be of shape (N,1).
+        in ```patient_ids```. This should be of shape (N,1). These should be of a format 
+        that is acceptable by ```pandas.to_datetime()```.
 
     Returns
     ---------
