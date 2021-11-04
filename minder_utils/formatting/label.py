@@ -13,17 +13,17 @@ dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/val
 from dri_data_util_validate import validated_date
 
 
-def label_dataframe(unlabelled_df):
+def label_dataframe(unlabelled_df, save_path = './data/raw_data/'):
     """
     unlabelled_df: contains id, time but no label information
     """
     unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
     
     try:
-        df = pd.read_csv('./data/raw_data/procedure.csv')
+        df = pd.read_csv(save_path + 'procedure.csv')
     except FileNotFoundError:
-        Downloader().export(categories=['procedure'])
-        df = pd.read_csv('./data/raw_data/procedure.csv')
+        Downloader().export(categories=['procedure'], save_path = save_path)
+        df = pd.read_csv(save_path + 'procedure.csv')
     
     df.notes = df.notes.apply(lambda x: str(x).lower())
     df = df[df.notes.str.contains('urinalysis') | df.notes.str.contains('uti') | df.notes.str.contains('positive')|df.notes.str.contains('negative')]
@@ -51,11 +51,11 @@ def label_array(patient_ids, time, save_path = './data/raw_data/'):
 
     - patient_ids: array:
         This is an array containing the patient IDs corresponding to the times in ```time```.
-        This should be of shape (N,1).
+        This should be of shape (N,).
 
     - time: array:
         This is an array containing the times of events corresponding to the patient IDs 
-        in ```patient_ids```. This should be of shape (N,1). These should be of a format 
+        in ```patient_ids```. This should be of shape (N,). These should be of a format 
         that is acceptable by ```pandas.to_datetime()```.
 
     Returns
@@ -65,28 +65,9 @@ def label_array(patient_ids, time, save_path = './data/raw_data/'):
         This is an array containing the labels for UTIs for the given inputs.
 
     """
+
     df_dict = {'id': patient_ids, 'time': pd.to_datetime(time, utc = True)}
     unlabelled_df = pd.DataFrame(df_dict)
-    unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
-    
-    try:
-        df = pd.read_csv(save_path + 'procedure.csv')
-    except FileNotFoundError:
-        Downloader().export(categories=['procedure'], save_path = save_path)
-        df = pd.read_csv(save_path + 'procedure.csv')
-    
-    df.notes = df.notes.apply(lambda x: str(x).lower())
-    df = df[df.notes.str.contains('urinalysis') | df.notes.str.contains('uti') | df.notes.str.contains('positive')|df.notes.str.contains('negative')]
-    df = df[['patient_id', 'start_date', 'outcome']]
-    df.columns = ['patient id', 'date', 'valid']
-    df.valid = map_url_to_flag(df.valid)
-    df.date = pd.to_datetime(df.date).dt.date
-    manual_label = validated_date(True)
-    manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
-    label_df = pd.concat([manual_label, df])
-    label_df = label_df.drop_duplicates()
-    label_df['time'] = label_df['patient id'].astype(str) + label_df['date'].astype(str)
-    mapping = label_df[['time', 'valid']].set_index('time').to_dict()['valid']
-    unlabelled_df['valid'] = unlabelled_df['valid'].map(mapping)
+    unlabelled_df = label_dataframe(unlabelled_df, save_path = save_path)
     
     return unlabelled_df['valid'].values
