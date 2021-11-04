@@ -36,25 +36,24 @@ def standardise_activity_data(df):
                               values='value').reset_index()
     table_df = table_df.replace(np.nan, 0)
     
-    with open(path_dir, 'r') as file_read:
-        uti_folder_path = file_read.read()
+    # with open(path_dir, 'r') as file_read:
+    #     uti_folder_path = file_read.read()
 
-    patient_data = pd.read_csv(uti_folder_path + 'UTIs-TP-TN.csv')
-    patient_data = patient_data[['subject', 'datetimeCreateddf', 'valid']].dropna().drop_duplicates()
-    patient_data.columns = ['id', 'time', 'valid']
+    # patient_data = pd.read_csv(uti_folder_path + 'UTIs-TP-TN.csv')
+    # patient_data = patient_data[['subject', 'datetimeCreateddf', 'valid']].dropna().drop_duplicates()
+    # patient_data.columns = ['id', 'time', 'valid']
     # patient_data.id = map_raw_ids(patient_data.id, True)
-
-    p_data = []
-    d = validated_date()
-    for idx, p_id in enumerate(d.keys()):
-        for data in d[p_id]:
-            p_data.append([p_id, data[0], data[1]])
-    p_data = pd.DataFrame(p_data, columns=['id', 'time', 'valid'])
-
-    patient_data = pd.concat([patient_data, p_data])
-
-    patient_data.time = pd.to_datetime(pd.to_datetime(patient_data.time).dt.date)
-    patient_data['time'] = patient_data.time.dt.strftime('%Y-%m-%d') + patient_data['id'].astype(str)
+    # p_data = []
+    # d = validated_date()
+    # for idx, p_id in enumerate(d.keys()):
+    #     for data in d[p_id]:
+    #         p_data.append([p_id, data[0], data[1]])
+    # p_data = pd.DataFrame(p_data, columns=['id', 'time', 'valid'])
+    #
+    # patient_data = pd.concat([patient_data, p_data])
+    #
+    # patient_data.time = pd.to_datetime(pd.to_datetime(patient_data.time).dt.date)
+    # patient_data['time'] = patient_data.time.dt.strftime('%Y-%m-%d') + patient_data['id'].astype(str)
 
     # table_df.id = map_raw_ids(table_df.id, True)
     # table_df['valid'] = table_df.time.dt.strftime('%Y-%m-%d') + table_df['id'].astype(str)

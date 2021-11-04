@@ -79,3 +79,5 @@ def label_array(patient_ids, time, save_path='./data/raw_data/'):
     unlabelled_df = label_dataframe(unlabelled_df, save_path=save_path)
 
     return unlabelled_df['valid'].values
+
+
