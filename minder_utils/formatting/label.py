@@ -36,6 +36,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
     df.columns = ['patient id', 'date', 'valid']
     df.valid = map_url_to_flag(df.valid)
     df.date = pd.to_datetime(df.date).dt.date
+    df = df.dropna()
     manual_label = validated_date(True)
     manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     label_df = pd.concat([manual_label, df])
