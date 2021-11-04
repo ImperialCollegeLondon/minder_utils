@@ -65,7 +65,7 @@ def label_array(patient_ids, time, save_path = './data/raw_data/'):
         This is an array containing the labels for UTIs for the given inputs.
 
     """
-    df_dict = {'id': patient_ids, 'time': pd.to_datetime(time)}
+    df_dict = {'id': patient_ids, 'time': pd.to_datetime(time, utc = True)}
     unlabelled_df = pd.DataFrame(df_dict)
     unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
     
