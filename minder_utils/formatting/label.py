@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from pathlib import Path
 from .map_utils import map_numeric_ids, map_url_to_flag
 from importlib.machinery import SourceFileLoader
 from ..download.download import Downloader
@@ -8,9 +9,14 @@ from minder_utils.configurations import data_path
 # import python function from path:
 with open(data_path, 'r') as file_read:
     path = file_read.read()
-dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
-from dri_data_util_validate import validated_date
+    path_path = Path(path + '/validated_date.py')
 
+if path_path.exists():
+    dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
+    from dri_data_util_validate import validated_date
+else:
+    print('Please add a mappings folder file path.')
+    pass
 
 def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
     '''
