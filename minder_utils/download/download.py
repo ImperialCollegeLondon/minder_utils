@@ -49,6 +49,7 @@ class Downloader:
             This returns a dictionary of the available datasets.
         '''
         try:
+            print('Sending Request...')
             return requests.get(self.url + 'info/datasets', headers=self.params).json()
         except json.decoder.JSONDecodeError:
             print('Get response ', requests.get(self.url + 'info/datasets', headers=self.params))
