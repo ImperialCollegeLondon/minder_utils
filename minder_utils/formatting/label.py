@@ -20,13 +20,26 @@ else:
 
 def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
     '''
-    This function will label the input dataframe based on the information in 'procedure' and
+    This function will label the input dataframe based on the information in ```procedure.csv``` and
     manual labels from TIHM.
-    Args:s
-        unlabelled_df: unlabelled dataframe, must contain columns [id, time], where id is the
-        ids of participants, time is the time of the sensors.
+    
+    Arguments
+    ----------
+    
+    - unlabelled_df: pandas dataframe:
+        Unlabelled dataframe, must contain columns ```[id, time]```, where ```id``` is the
+        ids of participants, ```time``` is the time of the sensors.
 
-    Returns: unlabelled_df with an extra column named valid, which contains the validation of UTIs
+    - save_path: str:
+        This is the path that points to the ```procedure.csv``` file. If this 
+        file does not exist, it will be downloaded to this path.
+
+    Returns
+    ---------
+    
+    - unlabelled_df: pandas dataframe:
+        This is a dataframe containing the original data along with a new column, ```'labels'```,
+        which contains the labels.
 
     '''
     try:
@@ -71,6 +84,10 @@ def label_array(patient_ids, time, save_path='./data/raw_data/'):
         This is an array containing the times of events corresponding to the patient IDs 
         in ```patient_ids```. This should be of shape (N,). These should be of a format 
         that is acceptable by ```pandas.to_datetime()```.
+
+    - save_path: str:
+        This is the path that points to the ```procedure.csv``` file. If this 
+        file does not exist, it will be downloaded to this path.
 
     Returns
     ---------
