@@ -20,7 +20,7 @@ class Intrinsic_selector(Feature_selector_template):
     ```
     '''
 
-    def __init__(self, classifier, model_name, num_features, freeze_classifier=False):
+    def __init__(self, classifier, model_name, num_features, freeze_classifier=False, temperature=5):
         self.classifier = classifier
         self.num_features = num_features
         super().__init__(model_name)
@@ -28,6 +28,7 @@ class Intrinsic_selector(Feature_selector_template):
         self.early_stop = EarlyStopping()
         self.freeze_classifier = freeze_classifier
         self.discrete = 'discrete' in model_name
+        self.temperature = temperature
 
     def reset_model(self, model_name, discrete=True):
         self.discrete = discrete
@@ -61,11 +62,11 @@ class Intrinsic_selector(Feature_selector_template):
                 optimiser.zero_grad()
                 if self.discrete:
                     features_importance = torch.stack([self.model[0](X), self.model[1](X)], dim=-1)
-                    features_importance = F.gumbel_softmax(features_importance, dim=-1, hard=True)[:, :, 1]
-                    features_importance = torch.mean(features_importance, dim=0)
+                    features_importance = F.gumbel_softmax(features_importance, tau=self.temperature, hard=True, dim=-1)[:, :, 1]
+                    features_importance = features_importance
                 else:
                     features_importance = self.model(X)
-                    features_importance = torch.mean(F.softmax(features_importance, dim=1), dim=0)
+                    features_importance = F.softmax(features_importance, dim=1)
                 X = X * features_importance
                 outputs = self.classifier(X)
                 loss = criterion(outputs, y) + torch.sum(features_importance)
@@ -78,14 +79,14 @@ class Intrinsic_selector(Feature_selector_template):
                     break
             print('')
 
-    def test(self, dataloader, T=1e-5):
+    def test(self, dataloader):
         correct = 0
         total = 0
         with torch.no_grad():
             for X, y in dataloader:
                 if self.discrete:
                     features_importance = torch.stack([self.model[0](X), self.model[1](X)], dim=-1)
-                    features_importance = F.softmax(features_importance / T, dim=-1)[:, :, 1]
+                    features_importance = F.softmax(features_importance / self.temperature, dim=-1)[:, :, 1]
                 else:
                     features_importance = self.model(X)
                     features_importance = F.softmax(features_importance, dim=1)
@@ -110,7 +111,7 @@ class Intrinsic_selector(Feature_selector_template):
             for X, y in dataloader:
                 if self.discrete:
                     features_importance = torch.stack([self.model[0](X), self.model[1](X)], dim=-1)
-                    importance.extend(list(F.softmax(features_importance / 1e-5, dim=-1).detach().numpy()[:, :, 1]))
+                    importance.extend(list(F.softmax(features_importance / self.temperature, dim=-1).detach().numpy()[:, :, 1]))
                 else:
                     features_importance = self.model(X)
                     importance.extend(list(F.softmax(features_importance, dim=1).detach().numpy()))

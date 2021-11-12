@@ -1,4 +1,4 @@
-from minder_utils.models.feature_extractors.autoencoders import Extractor
+from minder_utils.models.feature_extractors.keras_autoencoders import Extractor
 from minder_utils.models.classifiers.classifiers import Classifiers
 import numpy as np
 import pandas as pd
