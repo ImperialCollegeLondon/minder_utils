@@ -5,6 +5,7 @@ import os
 import shutil
 
 
+
 def save_mkdir(path):
     Path(path).mkdir(parents=True, exist_ok=True)
 
@@ -79,3 +80,84 @@ def progress_spinner(total_time, statement, new_line_after = True, progress_indi
     
     
     return
+
+
+class PBar:
+
+    '''
+    This is a class for a simple progress bar.
+    '''
+
+    def __init__(self, show_length, n_iterations, done_symbol = '#', todo_symbol = '-'):
+
+        '''
+        Arguments
+        ---------
+            show_length: integer
+                This is the length of the progress bar to show.
+
+            n_iterations: integer
+                This is the number of iterations the progress bar should expect.
+
+            done_symbol: string
+                This is the symbol shown for the finished section of the progress bar.
+                By default this is a '#'.
+            todo_symbol = string
+                This is the symbol shown for the unfinished section of the progress bar.
+                By default this is '-'
+
+        '''
+
+        self.show_length = show_length
+        self.n_iterations = n_iterations
+        self.done_symbol = done_symbol
+        self.todo_symbol = todo_symbol
+        self.progress = 0
+
+        return
+    def update(self, n = 1):
+        '''
+        This is the update function for the progress bar
+
+        Arguments
+        ---------
+            n: integer
+                This is extra progress made
+
+        '''
+
+        self.progress += n
+
+        return
+
+
+    def give(self):
+
+        '''
+        Returns
+        ---------
+            out: string
+                This returns a string of the progress bar.
+        '''
+
+        total_bar_length = self.show_length
+        current_progress = self.progress if self.progress <= self.n_iterations else self.n_iterations
+        n_iterations = self.n_iterations
+        hashes_length = int((current_progress)/n_iterations*total_bar_length)
+        hashes = self.done_symbol*hashes_length
+        dashes = self.todo_symbol*(total_bar_length-hashes_length)
+
+        out = '[{}{}]'.format(hashes, dashes)
+
+        return out
+
+    def show(self):
+        '''
+        This prints the progress bar.
+        '''
+
+        p_bar_to_print = self.give()
+
+        print(p_bar_to_print)
+
+        return
