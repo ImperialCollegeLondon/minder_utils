@@ -5,7 +5,7 @@ from minder_utils.download.download import Downloader
 from minder_utils.formatting.formatting import Formatting
 from minder_utils.dataloader.dataloader import Dataloader
 import numpy as np
-from minder_utils.util import save_mkdir, delete_dir
+from minder_utils.util.util import save_mkdir, delete_dir
 import json
 from minder_utils.settings import dates_save
 import pandas as pd

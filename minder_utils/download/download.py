@@ -3,13 +3,11 @@ import json
 import pandas as pd
 import io
 from pathlib import Path
-import importlib.resources as pkg_resources
 import sys
 import os
-from ..util import progress_spinner
+from minder_utils.util.util import progress_spinner
 from minder_utils.configurations import token_path
 import numpy as np
-import datetime
 
 
 class Downloader:

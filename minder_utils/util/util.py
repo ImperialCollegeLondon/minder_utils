@@ -3,7 +3,18 @@ import sys
 import time
 import os
 import shutil
+import pickle
 
+
+def save_file(obj, file_path, file_name):
+    with open(os.path.join(file_path, file_name + '.pickle'), 'wb') as handle:
+        pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def load_file(file_path, file_name):
+    with open(os.path.join(file_path, file_name + '.pickle'), 'rb') as handle:
+        data = pickle.load(handle)
+    return data
 
 
 def save_mkdir(path):
@@ -17,15 +28,15 @@ def delete_dir(dirpath):
 
 
 rocket_base_string = '[---------]'
-rocket_progress_indicator_list1 = [rocket_base_string[:n] + '>=>' + rocket_base_string[n:] for n in range(1,11)]
-rocket_progress_indicator_list2 = [rocket_base_string[:n] + '<=<' + rocket_base_string[n:] for n in range(1,11)]
+rocket_progress_indicator_list1 = [rocket_base_string[:n] + '>=>' + rocket_base_string[n:] for n in range(1, 11)]
+rocket_progress_indicator_list2 = [rocket_base_string[:n] + '<=<' + rocket_base_string[n:] for n in range(1, 11)]
 rocket_progress_indicator_list = rocket_progress_indicator_list1 + rocket_progress_indicator_list2[::-1]
-
 
 progress_indicator_dict = {'spinning_wheel': ['\\', '|', '/', '-', '\\', '|', '/', '-'],
                            'rocket': rocket_progress_indicator_list}
 
-def progress_spinner(total_time, statement, new_line_after = True, progress_indicator = 'rocket', time_period = 1):
+
+def progress_spinner(total_time, statement, new_line_after=True, progress_indicator='rocket', time_period=1):
     '''
     This function prints a spinning wheel for the length of time given in ```total_time```.
     This is useful when it is required to wait for some amount of time but the user wants
@@ -55,41 +66,38 @@ def progress_spinner(total_time, statement, new_line_after = True, progress_indi
     if type(progress_indicator) == str:
         progress_indicator_list = progress_indicator_dict[progress_indicator]
 
-    else: progress_indicator_list = progress_indicator
+    else:
+        progress_indicator_list = progress_indicator
 
-    sleep_value = time_period/len(progress_indicator_list)
-    
+    sleep_value = time_period / len(progress_indicator_list)
+
     progress_position = 0
-    
+
     time_run = 0
     start = time.time()
 
-    
     while time_run < total_time:
-        progress_position = progress_position%len(progress_indicator_list)
+        progress_position = progress_position % len(progress_indicator_list)
         sys.stdout.write('\r')
         sys.stdout.write("{} {}".format(statement, progress_indicator_list[progress_position]))
         sys.stdout.flush()
-        
+
         time.sleep(sleep_value)
         progress_position += 1
-        
+
         time_run = time.time() - start
-    
+
     if new_line_after: sys.stdout.write('\n')
-    
-    
+
     return
 
 
 class PBar:
-
     '''
     This is a class for a simple progress bar.
     '''
 
-    def __init__(self, show_length, n_iterations, done_symbol = '#', todo_symbol = '-'):
-
+    def __init__(self, show_length, n_iterations, done_symbol='#', todo_symbol='-'):
         '''
         Arguments
         ---------
@@ -115,7 +123,8 @@ class PBar:
         self.progress = 0
 
         return
-    def update(self, n = 1):
+
+    def update(self, n=1):
         '''
         This is the update function for the progress bar
 
@@ -130,9 +139,7 @@ class PBar:
 
         return
 
-
     def give(self):
-
         '''
         Returns
         ---------
@@ -143,9 +150,9 @@ class PBar:
         total_bar_length = self.show_length
         current_progress = self.progress if self.progress <= self.n_iterations else self.n_iterations
         n_iterations = self.n_iterations
-        hashes_length = int((current_progress)/n_iterations*total_bar_length)
-        hashes = self.done_symbol*hashes_length
-        dashes = self.todo_symbol*(total_bar_length-hashes_length)
+        hashes_length = int((current_progress) / n_iterations * total_bar_length)
+        hashes = self.done_symbol * hashes_length
+        dashes = self.todo_symbol * (total_bar_length - hashes_length)
 
         out = '[{}{}]'.format(hashes, dashes)
 

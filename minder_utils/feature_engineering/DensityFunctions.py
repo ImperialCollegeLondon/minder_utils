@@ -1,8 +1,5 @@
-from scipy import stats
 import numpy as np
-from minder_utils.util import PBar
-
-
+from minder_utils.util.util import PBar
 
 
 class BaseDensityCalc:
@@ -34,9 +31,9 @@ class BaseDensityCalc:
         This dictates whether the class will print information related to its progress.
     
     '''
-    
-    def __init__(self, save_baseline_array = True, sample = False, sample_size = 10000, seed = None, verbose = True):
-        
+
+    def __init__(self, save_baseline_array=True, sample=False, sample_size=10000, seed=None, verbose=True):
+
         self.is_fitted = False
         self.save_baseline_array = save_baseline_array
         self.methods_possible = ['reverse_percentiles']
@@ -45,9 +42,9 @@ class BaseDensityCalc:
         self.sample_size = sample_size
         self.rng = np.random.default_rng(seed)
         self.verbose = verbose
-        
+
         return
-    
+
     def fit(self, values):
         '''
         Arguments
@@ -60,39 +57,39 @@ class BaseDensityCalc:
         
         
         '''
-        
+
         if values.shape[0] < self.sample_size:
             self.sample = False
             if self.verbose:
                 print('Sample will not be used, since the sample size given is larger than the dataset.')
-        
+
         if self.save_baseline_array:
-            
+
             if len(values.shape) == 1:
-                raise TypeError('Please ensure that values is of shape (N,L) where N is the number of samples and L is the number of features.')
-            
+                raise TypeError(
+                    'Please ensure that values is of shape (N,L) where N is the number of samples and L is the number of features.')
+
             if self.sample:
-                sample_index = self.rng.integers(values.shape[0], size = self.sample_size)
+                sample_index = self.rng.integers(values.shape[0], size=self.sample_size)
                 self._baseline_values = values[sample_index]
             else:
                 self._baseline_values = values
-            
-        
+
+
         else:
             raise TypeError('save_baseline_array = False is not currently supported.')
-        
+
         self.is_fitted = True
-        
-        if values.shape[0]*values.shape[1] > 10000:
+
+        if values.shape[0] * values.shape[1] > 10000:
             if self.sample:
                 self.batch_size = 10000
             else:
                 self.batch_size = 200
 
         return self
-    
-    
-    def _calculate_reverse_percentiles(self, values, kind = 'rank'):
+
+    def _calculate_reverse_percentiles(self, values, kind='rank'):
         '''
         This function calculates the reverse percentiles from an array of values,
         given the baseline_values provided in the ```.fit()``` function.
@@ -121,51 +118,46 @@ class BaseDensityCalc:
         '''
 
         base = np.asarray(self._baseline_values)
-        n = base.shape[0]    
+        n = base.shape[0]
 
         if n == 0:
             return 100.0
 
-
         if kind == 'rank':
             # the None index forces broadcasting in the dimensions that I need.
-            left = np.count_nonzero(base < values[:, None, :], axis = 1)
-            right = np.count_nonzero( base <= values[:, None, :], axis = 1)
-            pct = (right + left + (right > left)) * 0.5/n
+            left = np.count_nonzero(base < values[:, None, :], axis=1)
+            right = np.count_nonzero(base <= values[:, None, :], axis=1)
+            pct = (right + left + (right > left)) * 0.5 / n
 
         elif kind == 'strict':
-            pct = np.count_nonzero(base < values[:, None, :], axis = 1) / n
-
+            pct = np.count_nonzero(base < values[:, None, :], axis=1) / n
 
         elif kind == 'weak':
-            pct = np.count_nonzero(base <= values[:, None, :], axis = 1) / n
-
+            pct = np.count_nonzero(base <= values[:, None, :], axis=1) / n
 
         elif kind == 'mean':
-            pct = (np.count_nonzero(base < values[:, None, :], axis = 1)
-                   + np.count_nonzero(base <= values[:, None, :], axis = 1)) / n*0.5
-
+            pct = (np.count_nonzero(base < values[:, None, :], axis=1)
+                   + np.count_nonzero(base <= values[:, None, :], axis=1)) / n * 0.5
 
         else:
             raise ValueError("kind can only be 'rank', 'strict', 'weak' or 'mean'")
 
         return pct
-    
-    
+
     def _batcher(self, values, batch_size):
         '''
         This function creates list containing the values, each with size of ```batch_size```
         or less.
         '''
-        
-        split_index = np.arange(0,values.shape[0], batch_size)[1:]
-        
+
+        split_index = np.arange(0, values.shape[0], batch_size)[1:]
+
         out = np.split(values, split_index)
         self.n_batches = split_index.shape[0] + 1
-        
+
         return out
-    
-    def threshold_counter(self, values, threshold, axis = 0):
+
+    def threshold_counter(self, values, threshold, axis=0):
         '''
         This counts the number of times there were breaches in the values against a threshold.
         
@@ -192,13 +184,12 @@ class BaseDensityCalc:
         
         '''
         breaches = values > threshold
-        
-        
-        out = np.sum(breaches, axis = axis, keepdims = True)
-        
+
+        out = np.sum(breaches, axis=axis, keepdims=True)
+
         return out
-    
-    def transform(self, values, method = 'reverse_percentiles'):
+
+    def transform(self, values, method='reverse_percentiles'):
         '''
         This function calculates the output of the values given a ```method```.
         
@@ -220,49 +211,47 @@ class BaseDensityCalc:
         
         
         '''
-        
+
         self.methods_possible
-        
+
         if type(method) == str:
             if not method in self.methods_possible:
                 raise TypeError('Please choose from the possible methods: {}'.format(self.methods_possible))
         else:
-            raise TypeError('Input must be a string. Please choose from the possible methods:'.format(self.methods_possible))
-        
-        
+            raise TypeError(
+                'Input must be a string. Please choose from the possible methods:'.format(self.methods_possible))
+
         if self.batch_size != -1:
             batches = self._batcher(values, self.batch_size)
-        
+
         else:
             batches = [values]
-        
-        
-        out = np.zeros(values.shape[1]).reshape(1,-1)
-        
-        bar = PBar(show_length = 20, n_iterations=len(batches))
+
+        out = np.zeros(values.shape[1]).reshape(1, -1)
+
+        bar = PBar(show_length=20, n_iterations=len(batches))
         print_progress = 0
         for nb, batch in enumerate(batches):
             if method == 'reverse_percentiles':
                 rp_batch = self._calculate_reverse_percentiles(batch)
                 out = np.vstack([out, rp_batch])
-            
-            progress = bar.progress/bar.n_iterations
+
+            progress = bar.progress / bar.n_iterations
             bar.update(1)
             if self.verbose:
                 sys.stdout.write('\r')
                 sys.stdout.write('Transforming {} - batch number {} / {}'.format(bar.give(), nb + 1, len(batches)))
                 sys.stdout.flush()
-            
+
         if self.verbose:
             sys.stdout.write('\n')
-        
+
         out = out[1:]
-        
+
         return out
 
-
-    def predict(self, values, method = 'threshold_counter', method_args = {'threshold': 0.7, 'axis': 0}, 
-                transform_method = 'reverse_percentiles'):
+    def predict(self, values, method='threshold_counter', method_args={'threshold': 0.7, 'axis': 0},
+                transform_method='reverse_percentiles'):
         '''
         This function makes predictions on the ```values```.
         
@@ -294,38 +283,38 @@ class BaseDensityCalc:
             These are the predictions.
         
         '''
-        
+
         values_tr = self.transform(values)
-        
+
         if self.batch_size != -1:
             batches = self._batcher(values_tr, self.batch_size)
-        
+
         else:
             batches = [values_tr]
-        
-        bar = PBar(show_length = 20, n_iterations= len(batches))
+
+        bar = PBar(show_length=20, n_iterations=len(batches))
         print_progress = 0
-        out = np.zeros(values.shape[1]).reshape(1,-1)
+        out = np.zeros(values.shape[1]).reshape(1, -1)
         for nb, batch in enumerate(batches):
-            
+
             if method == 'threshold_counter':
-                
+
                 include = ['threshold', 'axis']
                 to_include = [argument for argument in include if argument not in method_args]
                 if len(to_include) != 0:
                     raise TypeError('Please include the arguments {} in method_args'.format(to_include))
-                
+
                 predict_batch = self.threshold_counter(batch, **method_args)
                 out = np.vstack([out, predict_batch])
-                out = np.sum(out, axis = method_args['axis'], keepdims = True)
-        
+                out = np.sum(out, axis=method_args['axis'], keepdims=True)
+
             bar.update(1)
-            progress = bar.progress/bar.n_iterations
+            progress = bar.progress / bar.n_iterations
             if self.verbose:
                 sys.stdout.write('\r')
-                sys.stdout.write('Predicting   {} - batch number {} / {}'.format(bar.give(), nb + 1,  len(batches)))
+                sys.stdout.write('Predicting   {} - batch number {} / {}'.format(bar.give(), nb + 1, len(batches)))
                 sys.stdout.flush()
-        
+
         if self.verbose:
             sys.stdout.write('\n')
 

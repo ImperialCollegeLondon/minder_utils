@@ -1,5 +1,4 @@
 import pandas as pd
-import os
 from pathlib import Path
 from .map_utils import map_numeric_ids, map_url_to_flag
 from importlib.machinery import SourceFileLoader
@@ -17,6 +16,7 @@ if path_path.exists():
 else:
     print('Please add a mappings folder file path.')
     pass
+
 
 def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
     '''
@@ -104,3 +104,16 @@ def label_array(patient_ids, time, save_path='./data/raw_data/'):
     return unlabelled_df['valid'].values
 
 
+def label_by_week(df):
+    manual_label = validated_date(True)
+    manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
+    manual_label.date = pd.to_datetime(manual_label.date)
+    manual_label['week'] = manual_label.date.dt.isocalendar().week + \
+                           (manual_label.date.dt.isocalendar().year - 2000) * 100
+
+    manual_label['week'] = manual_label['patient id'].astype(str) + manual_label['week'].astype(str)
+    mapping = manual_label[['week', 'valid']].set_index('week').to_dict()['valid']
+
+    df['valid'] = df.id.astype(str) + df.week.astype(str)
+    df['valid'] = df['valid'].map(mapping)
+    return df

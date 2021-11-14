@@ -1,14 +1,9 @@
 import numpy as np
 import pandas as pd
 from .DensityFunctions import BaseDensityCalc
-from minder_utils.util import PBar
-import sys
 
 
-
-
-
-def single_location_delta(input_df, single_location, columns = {'time': 'time', 'location': 'location'}, recall_value = 5):
+def single_location_delta(input_df, single_location, columns={'time': 'time', 'location': 'location'}, recall_value=5):
     '''
     This function takes the ```input_df``` and calculates the raw time delta between the single_location location time
     and the time of the ```recall_value``` number of locations immediately before the single_location.
@@ -49,13 +44,13 @@ def single_location_delta(input_df, single_location, columns = {'time': 'time', 
 
     # format the incoming data to ensure assumptions about structure are met
     input_df['time'] = pd.to_datetime(input_df['time'], utc=True)
-    input_df =  input_df.sort_values('time')
+    input_df = input_df.sort_values('time')
 
     # find the indices of the data that match with the location we want to find the delta to
-    single_location_indices = np.where(input_df['location'] == single_location)[0].reshape(-1,1)
+    single_location_indices = np.where(input_df['location'] == single_location)[0].reshape(-1, 1)
     # making sure that the recall value is not more than the number of sensor triggers before the
     # first single_location sensor trigger
-    single_location_indices = single_location_indices[np.argmax(recall_value<single_location_indices):]
+    single_location_indices = single_location_indices[np.argmax(recall_value < single_location_indices):]
 
     # indices of the sensor triggers that we need in our calculations
     recall_indices = np.hstack([single_location_indices - i for i in range(recall_value + 1)])
@@ -64,10 +59,10 @@ def single_location_delta(input_df, single_location, columns = {'time': 'time', 
     recall_times = input_df['time'].values[recall_indices]
 
     # the delta between the times for each of the previous sensors to recall_value
-    recall_delta = (recall_times[:,0, None] - recall_times[:,1:])*1e-9
+    recall_delta = (recall_times[:, 0, None] - recall_times[:, 1:]) * 1e-9
 
     # the times of the single_location triggers
-    single_location_times = input_df['time'].loc[single_location_indices.reshape(-1,)]
+    single_location_times = input_df['time'].loc[single_location_indices.reshape(-1, )]
     # dates of the single_location triggers
     single_location_dates = single_location_times.dt.date
 
@@ -76,14 +71,10 @@ def single_location_delta(input_df, single_location, columns = {'time': 'time', 
 
     # creating the output dictionary
     for date in single_location_dates.unique():
-        
         # saving the delta values for this date to the dictionary
         out[pd.to_datetime(date)] = recall_delta[single_location_dates.values == date]
 
     return out
-
-
-
 
 
 class TimeDeltaDensity(BaseDensityCalc):
@@ -92,15 +83,13 @@ class TimeDeltaDensity(BaseDensityCalc):
     dataset.
 
     '''
-    def __init__(self, save_baseline_array = True, sample = False, sample_size = 10000, 
-                 seed = None, verbose = True):
-        
-        BaseDensityCalc.__init__(self, save_baseline_array = save_baseline_array,
-                                 sample = sample, sample_size = sample_size, seed = seed, verbose = verbose)
-        
+
+    def __init__(self, save_baseline_array=True, sample=False, sample_size=10000,
+                 seed=None, verbose=True):
+        BaseDensityCalc.__init__(self, save_baseline_array=save_baseline_array,
+                                 sample=sample, sample_size=sample_size, seed=seed, verbose=verbose)
+
         return
-
-
 
 
 def datetime_to_clock(times):
@@ -125,19 +114,19 @@ def datetime_to_clock(times):
         a cirlce for which the time would represent on a 24-hour analogue clock.
     
     '''
-    
-    times = pd.to_datetime(times, utc = True)
-    
+
+    times = pd.to_datetime(times, utc=True)
+
     total_seconds = times.hour * 3600 \
                     + times.minute * 60 \
                     + times.second \
-                    + 1e-6*times.microsecond
+                    + 1e-6 * times.microsecond
     total_seconds = np.asarray(total_seconds)
-    
-    C = 24*3600
-    x = (np.sin(2*np.pi*total_seconds/C) + 1e-12).reshape(-1,1)
-    y = (np.cos(2*np.pi*total_seconds/C) + 1e-12).reshape(-1,1)
-    
-    out = np.hstack([x,y])
-    
+
+    C = 24 * 3600
+    x = (np.sin(2 * np.pi * total_seconds / C) + 1e-12).reshape(-1, 1)
+    y = (np.cos(2 * np.pi * total_seconds / C) + 1e-12).reshape(-1, 1)
+
+    out = np.hstack([x, y])
+
     return out
