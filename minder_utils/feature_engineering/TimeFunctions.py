@@ -41,13 +41,15 @@ def single_location_delta(input_df, single_location, columns={'time': 'time', 'l
         found in the data, then an empty dictionary will be returned.
 
     '''
+    time_column = columns['time']
+    location_column = columns['location']
 
     # format the incoming data to ensure assumptions about structure are met
-    input_df['time'] = pd.to_datetime(input_df['time'], utc=True)
-    input_df = input_df.sort_values('time')
+    input_df[time_column] = pd.to_datetime(input_df[time_column], utc=True)
+    input_df = input_df.sort_values(time_column)
 
     # find the indices of the data that match with the location we want to find the delta to
-    single_location_indices = np.where(input_df['location'] == single_location)[0].reshape(-1, 1)
+    single_location_indices = np.where(input_df[location_column] == single_location)[0].reshape(-1, 1)
     # making sure that the recall value is not more than the number of sensor triggers before the
     # first single_location sensor trigger
     if len(single_location_indices) ==  0:
@@ -58,13 +60,13 @@ def single_location_delta(input_df, single_location, columns={'time': 'time', 'l
     recall_indices = np.hstack([single_location_indices - i for i in range(recall_value + 1)])
 
     # the times of the sensor triggers
-    recall_times = input_df['time'].values[recall_indices]
+    recall_times = input_df[time_column].values[recall_indices]
 
     # the delta between the times for each of the previous sensors to recall_value
     recall_delta = (recall_times[:, 0, None] - recall_times[:, 1:]) * 1e-9
 
     # the times of the single_location triggers
-    single_location_times = input_df['time'].iloc[single_location_indices.reshape(-1, )]
+    single_location_times = input_df[time_column].iloc[single_location_indices.reshape(-1, )]
     # dates of the single_location triggers
     single_location_dates = single_location_times.dt.date
 
