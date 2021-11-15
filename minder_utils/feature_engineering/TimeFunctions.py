@@ -37,7 +37,8 @@ def single_location_delta(input_df, single_location, columns={'time': 'time', 'l
     - out: dictionary:
         This has the Timestamps of the dates as keys (for example: Timestamp('2021-05-05 00:00:00')) and the 
         arrays of deltas as values. The arrays of deltas are of shape ```(Nt, recall_value)``` where Nt is the 
-        number of visits to ```single_location``` on a given day.
+        number of visits to ```single_location``` on a given day. If there are no ```single_location``` visits
+        found in the data, then an empty dictionary will be returned.
 
     '''
 
@@ -49,6 +50,8 @@ def single_location_delta(input_df, single_location, columns={'time': 'time', 'l
     single_location_indices = np.where(input_df['location'] == single_location)[0].reshape(-1, 1)
     # making sure that the recall value is not more than the number of sensor triggers before the
     # first single_location sensor trigger
+    if len(single_location_indices) ==  0:
+        return {}
     single_location_indices = single_location_indices[np.argmax(recall_value < single_location_indices):]
 
     # indices of the sensor triggers that we need in our calculations
