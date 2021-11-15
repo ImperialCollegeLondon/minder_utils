@@ -132,7 +132,7 @@ def set_data_dir(path='./data/'):
 
     path = ensure_folder(path)
 
-    with open(tihm_data_path, 'w') as file_write:
+    with open(data_path, 'w') as file_write:
         file_write.write(path)
 
     print('Path Saved')
