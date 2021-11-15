@@ -24,8 +24,7 @@ def single_location_delta(input_df, single_location, columns={'time': 'time', 'l
         in our calculations.
         This dictionary should be of the form:
         ```
-        {'subject':   column containing the subject names,
-         'time':      column containing the times of sensor triggers,
+        {'time':      column containing the times of sensor triggers,
          'location':  column containing the locations of the sensor triggers}
          ```
 
