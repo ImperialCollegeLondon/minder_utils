@@ -105,6 +105,14 @@ def label_array(patient_ids, time, save_path='./data/raw_data/'):
 
 
 def label_by_week(df):
+    '''
+    label the dataframe by week
+    Args:
+        df: Dataframe, contains columns ['id', 'week']
+
+    Returns:
+
+    '''
     manual_label = validated_date(True)
     manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     manual_label.date = pd.to_datetime(manual_label.date)

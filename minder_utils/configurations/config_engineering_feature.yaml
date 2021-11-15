@@ -15,3 +15,10 @@ bathroom_daytime:
 
 body_temperature:
   save: *save_config
+
+raw_activity:
+  save: *save_config
+
+activity:
+  features: ['raw_activity', 'bathroom_night', 'bathroom_daytime', 'body_temperature']
+  save: *save_config
