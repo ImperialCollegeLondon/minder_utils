@@ -62,7 +62,7 @@ def single_location_delta(input_df, single_location, columns={'time': 'time', 'l
     recall_delta = (recall_times[:, 0, None] - recall_times[:, 1:]) * 1e-9
 
     # the times of the single_location triggers
-    single_location_times = input_df['time'].loc[single_location_indices.reshape(-1, )]
+    single_location_times = input_df['time'].iloc[single_location_indices.reshape(-1, )]
     # dates of the single_location triggers
     single_location_dates = single_location_times.dt.date
 
