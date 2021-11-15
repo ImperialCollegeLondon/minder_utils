@@ -154,7 +154,7 @@ class Weekly_dataloader:
     def collate(self):
         date_dict = self.get_dates()
         for filename in iter_dir(self.previous_csv_data, split=False):
-            if filename not in ['device_types.csv']:
+            if filename not in ['device_types.csv', 'homes.csv', 'patients.csv']:
                 previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename))
                 current_data = pd.read_csv(os.path.join(self.current_csv_data, filename))
 

@@ -5,11 +5,15 @@ import importlib.resources as pkg_resources
 
 
 def map_raw_ids(p_id, df=False):
-    """
-    :param p_id:
-    :param df:
-    :return:
-    """
+    '''
+    Map the raw ids to numeric ids.
+    Args:
+        p_id:
+        df:
+
+    Returns:
+
+    '''
     path_dir = data_path
     with open(path_dir, 'r') as file_read:
         path = file_read.read()
@@ -25,8 +29,31 @@ def map_raw_ids(p_id, df=False):
     return int(patient_ids[contents[p_id]])
 
 
+def map_random_ids(p_id, df=False):
+    '''
+    Map random generated ids to raw ids
+    Args:
+        p_id:
+        df:
+
+    Returns:
+
+    '''
+    path_dir = data_path
+    with open(path_dir, 'r') as file_read:
+        path = file_read.read()
+
+    json_file_path = path + "/mappings.json"
+    with open(json_file_path, 'r') as j:
+        contents = json.loads(j.read())
+    if df:
+        return p_id.map(contents)
+    return contents[p_id]
+
+
 def map_numeric_ids(p_id, df=False):
     """
+    map the numeric ids to raw ids
     :param p_id:
     :param df:
     :return:

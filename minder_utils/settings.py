@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 import datetime as DT
-from minder_utils.configurations import data_path, dates_path, token_path, delta_path
+from minder_utils.configurations import data_path, dates_path, token_path, delta_path, tihm_data_path
 
 
 def token_save(token):
@@ -132,9 +132,42 @@ def set_data_dir(path='./data/'):
 
     path = ensure_folder(path)
 
-    with open(data_path, 'w') as file_write:
+    with open(tihm_data_path, 'w') as file_write:
         file_write.write(path)
 
     print('Path Saved')
 
     return
+
+
+def set_tihm_dir(path='./data/'):
+    '''
+    Only used in ```minder_utils``` and not ```minder_utils_lite```.
+
+    This allows you to set the path to the folder containing tihm data
+
+    Arguments
+    ---------
+
+    - path: string:
+        Please supply a string value that contains the relative path from your current
+        working directory to the folder containing the data.
+        Default: ```'./data/'```.
+
+
+    '''
+
+    def ensure_folder(path):
+        if path[-1] != '/':
+            path = path + ('/')
+        return path
+
+    path = ensure_folder(path)
+
+    with open(tihm_data_path, 'w') as file_write:
+        file_write.write(path)
+
+    print('TIHM Path Saved')
+
+    return
+

@@ -4,8 +4,9 @@ from minder_utils.formatting.label import label_by_week
 from minder_utils.feature_engineering import Feature_engineer
 from minder_utils.feature_engineering.compare_functions import *
 from minder_utils.util.decorators import formatting_plots
+from minder_utils.formatting import Formatting
 
-fe = Feature_engineer(raw_data_path='../../data/raw_data/')
+fe = Feature_engineer(Formatting())
 
 sns.set()
 
@@ -47,7 +48,7 @@ def visualise_weekly_data(df):
 
 
 @formatting_plots('P value, ' + figure_title[att])
-def visualise_weekly_statistical_analysis(df):
+def visualise_weekly_statistical_analysis(df, results):
     df = process_dataframe(df, 1)
     visualise_flags(df)
     data = results[patient_id]
@@ -65,8 +66,9 @@ def visualise_body_temperature(df):
     sns.lineplot(df.week, df.value)
 
 
-results = weekly_compare(getattr(fe, att), kolmogorov_smirnov)
-df = label_by_week(getattr(fe, att))
-visualise_weekly_data(df)
-visualise_weekly_statistical_analysis(df)
-visualise_body_temperature(label_by_week(fe.body_temperature))
+if __name__ == '__main__':
+    results = weekly_compare(getattr(fe, att), kolmogorov_smirnov)
+    df = label_by_week(getattr(fe, att))
+    visualise_weekly_data(df)
+    visualise_weekly_statistical_analysis(df)
+    visualise_body_temperature(label_by_week(fe.body_temperature))
