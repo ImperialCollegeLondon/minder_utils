@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
+from minder_utils.util import reformat_path
 import yaml
 
 p = Path(os.path.join(os.path.dirname(__file__), 'confidential'))
 if not p.exists():
-    os.mkdir(p)
+    os.mkdir(reformat_path(p))
 
 data_path = os.path.join(os.path.dirname(__file__), 'confidential', 'data_path.txt')
 token_path = os.path.join(os.path.dirname(__file__), 'confidential', 'token_real.json')

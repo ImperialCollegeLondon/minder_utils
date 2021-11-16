@@ -32,7 +32,7 @@ def reformat_path(path):
 
 
 def save_mkdir(path):
-    Path(path).mkdir(parents=True, exist_ok=True)
+    Path(reformat_path(path)).mkdir(parents=True, exist_ok=True)
 
 
 def delete_dir(dirpath):
