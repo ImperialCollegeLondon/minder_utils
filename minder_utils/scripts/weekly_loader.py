@@ -26,7 +26,7 @@ class Weekly_dataloader:
             - physiological data: N * 12
     """
 
-    def __init__(self, categories=None, save_dir=os.path.join('data', 'weekly_test'), num_days_extended=3):
+    def __init__(self, categories=None, save_dir=os.path.join('./data', 'weekly_test'), num_days_extended=3):
         '''
 
         @param data_type: activity, environmental, physiological
@@ -115,7 +115,7 @@ class Weekly_dataloader:
                                categories=categories)
 
     def format(self, period):
-        loader = Formatting(os.path.join(self.default_dir, period, 'csv'))
+        loader = Formatting(os.path.join(self.default_dir, period, 'csv'), add_tihm=period == 'previous')
         dataloader = Dataloader(loader.activity_data,
                                 loader.physiological_data,
                                 loader.environmental_data,
@@ -136,7 +136,9 @@ class Weekly_dataloader:
             else:
                 np.save(os.path.join(save_path, 'dates.npy'), dates)
 
-    def refresh(self):
+    def refresh(self, refresh_period=None):
+        if refresh_period is None:
+            refresh_period = ['current']
         date_dict = self.get_dates()
         if date_dict['current']['until'] == DT.date.today() - DT.timedelta(days=1):
             print('Data is up-to-date')
@@ -147,7 +149,7 @@ class Weekly_dataloader:
             self.download('gap')
         self.download('current')
         self.collate()
-        for folder in ['current', 'previous']:
+        for folder in refresh_period:
             self.format(folder)
         return
 

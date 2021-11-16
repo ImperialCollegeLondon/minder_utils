@@ -17,6 +17,10 @@ bathroom_urgent:
   recall_value: 2
   save: *save_config
 
+bathroom_urgent_reverse_percentage:
+  recall_value: 2
+  save: *save_config
+
 body_temperature:
   save: *save_config
 
