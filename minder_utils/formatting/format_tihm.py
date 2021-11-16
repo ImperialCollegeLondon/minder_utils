@@ -5,7 +5,7 @@ from minder_utils.util.decorators import load_save
 from minder_utils.configurations import config, tihm_data_path
 
 
-@load_save('./data/pkl/raw_data', 'TIHM')
+@load_save(os.path.join('./data', 'pkl', 'raw_data'), 'TIHM')
 def format_tihm_data():
     '''
     This function will change the TIHM data to the same format as DRI

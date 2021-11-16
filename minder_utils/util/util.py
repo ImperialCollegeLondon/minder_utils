@@ -4,6 +4,9 @@ import time
 import os
 import shutil
 import pickle
+import posixpath
+import ntpath
+import platform
 
 
 def save_file(obj, file_path, file_name):
@@ -15,6 +18,18 @@ def load_file(file_path, file_name):
     with open(os.path.join(file_path, file_name + '.pickle'), 'rb') as handle:
         data = pickle.load(handle)
     return data
+
+
+def reformat_path(path):
+    if isinstance(path, list):
+        return os.path.join(*path)
+    else:
+        if 'mac' in platform.platform().lower():
+            return path
+        elif 'windows' in platform.platform().lower():
+            return path.replace(os.sep, ntpath.sep)
+        elif 'unix' in platform.platform().lower():
+            return path.replace(os.sep, posixpath.sep)
 
 
 def save_mkdir(path):

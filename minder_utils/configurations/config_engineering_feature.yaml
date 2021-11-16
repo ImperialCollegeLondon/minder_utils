@@ -1,5 +1,5 @@
 name: &save_config
-  save_path: './data/pkl/feature_engineering'
+  save_path: ['./data', 'pkl', 'feature_engineering']
   save_name: null
   verbose: True
   refresh: False
@@ -11,6 +11,10 @@ bathroom_night:
   save: *save_config
 
 bathroom_daytime:
+  save: *save_config
+
+bathroom_urgent:
+  recall_value: 2
   save: *save_config
 
 body_temperature:

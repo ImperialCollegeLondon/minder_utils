@@ -2,11 +2,12 @@ from functools import wraps
 import matplotlib.pyplot as plt
 import os
 from minder_utils.util.util import save_mkdir, save_file, load_file
+from minder_utils.util.util import reformat_path
 
 
 class load_save:
     def __init__(self, save_path, save_name=None, verbose=True, refresh=False):
-        self.save_path = save_path
+        self.save_path = reformat_path(save_path)
         self.file_name = save_name
         self.verbose = verbose
         self.refresh = refresh

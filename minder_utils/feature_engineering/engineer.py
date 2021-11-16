@@ -3,6 +3,7 @@ import numpy as np
 from minder_utils.configurations import feature_config, config
 from minder_utils.util.decorators import load_save
 from minder_utils.feature_engineering.compare_functions import *
+from minder_utils.feature_engineering.TimeFunctions import single_location_delta
 
 
 class Feature_engineer:
@@ -56,6 +57,20 @@ class Feature_engineer:
         data = data[data.location.isin(config['activity']['sensors'])]
         return data
 
+    def _get_bathroom_delta(self):
+        data = self.formatter.activity_data
+        data.time = pd.to_datetime(data.time).dt.date
+        results = {}
+        for p_id in data.id.unique():
+            p_data = single_location_delta(data[data.id == p_id], 'bathroom1',
+                                           recall_value=feature_config['bathroom_urgent']['recall_value'])
+            if len(p_data) > 0:
+                results[p_id] = p_data
+        results = pd.DataFrame([(i, j, results[i][j].astype(float)) for i in results for j in results[i]],
+                               columns=['id', 'time', 'value'])
+        results['location'] = 'bathroom_urgent'
+        return results
+
     @property
     @load_save(**feature_config['bathroom_night']['save'])
     def bathroom_night(self):
@@ -65,6 +80,11 @@ class Feature_engineer:
     @load_save(**feature_config['bathroom_daytime']['save'])
     def bathroom_daytime(self):
         return self._get_bathroom_activity(feature_config['nocturia']['time_range'][::-1], 'bathroom_daytime')
+
+    @property
+    @load_save(**feature_config['bathroom_urgent']['save'])
+    def bathroom_urgent(self):
+        return self._get_bathroom_delta()
 
     @property
     @load_save(**feature_config['body_temperature']['save'])

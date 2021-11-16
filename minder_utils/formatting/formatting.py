@@ -16,7 +16,7 @@ class Formatting:
     Patient id, device type, time, value
     """
 
-    def __init__(self, path='./data/raw_data/'):
+    def __init__(self, path=os.path.join('data', 'raw_data')):
         self.path = path
 
         categories_check = ['device_types', 'homes', 'patients']
