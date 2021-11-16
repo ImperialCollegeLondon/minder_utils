@@ -5,7 +5,7 @@ import io
 from pathlib import Path
 import sys
 import os
-from minder_utils.util.util import progress_spinner
+from minder_utils.util.util import progress_spinner, reformat_path
 from minder_utils.configurations import token_path
 import numpy as np
 
@@ -249,7 +249,7 @@ class Downloader:
             If ```False```, the previous data will be overwritten if it exists.
 
         '''
-
+        save_path = reformat_path(save_path)
         p = Path(save_path)
         if not p.exists():
             print('Target directory does not exist, creating a new folder')
@@ -314,7 +314,7 @@ class Downloader:
         
 
         '''
-
+        save_path = reformat_path(save_path)
         if categories is None:
             raise TypeError('Please supply at least one category...')
         if type(categories) == str:

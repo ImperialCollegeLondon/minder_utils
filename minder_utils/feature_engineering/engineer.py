@@ -3,7 +3,7 @@ import numpy as np
 from minder_utils.configurations import feature_config, config
 from minder_utils.util.decorators import load_save
 from minder_utils.feature_engineering.compare_functions import *
-from minder_utils.feature_engineering.TimeFunctions import single_location_delta
+from minder_utils.feature_engineering.TimeFunctions import single_location_delta, rp_single_location_delta
 
 
 class Feature_engineer:
@@ -57,13 +57,13 @@ class Feature_engineer:
         data = data[data.location.isin(config['activity']['sensors'])]
         return data
 
-    def _get_bathroom_delta(self):
+    def _get_bathroom_delta(self, func):
         data = self.formatter.activity_data
         data.time = pd.to_datetime(data.time).dt.date
         results = {}
         for p_id in data.id.unique():
-            p_data = single_location_delta(data[data.id == p_id], 'bathroom1',
-                                           recall_value=feature_config['bathroom_urgent']['recall_value'])
+            p_data = func(data[data.id == p_id], single_location='bathroom1',
+                          recall_value=feature_config['bathroom_urgent']['recall_value'])
             if len(p_data) > 0:
                 results[p_id] = p_data
         results = pd.DataFrame([(i, j, results[i][j].astype(float)) for i in results for j in results[i]],
@@ -84,7 +84,12 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['bathroom_urgent']['save'])
     def bathroom_urgent(self):
-        return self._get_bathroom_delta()
+        return self._get_bathroom_delta(single_location_delta)
+
+    @property
+    @load_save(**feature_config['bathroom_urgent_reverse_percentage']['save'])
+    def bathroom_urgent_reverse_percentage(self):
+        return self._get_bathroom_delta(rp_single_location_delta)
 
     @property
     @load_save(**feature_config['body_temperature']['save'])

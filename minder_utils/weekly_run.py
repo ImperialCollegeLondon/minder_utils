@@ -25,20 +25,20 @@ def run_default(reload_weekly=False, reload_all=False):
 
     '''
     loader = Weekly_dataloader(num_days_extended=5)
-    loader.load_data(reload_weekly, reload_all)
-    unlabelled = np.load(os.path.join(loader.previous_data, 'unlabelled.npy'))
-    X = np.load(os.path.join(loader.previous_data, 'X.npy'))
-    y = np.load(os.path.join(loader.previous_data, 'y.npy'))
-    label_p_ids = np.load(os.path.join(loader.previous_data, 'label_ids.npy'))
+    loader.format('previous')
+    unlabelled = np.load(os.path.join(loader.previous_unlabelled_data, 'activity.npy'))
+    X = np.load(os.path.join(loader.previous_labelled_data, 'activity.npy'))
+    y = np.load(os.path.join(loader.previous_labelled_data, 'label.npy'))
+    label_p_ids = np.load(os.path.join(loader.previous_labelled_data, 'patient_id.npy'))
 
     extractor = Extractor()
     extractor.train(unlabelled, 'cnn')
     # Evaluate models
     evaluate(Classifiers('knn'), extractor.transform(X, 'cnn'), y, label_p_ids, 10)
 
-    weekly_data = np.load(os.path.join(loader.weekly_data, 'unlabelled.npy'))
-    p_ids = np.load(os.path.join(loader.weekly_data, 'label.npy'))
-    dates = np.load(os.path.join(loader.weekly_data, 'patient_id.npy'), allow_pickle=True)
+    weekly_data = np.load(os.path.join(loader.current_data, 'activity.npy'))
+    p_ids = np.load(os.path.join(loader.current_data, 'patient_id.npy'))
+    dates = np.load(os.path.join(loader.current_data, 'dates.npy'), allow_pickle=True)
     X = extractor.transform(X, 'cnn')
     weekly_data = extractor.transform(weekly_data, 'cnn')
 

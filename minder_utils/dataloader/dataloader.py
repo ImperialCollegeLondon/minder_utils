@@ -68,34 +68,6 @@ class Dataloader:
     def __len__(self):
         return int(len(self.labelled_df) / 24)
 
-    def get(self, valid=None):
-        if valid is None:
-            valid = bool(np.random.randint(2))
-        outputs = []
-        # get p ids
-        p_ids = self.true_p_ids if valid else self.false_p_ids
-        idx = np.random.randint(len(p_ids))
-        # get data of patient
-        data = self.labelled_df.loc[:, valid, :].loc[p_ids[idx]]
-        dates = np.unique(data.index.values)
-        # get date of patient
-        date = pd.to_datetime(dates[np.random.randint(len(dates))])
-        # validated data
-        data = data.loc[date, 'Back Door': 'Toaster'].to_numpy().reshape(3, 8, -1)
-        outputs.append(data)
-        for i in range(1, self.max_days):
-            date = date - datetime.timedelta(1)
-            try:
-                outputs.append(
-                    self.activity.loc[(p_ids[idx], date), 'Back Door': 'Toaster'].to_numpy().reshape(3, 8, -1))
-            except KeyError:
-                break
-        outputs = np.array(outputs)
-
-        label = np.array([int(valid)])
-
-        return outputs, label
-
     def get_labelled_data(self, normalise=False):
         # get p ids
         p_ids = self.labelled_df.index.get_level_values(0).unique()

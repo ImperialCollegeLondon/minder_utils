@@ -1,4 +1,4 @@
-from sklearn.feature_selection import RFE
+from sklearn.feature_selection import RFE, RFECV
 from minder_utils.models.feature_selectors import Feature_selector_template
 import numpy as np
 
@@ -48,10 +48,14 @@ class Supervised_wrapper(Feature_selector_template):
     def methods(self):
         return {
             'rfe': 'Recursive feature elimination',
+            'rfecv': 'Recursive feature elimination with cross-validation ',
         }
 
     def rfe(self):
         return RFE(self.estimator, n_features_to_select=self.num_features)
+
+    def rfecv(self):
+        return RFECV(self.estimator, min_features_to_select=self.num_features, cv=5)
 
     def fit(self, X, y):
         if y.ndim > 1:
@@ -60,6 +64,9 @@ class Supervised_wrapper(Feature_selector_template):
 
     def transform(self, X):
         return self.model.transform(X)
+
+    def mask_of_features(self):
+        return self.model.support_
 
     def __name__(self):
         return 'Supervised Filter', self.name

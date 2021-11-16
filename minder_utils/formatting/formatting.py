@@ -16,8 +16,9 @@ class Formatting:
     Patient id, device type, time, value
     """
 
-    def __init__(self, path=os.path.join('data', 'raw_data')):
+    def __init__(self, path=os.path.join('./data', 'raw_data'), add_tihm=None):
         self.path = path
+        self.add_tihm = add_tihm
 
         categories_check = ['device_types', 'homes', 'patients']
         if not np.all([os.path.exists(os.path.join(path, category + '.csv')) for category in categories_check]):
@@ -34,7 +35,8 @@ class Formatting:
     @property
     @load_save(**config['physiological']['save'])
     def physiological_data(self):
-        if config['physiological']['add_tihm']:
+        add_tihm = config['physiological']['add_tihm'] if self.add_tihm is None else self.add_tihm
+        if add_tihm:
             data = self.process_data('physiological')
             tihm_data = format_tihm_data()
             return pd.concat([data, tihm_data['physiological']])
@@ -43,7 +45,8 @@ class Formatting:
     @property
     @load_save(**config['activity']['save'])
     def activity_data(self):
-        if config['activity']['add_tihm']:
+        add_tihm = config['activity']['add_tihm'] if self.add_tihm is None else self.add_tihm
+        if add_tihm:
             data = self.process_data('activity')
             tihm_data = format_tihm_data()
             return pd.concat([data, tihm_data['activity']]).drop_duplicates()
