@@ -7,6 +7,7 @@ from minder_utils.download.download import Downloader
 from minder_utils.util.decorators import load_save
 from minder_utils.formatting.format_tihm import format_tihm_data
 import numpy as np
+from minder_utils.util.util import reformat_path
 
 
 class Formatting:
@@ -17,7 +18,7 @@ class Formatting:
     """
 
     def __init__(self, path=os.path.join('./data', 'raw_data'), add_tihm=None):
-        self.path = path
+        self.path = reformat_path(path)
         self.add_tihm = add_tihm
 
         categories_check = ['device_types', 'homes', 'patients']
