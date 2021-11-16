@@ -4,14 +4,16 @@ from .map_utils import map_numeric_ids, map_url_to_flag
 from importlib.machinery import SourceFileLoader
 from ..download.download import Downloader
 from minder_utils.configurations import data_path
+from minder_utils.util.util import reformat_path
+import os
 
 # import python function from path:
 with open(data_path, 'r') as file_read:
     path = file_read.read()
-    path_path = Path(path + '/validated_date.py')
+    path_path = Path(reformat_path(path + '/validated_date.py'))
 
 
-dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
+dri_data_util_validate = SourceFileLoader('dri_data_util_validate', reformat_path(path + '/validated_date.py')).load_module()
 from dri_data_util_validate import validated_date
 
 
@@ -39,11 +41,12 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
         which contains the labels.
 
     '''
+    save_path = reformat_path(save_path)
     try:
-        df = pd.read_csv(save_path + 'procedure.csv')
+        df = pd.read_csv(os.path.join(save_path, 'procedure.csv'))
     except FileNotFoundError:
         Downloader().export(categories=['procedure'], save_path=save_path)
-        df = pd.read_csv(save_path + 'procedure.csv')
+        df = pd.read_csv(os.path.join(save_path, 'procedure.csv'))
 
     df.notes = df.notes.apply(lambda x: str(x).lower())
     df = df[df.notes.str.contains('urinalysis') | df.notes.str.contains('uti') | df.notes.str.contains(
@@ -93,7 +96,7 @@ def label_array(patient_ids, time, save_path='./data/raw_data/'):
         This is an array containing the labels for UTIs for the given inputs.
 
     """
-
+    save_path = reformat_path(save_path)
     df_dict = {'id': patient_ids, 'time': pd.to_datetime(time, utc=True)}
     unlabelled_df = pd.DataFrame(df_dict)
     unlabelled_df = label_dataframe(unlabelled_df, save_path=save_path)
