@@ -22,14 +22,13 @@ def load_file(file_path, file_name):
 
 def reformat_path(path):
     if isinstance(path, list):
-        return os.path.join(*path)
-    else:
-        if 'mac' in platform.platform().lower():
-            return path
-        elif 'windows' in platform.platform().lower():
-            return path.replace(os.sep, ntpath.sep)
-        elif 'unix' in platform.platform().lower():
-            return path.replace(os.sep, posixpath.sep)
+        path = os.path.join(*path)
+    if 'mac' in platform.platform().lower():
+        return path
+    elif 'windows' in platform.platform().lower():
+        return path.replace(os.sep, ntpath.sep)
+    elif 'unix' in platform.platform().lower():
+        return path.replace(os.sep, posixpath.sep)
 
 
 def save_mkdir(path):
