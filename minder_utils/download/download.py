@@ -5,7 +5,7 @@ import io
 from pathlib import Path
 import sys
 import os
-from minder_utils.util.util import progress_spinner, reformat_path
+from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir
 from minder_utils.configurations import token_path
 import numpy as np
 
@@ -253,7 +253,7 @@ class Downloader:
         p = Path(save_path)
         if not p.exists():
             print('Target directory does not exist, creating a new folder')
-            p.mkdir()
+            save_mkdir(save_path)
         if reload:
             self._export_request(categories=categories, since=since, until=until)
 
