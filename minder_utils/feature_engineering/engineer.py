@@ -57,7 +57,7 @@ class Feature_engineer:
         data = data[data.location.isin(config['activity']['sensors'])]
         return data
 
-    def _get_bathroom_delta(self, func):
+    def _get_bathroom_delta(self, func, name):
         data = self.formatter.activity_data
         data.time = pd.to_datetime(data.time).dt.date
         results = {}
@@ -68,7 +68,7 @@ class Feature_engineer:
                 results[p_id] = p_data
         results = pd.DataFrame([(i, j, results[i][j].astype(float)) for i in results for j in results[i]],
                                columns=['id', 'time', 'value'])
-        results['location'] = 'bathroom_urgent'
+        results['location'] = name
         return results
 
     @property
@@ -84,12 +84,12 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['bathroom_urgent']['save'])
     def bathroom_urgent(self):
-        return self._get_bathroom_delta(single_location_delta)
+        return self._get_bathroom_delta(single_location_delta, 'bathroom_urgent')
 
     @property
     @load_save(**feature_config['bathroom_urgent_reverse_percentage']['save'])
     def bathroom_urgent_reverse_percentage(self):
-        return self._get_bathroom_delta(rp_single_location_delta)
+        return self._get_bathroom_delta(rp_single_location_delta, 'bathroom_urgent_reverse_percentage')
 
     @property
     @load_save(**feature_config['body_temperature']['save'])
