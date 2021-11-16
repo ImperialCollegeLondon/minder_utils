@@ -10,12 +10,9 @@ with open(data_path, 'r') as file_read:
     path = file_read.read()
     path_path = Path(path + '/validated_date.py')
 
-if path_path.exists():
-    dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
-    from dri_data_util_validate import validated_date
-else:
-    print('Please add a mappings folder file path.')
-    pass
+
+dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
+from dri_data_util_validate import validated_date
 
 
 def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
