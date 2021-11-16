@@ -87,7 +87,10 @@ def single_location_delta(input_df, single_location,
     # making sure that the recall value is not more than the number of sensor triggers before the
     # first single_location sensor trigger
     if len(single_location_indices) ==  0:
-        return {}
+        
+        if return_as_list: return [], []
+        else: return {}
+
     single_location_indices = single_location_indices[np.argmax(recall_value < single_location_indices):]
 
     # indices of the sensor triggers that we need in our calculations
