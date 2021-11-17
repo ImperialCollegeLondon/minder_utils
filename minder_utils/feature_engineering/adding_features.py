@@ -33,6 +33,7 @@ def get_bathroom_delta(data, func, name):
             results[p_id] = p_data
     results = pd.DataFrame([(i, j, results[i][j].astype(float)) for i in results for j in results[i]],
                            columns=['id', 'time', 'value'])
+    results['week'] = compute_week_number(results.time)
     results['location'] = name
     return results
 
