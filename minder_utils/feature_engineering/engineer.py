@@ -1,6 +1,7 @@
 import numpy as np
 from minder_utils.util.decorators import load_save
 from minder_utils.feature_engineering.adding_features import *
+from .calculation import calculate_entropy
 from minder_utils.feature_engineering.TimeFunctions import single_location_delta, rp_single_location_delta
 
 
