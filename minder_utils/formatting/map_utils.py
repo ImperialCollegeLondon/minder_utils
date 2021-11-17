@@ -44,7 +44,7 @@ def map_random_ids(p_id, df=False):
     with open(path_dir, 'r') as file_read:
         path = file_read.read()
 
-    json_file_path = os.path.join(path, "/mappings.json")
+    json_file_path = os.path.join(path, "mappings.json")
     with open(json_file_path, 'r') as j:
         contents = json.loads(j.read())
     if df:
