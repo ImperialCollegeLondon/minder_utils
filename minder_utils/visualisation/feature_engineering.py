@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from minder_utils.formatting.label import label_by_week
 from minder_utils.feature_engineering import Feature_engineer
-from minder_utils.feature_engineering.compare_functions import *
+from minder_utils.feature_engineering.calculation import *
 from minder_utils.util.decorators import formatting_plots
 from minder_utils.formatting import Formatting
 
