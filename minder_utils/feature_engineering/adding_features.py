@@ -27,7 +27,7 @@ def get_bathroom_delta(data, func, name):
     data.time = pd.to_datetime(data.time).dt.date
     results = {}
     for p_id in data.id.unique():
-        p_data = func(data[data.id == p_id], single_location='bathroom1',
+        p_data = func(data[data.id == p_id].copy(), single_location='bathroom1',
                       recall_value=feature_config['bathroom_urgent']['recall_value'])
         if len(p_data) > 0:
             results[p_id] = p_data

@@ -83,8 +83,14 @@ def calculate_entropy(df: pd.DataFrame, sensors: list) -> pd.DataFrame:
     # Calculate the probabilities
     df['probabilities'] = df['value'] / df['summation']
 
+    # entropy function used in groupby
+    def cal_entropy_groupby(x):
+        x = cal_entropy(list(x))
+        return x
+    
     # Calculate the entropy
-    df = df.groupby(['id', 'week'])['probabilities'].apply(cal_entropy).reset_index()
+    df = df.groupby(by=['id', 'week'])['probabilities'].apply(cal_entropy_groupby).reset_index()
+
     df.columns = ['id', 'week', 'value']
     df['location'] = 'entropy'
     return df
