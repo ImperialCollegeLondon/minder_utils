@@ -166,7 +166,7 @@ def rp_single_location_delta(input_df, single_location, baseline_length_days = 7
     ---------
 
     - input_df: pandas dataframe:
-        This is a dataframe that contains columns relating to the subject, time and location of sensor trigger.
+        This is a dataframe that contains columns relating to the time and location of sensor trigger.
 
     - single_location: string:
         This is the location value that you wish to calculate the delta to.

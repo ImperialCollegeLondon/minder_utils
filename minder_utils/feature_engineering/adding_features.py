@@ -24,6 +24,31 @@ def get_body_temperature(data):
 
 
 def get_bathroom_delta(data, func, name):
+
+    def func_group_by(x):
+        x = func(input_df=x, single_location='bathroom1',
+                 recall_value=feature_config['bathroom_urgent']['recall_value'])
+        return x
+ 
+    out = data.groupby(by=['id'])[['time', 'location']].apply(
+                                                func_group_by).reset_index()
+    out.columns = ['id','value']
+
+    out_rp = (pd.DataFrame(out.value.values.tolist())
+             .stack()
+             .reset_index(level=1)
+             .rename(columns={0:'val','level_1':'key'}))
+
+    out = out.drop('value', 1).join(out_rp).reset_index(drop=True).dropna()
+    out.columns = ['id', 'time', 'value']
+    out['week'] = compute_week_number(out.time)
+    out['location'] = name
+
+    return out
+
+
+
+def get_bathroom_delta_v1(data, func, name):
     data.time = pd.to_datetime(data.time).dt.date
     results = {}
     for p_id in data.id.unique():
