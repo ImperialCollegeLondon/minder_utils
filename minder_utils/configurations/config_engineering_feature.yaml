@@ -25,7 +25,7 @@ body_temperature:
   save: *save_config
 
 entropy:
-  sensors: ['bathroom1', 'study', 'back door', 'front door']
+  sensors: 'all'
   save: *save_config
 
 raw_activity:

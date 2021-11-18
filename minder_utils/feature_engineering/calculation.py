@@ -1,5 +1,6 @@
 from scipy.stats import ks_2samp
 import pandas as pd
+from typing import Union
 from scipy.stats import entropy as cal_entropy
 
 
@@ -56,7 +57,7 @@ def threshold_compare(df: pd.DataFrame, func='>', threshold=36) -> pd.DataFrame:
         return df[df.value < threshold]
 
 
-def calculate_entropy(df: pd.DataFrame, sensors: list) -> pd.DataFrame:
+def calculate_entropy(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFrame:
     '''
     Return a dataframe with research id, week id, and entropy value
     based on list of sensors given. If resulting activity count of
@@ -65,14 +66,20 @@ def calculate_entropy(df: pd.DataFrame, sensors: list) -> pd.DataFrame:
 
     Args:
         df: Dataframe, contains at least 4 columns ['id', 'week', 'location', 'value']
-        sensors: List, the
+        sensors: List or string, if list,  will calculate the entropy based on the list
+            of sensors; if string, only accept 'all', which means use all sensors.
 
     Returns:
 
     '''
     assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
+
     # Filter the sensors
-    df = df[df.location.isin(sensors)]
+    if isinstance(sensors, list):
+        df = df[df.location.isin(sensors)]
+    elif isinstance(sensors, str):
+        assert sensors == 'all', 'only accept all as a string input for sensors'
+
     # Sum the the number of readings of sensors weekly
     sensor_summation = df.groupby(['id', 'week'])['value'].sum().reset_index()
     sensor_summation.columns = ['id', 'week', 'summation']
