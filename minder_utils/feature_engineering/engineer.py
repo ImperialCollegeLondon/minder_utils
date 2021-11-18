@@ -75,8 +75,7 @@ class Feature_engineer:
                                 values='value').reset_index().replace(np.nan, 0)
 
     @property
-    @load_save(**feature_config['outlier_freq']['save'])
-    def outlier_freq(self):
-        
-        return get_outlier_freq(self.formatter.activity_data, anomaly_detection_freq, 'outlier_freq')
+    @load_save(**feature_config['outlier_score_activity']['save'])
+    def outlier_score_activity(self):
+        return get_outlier_freq(self.formatter.activity_data, anomaly_detection_freq, 'outlier_score_activity')
 

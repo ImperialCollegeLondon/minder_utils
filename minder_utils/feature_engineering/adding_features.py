@@ -77,10 +77,10 @@ def get_outlier_freq(data, func, name):
     data.time = pd.to_datetime(data.time).dt.date
 
     def func_group_by(x):
-        x = func(x, outlier_class=feature_config['outlier_freq']['outlier_class'],
-                    tp_for_outlier_hours=feature_config['outlier_freq']['tp_for_outlier_hours'],
-                    baseline_length_days=feature_config['outlier_freq']['baseline_length_days'],
-                    baseline_offset_days=feature_config['outlier_freq']['baseline_offset_days'])
+        x = func(x, outlier_class=feature_config['outlier_score_activity']['outlier_class'],
+                    tp_for_outlier_hours=feature_config['outlier_score_activity']['tp_for_outlier_hours'],
+                    baseline_length_days=feature_config['outlier_score_activity']['baseline_length_days'],
+                    baseline_offset_days=feature_config['outlier_score_activity']['baseline_offset_days'])
         return x
     
     outlier_data = data.groupby(by=['id'])[['time', 'location']].apply(
