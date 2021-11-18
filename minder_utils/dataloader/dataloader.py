@@ -120,6 +120,12 @@ class Dataloader:
         return activity_data, physiological_data, environmental_data, patient_ids, uti_labels
 
     def get_unlabelled_data(self, normalise=False, date=None):
+        # May need to change the for loop to dataframe operations
+        # df = self.activity.reset_index().set_index(['id', 'Date'])
+        # phy_df = self.physiological.reset_index()
+        # phy_df = phy_df.pivot_table(index=['id', 'time'], columns='location',
+        #                             values='value').reset_index().rename(columns={'time': 'Date'})
+        # indices = df.reset_index()[['id', 'Date']].drop_duplicates()
         # get p ids
         df = self.activity.reset_index().set_index(['id', 'Date'])
         if date is not None:

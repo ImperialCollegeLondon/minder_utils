@@ -202,7 +202,7 @@ class Downloader:
 
         return job_id_dict
 
-    def export(self, since=None, until=None, reload=True, categories='all', save_path='./data/raw_data/', append = True):
+    def export(self, since=None, until=None, reload=True, categories='all', save_path='./data/raw_data/', append=True):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -283,8 +283,9 @@ class Downloader:
                 print('Fail, Response code {}'.format(content.status_code))
             else:
                 mode = 'a' if append else 'w'
-                header = (not Path(os.path.join(save_path, record['type'] + '.csv')).exists()) or mode == 'w' 
-                pd.read_csv(io.StringIO(content.text)).to_csv(os.path.join(save_path, record['type'] + '.csv'), mode=mode,
+                header = not Path(os.path.join(save_path, record['type'] + '.csv')).exists() or mode == 'w'
+                pd.read_csv(io.StringIO(content.text)).to_csv(os.path.join(save_path, record['type'] + '.csv'),
+                                                              mode=mode,
                                                               header=header)
 
                 print('Success')
@@ -339,11 +340,11 @@ class Downloader:
                     since = pd.to_datetime(data[['start_date']].iloc[0, 0])
                     # if the earliest date is after until, then we error
                     if self.convert_to_ISO(since) > self.convert_to_ISO(until):
-                        raise TypeError('Please check your inputs. For {} we found that you tried refreshing'\
-                            'to a date earlier than the earliest date in the file.'.format(category))
+                        raise TypeError('Please check your inputs. For {} we found that you tried refreshing' \
+                                        'to a date earlier than the earliest date in the file.'.format(category))
                     else:
                         mode_dict[category] = 'w'
-                else: 
+                else:
                     mode_dict[category] = 'a'
 
             export_dict[category] = (since, until)
@@ -362,13 +363,13 @@ class Downloader:
                     break
 
             if not job_found:
-                raise TypeError('Uh-oh! Something seems to have gone wrong.'\
-                    'Please check the inputs to the function and try again.')
+                raise TypeError('Uh-oh! Something seems to have gone wrong.' \
+                                'Please check the inputs to the function and try again.')
 
             for n_output, data_chunk in enumerate(output):
                 content = requests.get(data_chunk['url'], headers=self.params)
                 sys.stdout.write('\r')
-                sys.stdout.write("For {}, exporting {}/{}".format(category, n_output+1,len(output)))
+                sys.stdout.write("For {}, exporting {}/{}".format(category, n_output + 1, len(output)))
                 sys.stdout.flush()
                 if content.status_code != 200:
                     sys.stdout.write('\n')
@@ -378,10 +379,11 @@ class Downloader:
                     sys.stdout.flush()
                 else:
                     current_data = pd.read_csv(io.StringIO(content.text))
-                    header = (not Path(save_path + category + '.csv').exists()) or mode_dict[category]  == 'w'
+                    header = (not Path(save_path + category + '.csv').exists()) or mode_dict[category] == 'w'
                     # checking whether the first line is a duplicate of the end of the previous file
                     if np.all(current_data[['start_date', 'id']].iloc[0, :] == last_rows[category]):
-                        current_data.iloc[1:, :].reset_index(drop=True).to_csv(save_path + category + '.csv', mode=mode_dict[category],
+                        current_data.iloc[1:, :].reset_index(drop=True).to_csv(save_path + category + '.csv',
+                                                                               mode=mode_dict[category],
                                                                                header=header)
                     else:
                         current_data.to_csv(save_path + category + '.csv', mode=mode_dict[category],

@@ -25,7 +25,7 @@ def run_default(reload_weekly=False, reload_all=False):
 
     '''
     loader = Weekly_dataloader(num_days_extended=5)
-    loader.format('previous')
+    loader.refresh()
     unlabelled = np.load(os.path.join(loader.previous_unlabelled_data, 'activity.npy'))
     X = np.load(os.path.join(loader.previous_labelled_data, 'activity.npy'))
     y = np.load(os.path.join(loader.previous_labelled_data, 'label.npy'))

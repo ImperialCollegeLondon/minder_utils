@@ -159,6 +159,8 @@ class Weekly_dataloader:
             if filename not in ['device_types.csv', 'homes.csv', 'patients.csv']:
                 previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename))
                 current_data = pd.read_csv(os.path.join(self.current_csv_data, filename))
+                current_data = current_data[current_data.start_date != 'start_date']
+                previous_data = previous_data[previous_data.start_date != 'start_date']
 
                 current_data.start_date = pd.to_datetime(current_data.start_date)
                 current_mask = current_data.start_date.dt.date < date_dict['gap']['until']
