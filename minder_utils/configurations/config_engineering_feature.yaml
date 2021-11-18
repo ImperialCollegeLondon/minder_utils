@@ -34,3 +34,10 @@ raw_activity:
 activity:
   features: ['raw_activity', 'bathroom_night', 'bathroom_daytime', 'body_temperature', 'entropy']
   save: *save_config
+
+outlier_freq:
+  outlier_class: 'zscore'
+  tp_for_outlier_hours: 3
+  baseline_length_days: 7
+  baseline_offset_days: 0
+  save: *save_config
