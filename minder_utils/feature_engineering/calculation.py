@@ -1,8 +1,12 @@
 from scipy.stats import ks_2samp
 import pandas as pd
+import numpy as np
 from typing import Union
 from scipy.stats import entropy as cal_entropy
-
+from minder_utils.models.outlier_detection import ZScore
+from sklearn.preprocessing import StandardScaler
+from .util import frequencies_tp
+from sklearn.ensemble import IsolationForest
 
 def weekly_compare(df: pd.DataFrame, func, num_previous_week=1) -> dict:
     '''
@@ -105,3 +109,91 @@ def calculate_entropy(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFra
 
 def kolmogorov_smirnov(freq1, freq2):
     return ks_2samp(freq1, freq2)
+
+
+
+
+
+def anomaly_detection_freq(input_df, outlier_class, tp_for_outlier_hours = 3, baseline_length_days = 7,
+                           baseline_offset_days = 0 ):
+    '''
+    Given an outlier function, and an input, this function calculates an outlier score
+    for every point based on a window of ```baseline_length_days``` days. Because this
+    function fits the class for every new point, using a complicated outlier detection
+    class is not possible. Please consider using a light class.
+    
+    Arguments
+    ---------
+
+    - input_df: pandas dataframe:
+        This dataframe must have the columns ```'time'``` and ```'location'```. This is the
+        data to calculate outlier scores on.
+
+    - outlier_class: class or string
+        This is the class that will be used to calculate the outlier scores. This class must have
+        the functions ```.fit()``` to fit the class and ```.decision_function()``` to produce the
+        outlier scores. Inputs to these functions will always be 2d. The input to ```.fit()``` will
+        be an array of shape ```(N_t, N_f)``` where ```N_t``` is the number of points that fit in the 
+        ```baseline_length_days```. Each point will represent the frequencies of location visits for 
+        a given ```tp_for_outlier_hours``` hour time period. The input to ```.decision_function()```
+        will be an array of shape ```(1, N_f)``` as it will be a single point.
+        If string, make sure it is one of ['zscore', 'isolation_forest']
+
+    - tp_for_outlier_hours: int:
+        This is the number of hours to aggregate the frequency data by. This is the ```tp``` 
+        input to the function ```minder_utils.feature_engineering.util.frequencies_tp```.
+
+    - baseline_length_days: integer:
+        This is the length of the baseline in days that will be used. This value is used when finding
+        the ```baseline_length_days``` complete days of the frequency data to use as a baseline.
+    
+    - baseline_offset_days: integer:
+        This is the offset to the baseline period. ```0``` corresponds to a time period ending the morning of the
+        current date being calculated on.
+
+
+    Returns
+    ---------
+    '''
+
+    
+    frequency_df, locations = frequencies_tp(input_df, tp = tp_for_outlier_hours, return_locations=True)
+    X = frequency_df[locations].values
+    
+    scaler = StandardScaler()
+    X_s = scaler.fit_transform(X)
+
+    out = np.zeros(frequency_df.shape[0])
+
+    dates = frequency_df['time'].values
+
+    baseline_length_tps = int(np.ceil(24/tp_for_outlier_hours * baseline_length_days))
+    baseline_offset_tps = int(np.ceil(24/tp_for_outlier_hours * baseline_offset_days))
+
+    if outlier_class == 'zscore':
+        outlier_class = ZScore()
+    elif outlier_class == 'isolation_forest':
+        outlier_class = IsolationForest()
+
+
+    for nd, date in enumerate(dates):
+        index_baseline_end = np.where(dates <= date)[0][-1]
+        
+        index_baseline_end = index_baseline_end - baseline_offset_tps
+        index_baseline_start = index_baseline_end - baseline_length_tps
+
+        if index_baseline_start < 0:
+            out[nd] = np.NAN
+
+        else:
+            X_s_input = X_s[index_baseline_start:index_baseline_end]
+            X_s_current = X_s[nd].reshape(1, -1)
+
+            outlier_class.fit(X_s_input)
+            outlier_scores = outlier_class.decision_function(X_s_current)
+            out[nd] = outlier_scores
+
+
+    frequency_df['outlier_score'] = out
+
+    return frequency_df

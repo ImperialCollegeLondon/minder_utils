@@ -18,6 +18,7 @@ setup(
     install_requires=["numpy==1.19.5",
                         "pandas==1.1.5",
                         "requests",
-                        "argparse"
+                        "argparse",
+                        "pyyaml"
     ]
 )

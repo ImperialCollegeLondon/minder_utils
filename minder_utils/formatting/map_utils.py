@@ -44,12 +44,29 @@ def map_random_ids(p_id, df=False):
     with open(path_dir, 'r') as file_read:
         path = file_read.read()
 
-    json_file_path = os.path.join(path, "mappings.json")
-    with open(json_file_path, 'r') as j:
-        contents = json.loads(j.read())
+    cvssp_research_file_path = os.path.join(path, "mappings.json")
+    with open(cvssp_research_file_path, 'r') as j:
+        cvssp_research = json.loads(j.read())
+
+    random_research_file_path = os.path.join(path, "random_id_to_research_id.json")
+    with open(random_research_file_path, 'r') as j:
+        random_research = json.loads(j.read())
+
+    def map_ids(p_id):
+        if p_id in cvssp_research:
+            p_id_22 = cvssp_research[p_id]
+        else:
+            p_id_22 = p_id
+        if p_id_22 in random_research:
+            p_id_out = random_research[p_id_22]
+        else:
+            p_id_out = p_id_22
+        
+        return p_id_out
+
     if df:
-        return p_id.map(contents)
-    return contents[p_id]
+        return p_id.apply(map_ids)
+    return map_ids[p_id]
 
 
 def map_numeric_ids(p_id, df=False):
