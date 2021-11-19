@@ -153,7 +153,7 @@ def rp_single_location_delta(input_df, single_location, baseline_length_days = 7
     '''
     This function takes the ```input_df``` and calculates the reverse percentage time delta between the ```single_location``` location time
     and the time of the ```recall_value``` number of locations immediately before the ```single_location```. The baseline
-    for the rever percentage calculation is defined by ```baseline_length_days``` and ```baseline_offset_days```. 
+    for the reverse percentage calculation is defined by ```baseline_length_days``` and ```baseline_offset_days```. 
 
     For example:
     With ```baseline_length_days = 7``` and ```baseline_offset_days = 1```, the rp deltas on the day
@@ -161,6 +161,9 @@ def rp_single_location_delta(input_df, single_location, baseline_length_days = 7
     ```pd.Timestamp('2021-06-21 00:00:00')``` to ```pd.Timestamp('2021-06-28 00:00:00')```.
 
     This does not separate on subject. Please pass data from a single subject into this function.
+
+    NOTE: The reverse percentage is calculated based on all of the deltas coming into a location!
+    This means that the delta is agnostic to the "from" location.
 
     Arguments
     ---------
