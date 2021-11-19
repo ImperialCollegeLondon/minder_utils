@@ -2,7 +2,8 @@
 <h1>Getting Started</h1>
 To use the package, please:
 
-1. access RDS to download the necessary files (mapping.json and validated_date.py)
+1. access RDS to download the necessary files including mapping.json, validated_date.py
+    and random_id_to_research_id.json (optional, for TIHM data).
 
 2. acess the research portal to get the access token
 
