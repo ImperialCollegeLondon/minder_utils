@@ -24,20 +24,19 @@ def get_body_temperature(data):
 
 
 def get_bathroom_delta(data, func, name):
-
     def func_group_by(x):
         x = func(input_df=x, single_location='bathroom1',
                  recall_value=feature_config['bathroom_urgent']['recall_value'])
         return x
- 
+
     out = data.groupby(by=['id'])[['time', 'location']].apply(
-                                                func_group_by).reset_index()
-    out.columns = ['id','value']
+        func_group_by).reset_index()
+    out.columns = ['id', 'value']
 
     out_rp = (pd.DataFrame(out.value.values.tolist())
-             .stack()
-             .reset_index(level=1)
-             .rename(columns={0:'val','level_1':'key'}))
+              .stack()
+              .reset_index(level=1)
+              .rename(columns={0: 'val', 'level_1': 'key'}))
 
     out = out.drop('value', 1).join(out_rp).reset_index(drop=True).dropna()
     out.columns = ['id', 'time', 'value']
@@ -45,7 +44,6 @@ def get_bathroom_delta(data, func, name):
     out['location'] = name
 
     return out
-
 
 
 def get_bathroom_delta_v1(data, func, name):
@@ -71,26 +69,24 @@ def get_weekly_activity_data(data):
     return data
 
 
-
 def get_outlier_freq(data, func, name):
-
     data.time = pd.to_datetime(data.time).dt.date
 
     def func_group_by(x):
         x = func(x, outlier_class=feature_config['outlier_score_activity']['outlier_class'],
-                    tp_for_outlier_hours=feature_config['outlier_score_activity']['tp_for_outlier_hours'],
-                    baseline_length_days=feature_config['outlier_score_activity']['baseline_length_days'],
-                    baseline_offset_days=feature_config['outlier_score_activity']['baseline_offset_days'])
+                 tp_for_outlier_hours=feature_config['outlier_score_activity']['tp_for_outlier_hours'],
+                 baseline_length_days=feature_config['outlier_score_activity']['baseline_length_days'],
+                 baseline_offset_days=feature_config['outlier_score_activity']['baseline_offset_days'])
         return x
-    
-    outlier_data = data.groupby(by=['id'])[['time', 'location']].apply(
-                                func_group_by).reset_index()[['id', 'time', 'outlier_score']]
 
-    outlier_data = outlier_data.groupby(['id', pd.Grouper(key = 'time', freq='1d', 
-                                origin = 'start_day', 
-                                dropna = False)]).mean().reset_index()
-    
+    outlier_data = data.groupby(by=['id'])[['time', 'location']].apply(
+        func_group_by).reset_index()[['id', 'time', 'outlier_score']]
+
+    outlier_data = outlier_data.groupby(['id', pd.Grouper(key='time', freq='1d',
+                                                          origin='start_day',
+                                                          dropna=False)]).mean().reset_index()
+
     outlier_data['week'] = compute_week_number(outlier_data.time)
     outlier_data['location'] = name
-    
+
     return outlier_data
