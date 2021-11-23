@@ -1,7 +1,7 @@
 import numpy as np
 from minder_utils.util.decorators import load_save
 from .adding_features import *
-from .calculation import calculate_entropy, anomaly_detection_freq
+from .calculation import calculate_entropy, calculate_entropy_rate, anomaly_detection_freq
 from .TimeFunctions import single_location_delta, rp_single_location_delta
 from .util import week_to_date
 
@@ -58,6 +58,11 @@ class Feature_engineer:
     @load_save(**feature_config['entropy']['save'])
     def entropy(self):
         return calculate_entropy(self.raw_activity, feature_config['entropy']['sensors'])
+
+    @property
+    @load_save(**feature_config['entropy_rate']['save'])
+    def entropy_rate(self):
+        return calculate_entropy_rate(self.formatter.activity_data, feature_config['entropy_rate']['sensors'])
 
     @property
     @load_save(**feature_config['raw_activity']['save'])

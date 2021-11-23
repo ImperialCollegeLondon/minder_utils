@@ -28,6 +28,10 @@ entropy:
   sensors: 'all'
   save: *save_config
 
+entropy_rate:
+  sensors: 'all'
+  save: *save_config
+
 raw_activity:
   save: *save_config
 

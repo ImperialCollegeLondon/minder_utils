@@ -5,7 +5,7 @@ from typing import Union
 from scipy.stats import entropy as cal_entropy
 from minder_utils.models.outlier_detection import ZScore
 from sklearn.preprocessing import StandardScaler
-from .util import frequencies_tp
+from .util import frequencies_tp, compute_week_number
 from sklearn.ensemble import IsolationForest
 
 def weekly_compare(df: pd.DataFrame, func, num_previous_week=1) -> dict:
@@ -105,6 +105,99 @@ def calculate_entropy(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFra
     df.columns = ['id', 'week', 'value']
     df['location'] = 'entropy'
     return df
+
+
+
+def entropy_rate_from_p_matrix(p_matrix, normalised = True):
+
+    a_matrix = (p_matrix > 0.0).astype(int)
+
+    eig_val, eig_vec = np.linalg.eig(p_matrix.T)
+    eig_val_a, _ = np.linalg.eig(a_matrix.T)
+    
+    max_eig_val_a = np.max(eig_val_a)
+    
+    stationary_dist = eig_vec[:, np.argmax(np.abs(eig_val - 1) < 1e-10)]
+    stationary_dist = stationary_dist/np.sum(stationary_dist)
+
+    if (max_eig_val_a != 1.) & (max_eig_val_a != 0.):
+
+        h = -np.sum(stationary_dist * np.sum(p_matrix * np.log(p_matrix, 
+                                                            out=np.zeros_like(p_matrix), 
+                                                            where=(p_matrix != 0)), axis = 1))/np.log(max_eig_val_a)
+        
+
+    else:
+        h = -np.sum(stationary_dist * np.sum(p_matrix * np.log(p_matrix, 
+                                                            out=np.zeros_like(p_matrix), 
+                                                            where=(p_matrix != 0)), axis = 1))
+
+    return np.abs(h) 
+
+
+
+def entropy_rate_from_sequence(sequence):
+
+
+    sequence_df = pd.DataFrame()
+
+    sequence_df['from'] = sequence.iloc[:-1].values
+    sequence_df['to'] = sequence.iloc[1:].values
+    sequence_df['count'] = 1
+
+    pm = sequence_df.groupby(by=['from','to']).count().reset_index()
+    pm_total = pm.groupby(by='from')['count'].sum().to_dict()
+    pm['total'] = pm['from'].map(pm_total)
+
+    def calc_prob(x):
+        return x['count']/x['total']
+
+    if pm.shape[0] < 2:
+        return np.nan
+
+    pm['probability'] = pm.apply(calc_prob, axis = 1)
+
+    
+
+    unique_locations = list(pm[['from', 'to']].values.ravel())
+    
+    p_matrix = np.zeros((len(unique_locations),len(unique_locations)))
+
+    for (from_loc, to_loc, probability_loc) in pm[['from', 'to', 'probability']].values:
+        
+
+        i = unique_locations.index(from_loc)
+        j = unique_locations.index(to_loc)
+
+
+        p_matrix[i,j] = probability_loc
+    
+    return entropy_rate_from_p_matrix(p_matrix)
+
+
+
+
+def calculate_entropy_rate(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFrame:
+
+
+    assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
+
+    # Filter the sensors
+    if isinstance(sensors, list):
+        df = df[df.location.isin(sensors)]
+    elif isinstance(sensors, str):
+        assert sensors == 'all', 'only accept all as a string input for sensors'
+
+
+    df['week'] = compute_week_number(df['time'])
+
+
+    df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence).reset_index()
+    df.columns = ['id', 'week', 'value']
+    df['location'] = 'entropy'
+
+    return df
+
 
 
 def kolmogorov_smirnov(freq1, freq2):
