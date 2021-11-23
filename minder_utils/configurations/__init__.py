@@ -16,3 +16,6 @@ tihm_data_path = os.path.join(os.path.dirname(__file__), 'confidential', 'tihm_d
 config = yaml.load(open(os.path.join(os.path.dirname(__file__), "config_dri.yaml"), "r"), Loader=yaml.FullLoader)
 feature_config = yaml.load(open(os.path.join(os.path.dirname(__file__), "config_engineering_feature.yaml"), "r")
                            , Loader=yaml.FullLoader)
+feature_extractor_config = yaml.load(
+    open(os.path.join(os.path.dirname(__file__), "config_feature_extractors.yaml"), "r")
+    , Loader=yaml.FullLoader)

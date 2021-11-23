@@ -1,9 +1,9 @@
 from sklearn.feature_selection import RFE, RFECV
-from minder_utils.models.feature_selectors import Feature_selector_template
+from minder_utils.models.utils import Feature_selector
 import numpy as np
 
 
-class Supervised_wrapper(Feature_selector_template):
+class Supervised_wrapper(Feature_selector):
     '''
     This class provide a set of supervised feature selection methods.
     Particularly, it contains a set of filter methods, which will perform SEPARATELY with the classifier.

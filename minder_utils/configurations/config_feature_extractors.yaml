@@ -1,0 +1,73 @@
+name:
+  - &architecture
+      input_dim: 336
+      latent_dim: 100
+      out_dim: 2
+  - &train
+      epochs: 50
+      batch_size: 128
+      verbose: True
+      retrain: False
+  - &optimiser
+      lr: 0.01
+      weight_decay: 0.01
+  - &early_stop
+      enable: True
+      patience: 20
+      verbose: False
+      delta: 0
+      path: './ckpt/feature_extractors'
+      save_model: True
+  - &test
+      save: True
+      save_path: './data/extracted_features'
+
+
+simclr:
+  model:
+    base_model: 'basic'
+    << : *architecture
+  optimiser:
+    <<: *optimiser
+  train:
+    <<: *train
+  test: *test
+  early_stop:
+    <<: *early_stop
+  loss:
+    temperature: 0.5
+    use_cosine_similarity: True
+
+
+
+partial_order:
+  model:
+    base_model: 'basic'
+    << : *architecture
+  optimiser:
+    <<: *optimiser
+  train:
+    <<: *train
+  test:
+    <<: *test
+  early_stop:
+    <<: *early_stop
+  loss:
+    delta: 0.5
+    use_cosine_similarity: True
+
+
+autoencoder:
+  model:
+    base_model: 'conv'
+    << : *architecture
+  optimiser:
+    <<: *optimiser
+  train:
+    <<: *train
+  test:
+    <<: *test
+  early_stop:
+    <<: *early_stop
+  loss:
+    func: 'bce'
