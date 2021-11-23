@@ -17,8 +17,7 @@ class Configuration:
     def partial_order(self):
         return {
             'model': {'base_model': 'basic',
-                      'out_dim': self.out_dim,
-                      'input_dim': self.input_dim},
+                      'out_dim': self.out_dim},
             'epochs': 500,
             'eval_every_n_epochs': 1,
             'loss': {'delta': 0.5,
@@ -32,4 +31,5 @@ class Configuration:
                       'out_dim': self.out_dim,
                       'input_dim': self.input_dim},
             'epochs': 500,
+            'loss': 'bce',
         }

@@ -33,7 +33,12 @@ raw_activity:
 
 activity:
   features: ['raw_activity', 'bathroom_night', 'bathroom_daytime', 'body_temperature', 'entropy']
-  save: *save_config
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: True
+
 
 outlier_score_activity:
   outlier_class: 'zscore'

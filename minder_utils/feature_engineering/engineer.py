@@ -1,8 +1,9 @@
 import numpy as np
 from minder_utils.util.decorators import load_save
-from minder_utils.feature_engineering.adding_features import *
+from .adding_features import *
 from .calculation import calculate_entropy, anomaly_detection_freq
-from minder_utils.feature_engineering.TimeFunctions import single_location_delta, rp_single_location_delta
+from .TimeFunctions import single_location_delta, rp_single_location_delta
+from .util import week_to_date
 
 
 class Feature_engineer:
@@ -71,8 +72,10 @@ class Feature_engineer:
             data.append(getattr(self, feat)[['id', 'week', 'location', 'value']])
         data = pd.concat(data)
         data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
-        return data.pivot_table(index=['id', 'week'], columns='location',
+        data = data.pivot_table(index=['id', 'week'], columns='location',
                                 values='value').reset_index().replace(np.nan, 0)
+        data['time'] = week_to_date(data['week'])
+        return data
 
     @property
     @load_save(**feature_config['outlier_score_activity']['save'])
