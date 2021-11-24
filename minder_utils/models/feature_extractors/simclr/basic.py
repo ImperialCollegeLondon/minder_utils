@@ -38,7 +38,7 @@ class Encoder(nn.Module):
 
 class ResNetSimCLR(nn.Module):
 
-    def __init__(self, base_model, out_dim):
+    def __init__(self, base_model, out_dim, **kwargs):
         super(ResNetSimCLR, self).__init__()
         self.resnet_dict = {"resnet18": models.resnet18(pretrained=False),
                             "resnet50": models.resnet50(pretrained=False),

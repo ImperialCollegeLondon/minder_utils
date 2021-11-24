@@ -1,4 +1,4 @@
-from minder_utils.models.feature_selectors import Feature_selector_template
+from minder_utils.models.utils import Feature_selector
 from minder_utils.models.utils import EarlyStopping
 import torch.nn.functional as F
 import torch
@@ -7,7 +7,7 @@ from torch import nn
 import numpy as np
 
 
-class Intrinsic_selector(Feature_selector_template):
+class Intrinsic_selector(Feature_selector):
     '''
     This class provide a set of supervised feature selection methods.
     Particularly, it contains a set of intrinsic methods, which will perform automatic feature selection
