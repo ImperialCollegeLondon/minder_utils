@@ -109,6 +109,34 @@ def calculate_entropy(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFra
 
 
 def entropy_rate_from_p_matrix(p_matrix, normalised = True):
+    '''
+    This function allows the user to calculate the entropy rate of
+    a stochastic matrix.
+    
+    
+    
+    Arguments
+    ---------
+    
+    - p_matrix: numpy.array: 
+        This is the matrix that will be used to calculate the entropy rate.
+        The rows of this matrix should sum to 1.
+    
+    - normalised: bool, optional:
+        This dictates whether the entropy rate will be normalised or not. 
+        Defaults to ```True```.
+    
+    
+    
+    Returns
+    --------
+    
+    - h: float : 
+        The entropy value, either between 0 and 1 if ```normalised=True``` or
+        as a raw value.
+    
+    
+    '''
 
     a_matrix = (p_matrix > 0.0).astype(int)
 
@@ -121,11 +149,11 @@ def entropy_rate_from_p_matrix(p_matrix, normalised = True):
     stationary_dist = stationary_dist/np.sum(stationary_dist)
 
     if (max_eig_val_a != 1.) & (max_eig_val_a != 0.):
-
+        divide = np.log(max_eig_val_a) if normalised else 1
         h = -np.sum(stationary_dist * np.sum(p_matrix * np.log(p_matrix, 
-                                                            out=np.zeros_like(p_matrix), 
-                                                            where=(p_matrix != 0)), axis = 1))/np.log(max_eig_val_a)
-        
+                                                                out=np.zeros_like(p_matrix), 
+                                                                where=(p_matrix != 0)), axis = 1))/divide
+         
 
     else:
         h = -np.sum(stationary_dist * np.sum(p_matrix * np.log(p_matrix, 
@@ -134,15 +162,34 @@ def entropy_rate_from_p_matrix(p_matrix, normalised = True):
 
     return np.abs(h) 
 
-
-
-def entropy_rate_from_sequence(sequence):
-
+def build_p_matrix(sequence):
+    '''
+    This function allows the user to create a stochastic matrix from a 
+    sequence of events.
+    
+    
+    
+    Arguments
+    ---------
+    
+    - sequence: numpy.array: 
+        A sequence of events that will be used to calculate the stochastic matrix.
+    
+    
+    
+    Returns
+    --------
+    
+    - p_matrix: numpy.array : 
+        A stochastic matrix, in which all of the rows sum to 1.
+    
+    
+    '''
 
     sequence_df = pd.DataFrame()
 
-    sequence_df['from'] = sequence.iloc[:-1].values
-    sequence_df['to'] = sequence.iloc[1:].values
+    sequence_df['from'] = sequence[:-1]
+    sequence_df['to'] = sequence[1:]
     sequence_df['count'] = 1
 
     pm = sequence_df.groupby(by=['from','to']).count().reset_index()
@@ -159,7 +206,7 @@ def entropy_rate_from_sequence(sequence):
 
     
 
-    unique_locations = list(pm[['from', 'to']].values.ravel())
+    unique_locations = list(np.unique(pm[['from', 'to']].values.ravel()))
     
     p_matrix = np.zeros((len(unique_locations),len(unique_locations)))
 
@@ -171,13 +218,72 @@ def entropy_rate_from_sequence(sequence):
 
 
         p_matrix[i,j] = probability_loc
+
+    return p_matrix
+
+
+def entropy_rate_from_sequence(sequence):
+    '''
+    This function allows the user to calculate the entropy rate based on 
+    a sequence of events.
     
+    
+    
+    Arguments
+    ---------
+    
+    - sequence: numpy.array: 
+        A sequence of events to calculate the entropy rate on.
+    
+    
+    
+    Returns
+    --------
+    
+    - out: float : 
+        Entropy rate
+    
+    
+    '''
+
+    p_matrix = build_p_matrix(sequence)
+
+    if type(p_matrix) != np.ndarray:
+        return np.nan
+
     return entropy_rate_from_p_matrix(p_matrix)
 
 
 
 
-def calculate_entropy_rate(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFrame:
+def calculate_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all') -> pd.DataFrame:
+    '''
+    This function allows the user to return a pandas.DataFrame with the entropy rate calculated
+    for every week.
+    
+    
+    
+    Arguments
+    ---------
+    
+    - df: pandas.DataFrame: 
+        A pandas.DataFrame containing ```'id'```, ```'week'```, ```'location'```.
+    
+    - sensors: Union[list, str]: 
+        The values of the ```'location'``` column of ```df``` that will be 
+        used in the entropy calculations.
+        Defaults to ```'all'```.
+    
+    
+    
+    Returns
+    --------
+    
+    - out: pd.DataFrame : 
+        This is a dataframe, in which the entropy rate is located in the ```'value'``` column.
+    
+    
+    '''
 
 
     assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
@@ -191,8 +297,11 @@ def calculate_entropy_rate(df: pd.DataFrame, sensors: Union[list, str]) -> pd.Da
 
     df['week'] = compute_week_number(df['time'])
 
+    def entropy_rate_from_sequence_groupby(x):
+        x = entropy_rate_from_sequence(x.values)
+        return x
 
-    df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence).reset_index()
+    df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
     df.columns = ['id', 'week', 'value']
     df['location'] = 'entropy'
 
