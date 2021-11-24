@@ -5,9 +5,9 @@ import numpy as np
 from ...formatting.format_util import normalise
 
 
-def get_ae_model(model_type='nn', input_dim=8 * 19 * 3, encoding_dim=24 * 7):
+def get_ae_model(model_type='nn', input_dim=(8, 14, 3), encoding_dim=24 * 7):
     if model_type is 'nn':
-        input_layer = Input(shape=(input_dim,))
+        input_layer = Flatten()(Input(shape=(input_dim,)))
         encoded = Dense(256, activation='relu')(input_layer)
         encoded = Dense(512, activation='relu')(encoded)
         encoded = Dense(encoding_dim, activation='relu', name='latent')(encoded)
@@ -17,7 +17,7 @@ def get_ae_model(model_type='nn', input_dim=8 * 19 * 3, encoding_dim=24 * 7):
         encoder = Model(input_layer, encoded)
         autoencoder = Model(input_layer, decoded)
     elif model_type is 'cnn':
-        input_layer = Input(shape=(8, 19, 3))
+        input_layer = Input(shape=input_dim)
         encoded = Conv2D(4, (3, 3), activation='relu', padding='same')(input_layer)
         encoded = Conv2D(3, (3, 3), activation='relu', padding='same')(encoded)
         latent = Flatten(name='latent')(encoded)

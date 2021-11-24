@@ -4,7 +4,11 @@ import time
 from minder_utils.configurations import config
 from .format_util import iter_dir
 from minder_utils.download.download import Downloader
+from minder_utils.util.decorators import load_save
+from minder_utils.formatting.format_tihm import format_tihm_data
 import numpy as np
+from minder_utils.util.util import reformat_path
+from .label import label_dataframe
 
 
 class Formatting:
@@ -14,8 +18,9 @@ class Formatting:
     Patient id, device type, time, value
     """
 
-    def __init__(self, path='./data/raw_data/'):
-        self.path = path
+    def __init__(self, path=os.path.join('./data', 'raw_data'), add_tihm=None):
+        self.path = reformat_path(path)
+        self.add_tihm = add_tihm
 
         categories_check = ['device_types', 'homes', 'patients']
         if not np.all([os.path.exists(os.path.join(path, category + '.csv')) for category in categories_check]):
@@ -28,36 +33,55 @@ class Formatting:
         self.device_type = \
             pd.read_csv(os.path.join(self.path, 'device_types.csv'))[['id', 'type']].set_index('id').to_dict()['type']
         self.config = config
-        self.physiological_data = pd.DataFrame(columns=self.config['physiological']['columns'])
-        self.activity_data = pd.DataFrame(columns=self.config['activity']['columns'])
-        self.environmental_data = pd.DataFrame(columns=self.config['environmental']['columns'])
-        self.process_data()
 
-    def process_data(self):
+    @property
+    @load_save(**config['physiological']['save'])
+    def physiological_data(self):
+        add_tihm = config['physiological']['add_tihm'] if self.add_tihm is None else self.add_tihm
+        if add_tihm:
+            data = self.process_data('physiological')
+            tihm_data = format_tihm_data()
+            return pd.concat([data, tihm_data['physiological']])
+        return label_dataframe(self.process_data('physiological').drop_duplicates())
+
+    @property
+    @load_save(**config['activity']['save'])
+    def activity_data(self):
+        add_tihm = config['activity']['add_tihm'] if self.add_tihm is None else self.add_tihm
+        if add_tihm:
+            data = self.process_data('activity')
+            tihm_data = format_tihm_data()
+            return pd.concat([data, tihm_data['activity']]).drop_duplicates()
+        return label_dataframe(self.process_data('activity'))
+
+    @property
+    @load_save(**config['environmental']['save'])
+    def environmental_data(self):
+        return label_dataframe(self.process_data('environmental'))
+
+    def process_data(self, datatype):
+        assert datatype in ['physiological', 'activity', 'environmental'], 'not a valid type'
+        process_func = getattr(self, 'process_{}_data'.format(datatype))
+        dataframe = pd.DataFrame(columns=self.config[datatype]['columns'])
         for name in iter_dir(self.path):
             start_time = time.time()
-            print('Processing: {}'.format(name).ljust(50, ' '), end='')
-            if name in self.config['physiological']['type']:
-                self.process_physiological_data(name)
-            elif name in self.config['activity']['type']:
-                self.process_activity_data(name)
-            elif name in self.config['environmental']['type']:
-                self.process_environmental_data(name)
-            elif name in self.config['individuals']['text'] or name in self.config['individuals']['measure']:
-                print('TODO')
-                continue
+            print('Processing: {} ------->  {}'.format(datatype, name).ljust(80, ' '), end='')
+            if name in self.config[datatype]['type']:
+                dataframe = process_func(name, dataframe)
             end_time = time.time()
             print('Finished in {:.2f} seconds'.format(end_time - start_time))
+        return dataframe
 
-    def process_physiological_data(self, name):
+    def process_physiological_data(self, name, df):
         """
         process the physiological data, the data will be append to the self.physiological_data
 
         NOTE:
             the data will be averaged by date and patient id
 
-        :param name: file name to load the data.
+        :param name: string, file name to load the data.
             data: the data must contains ['patient_id', 'start_date', 'device_type', 'value', 'unit']
+        :param df: dataframe, dataframe to append the data
         :return: append to the self.physiological_data
         """
         col_filter = ['patient_id', 'start_date', 'device_type', 'value']
@@ -72,9 +96,10 @@ class Formatting:
         data = data.groupby(['patient_id', 'start_date', 'device_type']).mean().reset_index()
         data.columns = self.config['physiological']['columns']
         data.location = data.location.apply(lambda x: x.split('->')[-1])
-        self.physiological_data = self.physiological_data.append(data)
+        data.time = pd.to_datetime(data.time, utc=True)
+        return df.append(data)
 
-    def process_activity_data(self, name):
+    def process_activity_data(self, name, df):
         """
         process the activity data, the data will be append to the self.activity_data
 
@@ -84,6 +109,7 @@ class Formatting:
                             the names of the values, e.g. iron-use -> location_name: iron, value: 1
         :param name: the file name to load the data
             the data must contains ['patient_id', 'start_date', 'location_name', 'value']
+        :param df: dataframe, dataframe to append the data
         :return: append to the self.activity_data
         """
         col_filter = ['patient_id', 'start_date', 'location_name', 'value']
@@ -91,9 +117,10 @@ class Formatting:
         data = data[data['location_name'] != 'location_name']
         data = getattr(self, 'process_' + name)(data)[col_filter]
         data.columns = self.config['activity']['columns']
-        self.activity_data = self.activity_data.append(data)
+        data.time = pd.to_datetime(data.time, utc=True)
+        return df.append(data)
 
-    def process_environmental_data(self, name):
+    def process_environmental_data(self, name, df):
         """
         process the environmental data, the data will be append to the self.environmental_data
 
@@ -101,6 +128,7 @@ class Formatting:
             the data will be averaged by date and patient id
         :param name: file name to load the data.
             data: the data must contains ['patient_id', 'start_date', 'location_name', 'device_type', 'value', 'unit']
+        :param df: dataframe, dataframe to append the data
         :return: append to the self.environmental_data
         """
         col_filter = ['patient_id', 'start_date', 'location_name', 'value']
@@ -112,22 +140,27 @@ class Formatting:
         data.value = data.value.astype(float)
         data = data.groupby(['patient_id', 'start_date', 'location_name']).mean().reset_index()
         data.columns = self.config['environmental']['columns']
-        self.environmental_data = self.environmental_data.append(data)
+        data.time = pd.to_datetime(data.time, utc=True)
+        return df.append(data)
 
-    def process_raw_door_sensor(self, data):
+    @staticmethod
+    def process_raw_door_sensor(data):
         data['value'] = 1
         return data
 
-    def process_raw_activity_pir(self, data):
+    @staticmethod
+    def process_raw_activity_pir(data):
         data['value'] = 1
         return data
 
-    def process_raw_appliance_use(self, data):
+    @staticmethod
+    def process_raw_appliance_use(data):
         data.location_name = data.value.apply(lambda x: x.split('-')[0])
         data.value = 1
         return data
 
-    def process_raw_blood_pressure(self, data):
+    @staticmethod
+    def process_raw_blood_pressure(data):
         col_filter = ['patient_id', 'start_date', 'device_type', 'value', 'unit']
         blood_pressure = []
         for value in ['systolic_value', 'diastolic_value']:

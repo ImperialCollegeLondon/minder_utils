@@ -1,9 +1,9 @@
 from sklearn.feature_selection import SelectPercentile, chi2, f_classif, mutual_info_classif
-from minder_utils.models.feature_selectors import Feature_selector_template
+from minder_utils.models.utils import Feature_selector
 import numpy as np
 
 
-class Supervised_Filter(Feature_selector_template):
+class Supervised_Filter(Feature_selector):
     '''
     This class provide a set of supervised feature selection methods.
     Particularly, it contains a set of filter methods, which will perform SEPARATELY with the classifier.

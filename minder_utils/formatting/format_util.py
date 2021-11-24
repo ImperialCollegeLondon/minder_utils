@@ -70,3 +70,7 @@ def flatten(x, last_axis=False):
     if last_axis:
         return x.reshape(x.shape[0], x.shape[1], -1)
     return x.reshape(x.shape[0], -1)
+
+
+def l2_norm(x, epsilon=1e-10):
+    return x / np.sqrt(max(np.sum(x ** 2), epsilon))

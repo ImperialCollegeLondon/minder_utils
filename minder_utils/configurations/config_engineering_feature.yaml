@@ -1,0 +1,52 @@
+name: &save_config
+  save_path: ['./data', 'pkl', 'feature_engineering']
+  save_name: null
+  verbose: True
+  refresh: False
+
+nocturia:
+  time_range: ['22:00', '06:00']
+
+bathroom_night:
+  save: *save_config
+
+bathroom_daytime:
+  save: *save_config
+
+bathroom_urgent:
+  recall_value: 2
+  save: *save_config
+
+bathroom_urgent_reverse_percentage:
+  recall_value: 2
+  save: *save_config
+
+body_temperature:
+  save: *save_config
+
+entropy:
+  sensors: 'all'
+  save: *save_config
+
+entropy_rate:
+  sensors: 'all'
+  save: *save_config
+
+raw_activity:
+  save: *save_config
+
+activity:
+  features: ['raw_activity', 'bathroom_night', 'bathroom_daytime', 'body_temperature', 'entropy']
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: True
+
+
+outlier_score_activity:
+  outlier_class: 'zscore'
+  tp_for_outlier_hours: 3
+  baseline_length_days: 7
+  baseline_offset_days: 0
+  save: *save_config
