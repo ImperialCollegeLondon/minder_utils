@@ -91,12 +91,22 @@ class Visualisation_Activity:
     def raw_data(self):
         self.subplots(self.data['raw_data'], self._visual_scatter)
 
+    @formatting_plots(save_path=visual_config['activity']['save_path'], rotation=0, legend=False)
+    def aggregated_data(self):
+        self.subplots(self.data['agg'], self._visual_heatmap)
+
+    @formatting_plots(save_path=visual_config['activity']['save_path'], rotation=0, legend=False)
+    def normalised_data(self):
+        self.subplots(self.data['normalise'], self._visual_heatmap)
+
     @staticmethod
     def _visual_scatter(data, ax):
         yticks = config['activity']['sensors']
         ax.set_yticks(range(1, len(yticks) + 1))
         ax.set_yticklabels(yticks)
         sns.scatterplot(x='seconds', y='activity', marker="$\circ$", ec="face", data=data, ax=ax)
+        formatter = matplotlib.ticker.FuncFormatter(lambda ms, x: time.strftime('%H', time.gmtime(ms)))
+        ax.xaxis.set_major_formatter(formatter)
 
     @staticmethod
     def _visual_heatmap(data, ax):
@@ -104,20 +114,17 @@ class Visualisation_Activity:
         ax.set_yticks(range(1, len(yticks) + 1))
         ax.set_yticklabels(yticks)
         sns.heatmap(data[yticks].transpose().astype(float), ax=ax)
-
-    @formatting_plots(save_path=visual_config['activity']['save_path'], rotation=90, legend=False)
-    def aggregated_data(self):
-        self.subplots(self.data['agg'], self._visual_heatmap)
-
-    @formatting_plots(save_path=visual_config['activity']['save_path'], rotation=90, legend=False)
-    def normalised_data(self):
-        self.subplots(self.data['normalise'], self._visual_heatmap)
+        formatter = matplotlib.ticker.FuncFormatter(lambda ms, x: time.strftime('%H', time.gmtime(ms * 3600)))
+        ax.xaxis.set_major_formatter(formatter)
 
     @staticmethod
     def subplots(df, func):
         rows = df.id.unique()
         cols = df.time.dt.date.unique()
-        fig, axes = plt.subplots(len(rows), len(cols), sharex=True, sharey=True,)
+        width, height = plt.gcf().get_size_inches()
+        width += len(cols)
+        height += len(rows)
+        fig, axes = plt.subplots(len(rows), len(cols), sharex=True, sharey=True, figsize=(width, height))
         mappings = {}
         for x_axis in range(len(rows)):
             for y_axis in range(len(cols)):
@@ -135,8 +142,6 @@ class Visualisation_Activity:
                 ax.set_xlabel(None)
                 ax.set_ylabel('Participant {}'.format(x_axis))
                 ax.set_title(cols[y_axis])
-                formatter = matplotlib.ticker.FuncFormatter(lambda ms, x: time.strftime('%H', time.gmtime(ms)))
-                ax.xaxis.set_major_formatter(formatter)
                 mappings[x_axis] = rows[x_axis]
 
         fig.supxlabel('Time')

@@ -5,6 +5,8 @@ os.chdir('..')
 
 va = Visualisation_Activity()
 
+# get label information
+print(va.get_label_info())
 
 # Visualise random patient in random day, without validation
 va.raw_data()
@@ -17,11 +19,8 @@ va.raw_data()
 va.aggregated_data()
 va.normalised_data()
 
-# Or specify the patient id and the date, NOTE either could be str or list
-# Meanwhile, you can get the information of the labelled data by
-print(va.get_label_info())
-
-va.reset(patient_id='', date=['2021-06-01', '2021-06-02'])
+# or specify the patient id and the date, No either could be str or list
+va.reset(patient_id=[***REMOVED***, ''], date=['2021-06-01', '2021-06-02'])
 va.raw_data()
 va.aggregated_data()
 va.normalised_data()
