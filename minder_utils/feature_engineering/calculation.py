@@ -206,7 +206,7 @@ def build_p_matrix(sequence):
 
     
 
-    unique_locations = list(pm[['from', 'to']].values.ravel())
+    unique_locations = list(np.unique(pm[['from', 'to']].values.ravel()))
     
     p_matrix = np.zeros((len(unique_locations),len(unique_locations)))
 
