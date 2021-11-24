@@ -135,9 +135,7 @@ def entropy_rate_from_p_matrix(p_matrix, normalised = True):
     return np.abs(h) 
 
 
-
-def entropy_rate_from_sequence(sequence):
-
+def build_p_matrix(sequence):
 
     sequence_df = pd.DataFrame()
 
@@ -171,6 +169,14 @@ def entropy_rate_from_sequence(sequence):
 
 
         p_matrix[i,j] = probability_loc
+
+    return p_matrix
+
+
+def entropy_rate_from_sequence(sequence):
+
+    p_matrix = build_p_matrix(sequence)
+
     
     return entropy_rate_from_p_matrix(p_matrix)
 
