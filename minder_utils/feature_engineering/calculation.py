@@ -248,7 +248,9 @@ def entropy_rate_from_sequence(sequence):
 
     p_matrix = build_p_matrix(sequence)
 
-    
+    if type(p_matrix) != np.ndarray:
+        return np.nan
+
     return entropy_rate_from_p_matrix(p_matrix)
 
 
