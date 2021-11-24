@@ -19,6 +19,7 @@ va.raw_data()
 va.aggregated_data()
 va.normalised_data()
 
+
 # or specify the patient id and the date, Note either could be str or list
 va.reset(date=['2021-06-01', '2021-06-02'])
 va.raw_data()
