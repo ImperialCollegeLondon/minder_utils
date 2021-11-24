@@ -162,7 +162,7 @@ def entropy_rate_from_p_matrix(p_matrix, normalised = True):
 
     return np.abs(h) 
 
-def build_p_matrix(sequence):
+def build_p_matrix(sequence, return_events=False):
     '''
     This function allows the user to create a stochastic matrix from a 
     sequence of events.
@@ -174,6 +174,11 @@ def build_p_matrix(sequence):
     
     - sequence: numpy.array: 
         A sequence of events that will be used to calculate the stochastic matrix.
+
+    - return_events: bool:
+        Dictates whether a list of the events should be returned, in the 
+        order of their appearance in the stochastic matrix, ```p_martix```.
+        Defaults to ```False```
     
     
     
@@ -182,6 +187,10 @@ def build_p_matrix(sequence):
     
     - p_matrix: numpy.array : 
         A stochastic matrix, in which all of the rows sum to 1.
+
+    - unique_locations: list:
+        A list of the events in the order of their appearance in the stochastic
+        matrix, ```p_martix```. This is only returned if ```return_events=True```
     
     
     '''
@@ -218,8 +227,11 @@ def build_p_matrix(sequence):
 
 
         p_matrix[i,j] = probability_loc
-
-    return p_matrix
+    
+    if return_events:
+        return p_matrix, unique_locations
+    else:
+        return p_matrix
 
 
 def entropy_rate_from_sequence(sequence):
