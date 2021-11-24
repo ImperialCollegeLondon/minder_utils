@@ -8,6 +8,7 @@ from minder_utils.util.decorators import load_save
 from minder_utils.formatting.format_tihm import format_tihm_data
 import numpy as np
 from minder_utils.util.util import reformat_path
+from .label import label_dataframe
 
 
 class Formatting:
@@ -41,7 +42,7 @@ class Formatting:
             data = self.process_data('physiological')
             tihm_data = format_tihm_data()
             return pd.concat([data, tihm_data['physiological']])
-        return self.process_data('physiological').drop_duplicates()
+        return label_dataframe(self.process_data('physiological').drop_duplicates())
 
     @property
     @load_save(**config['activity']['save'])
@@ -51,12 +52,12 @@ class Formatting:
             data = self.process_data('activity')
             tihm_data = format_tihm_data()
             return pd.concat([data, tihm_data['activity']]).drop_duplicates()
-        return self.process_data('activity')
+        return label_dataframe(self.process_data('activity'))
 
     @property
     @load_save(**config['environmental']['save'])
     def environmental_data(self):
-        return self.process_data('environmental')
+        return label_dataframe(self.process_data('environmental'))
 
     def process_data(self, datatype):
         assert datatype in ['physiological', 'activity', 'environmental'], 'not a valid type'

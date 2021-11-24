@@ -3,7 +3,7 @@ import numpy as np
 import os
 import importlib.resources as pkg_resources
 from importlib.machinery import SourceFileLoader
-from minder_utils.configurations import data_path
+from minder_utils.configurations import data_path, config
 
 
 # import python function from path:
@@ -15,7 +15,7 @@ from dri_data_util_validate import validated_date
 
 
 def standardise_activity_data(df):
-    df = df.dropna().drop_duplicates()
+    df = df.drop_duplicates()
     df.time = pd.to_datetime(df.time)
     df.time = pd.to_datetime(df.time.dt.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -35,6 +35,9 @@ def standardise_activity_data(df):
     table_df = df.pivot_table(index=['id', 'time'], columns='location',
                               values='value').reset_index()
     table_df = table_df.replace(np.nan, 0)
+    for sensor in config['activity']['sensors']:
+        if sensor not in table_df.columns:
+            table_df[sensor] = 0
     
     # with open(path_dir, 'r') as file_read:
     #     uti_folder_path = file_read.read()

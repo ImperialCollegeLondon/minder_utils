@@ -19,3 +19,6 @@ feature_config = yaml.load(open(os.path.join(os.path.dirname(__file__), "config_
 feature_extractor_config = yaml.load(
     open(os.path.join(os.path.dirname(__file__), "config_feature_extractors.yaml"), "r")
     , Loader=yaml.FullLoader)
+visual_config = yaml.load(
+    open(os.path.join(os.path.dirname(__file__), "config_visualisation.yaml"), "r")
+    , Loader=yaml.FullLoader)

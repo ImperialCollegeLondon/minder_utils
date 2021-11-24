@@ -1,5 +1,5 @@
 name: &save_config
-  save_path: ['./data', 'pkl', 'raw_data']
+  save_path: './data/pkl/raw_data'
   save_name: null
   verbose: True
   refresh: False
@@ -33,7 +33,7 @@ activity:
   sensors: [ 'back door', 'bathroom1', 'bedroom1', 'dining room',
              'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
              'living room', 'lounge', 'microwave', 'study', 'toaster' ]
-  add_tihm: True
+  add_tihm: False
   save: *save_config
 
 environmental:
