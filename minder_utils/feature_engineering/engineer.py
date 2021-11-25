@@ -90,13 +90,13 @@ class Feature_engineer:
         return get_outlier_freq(self.formatter.activity_data, anomaly_detection_freq, 'outlier_score_activity')
 
     @property
-    @load_save(**feature_config['rp_location_delta']['save'])
-    def rp_location_delta(self):
+    @load_save(**feature_config['rp_location_time_delta']['save'])
+    def rp_location_time_delta(self):
         print('This might take a bit of time...')
         return get_subject_rp_location_delta(data=self.formatter.activity_data, 
                                               columns = {'subject':'id', 'time':'time', 'location':'location'}, 
-                                              baseline_length_days = feature_config['rp_location_delta']['baseline_length_days'],
-                                              baseline_offset_days = feature_config['rp_location_delta']['baseline_offset_days'],
-                                              all_loc_as_baseline = feature_config['rp_location_delta']['all_loc_as_baseline'],
-                                              name='rp_location_delta')
+                                              baseline_length_days = feature_config['rp_location_time_delta']['baseline_length_days'],
+                                              baseline_offset_days = feature_config['rp_location_time_delta']['baseline_offset_days'],
+                                              all_loc_as_baseline = feature_config['rp_location_time_delta']['all_loc_as_baseline'],
+                                              name='rp_location_time_delta')
 
