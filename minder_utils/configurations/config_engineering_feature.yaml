@@ -50,3 +50,9 @@ outlier_score_activity:
   baseline_length_days: 7
   baseline_offset_days: 0
   save: *save_config
+
+rp_location_delta:
+  all_loc_as_baseline: False
+  baseline_length_days: 7
+  baseline_offset_days: 0
+  save: *save_config

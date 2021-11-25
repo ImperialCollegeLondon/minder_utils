@@ -268,57 +268,6 @@ def entropy_rate_from_sequence(sequence):
 
 
 
-def calculate_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all') -> pd.DataFrame:
-    '''
-    This function allows the user to return a pandas.DataFrame with the entropy rate calculated
-    for every week.
-    
-    
-    
-    Arguments
-    ---------
-    
-    - df: pandas.DataFrame: 
-        A pandas.DataFrame containing ```'id'```, ```'week'```, ```'location'```.
-    
-    - sensors: Union[list, str]: 
-        The values of the ```'location'``` column of ```df``` that will be 
-        used in the entropy calculations.
-        Defaults to ```'all'```.
-    
-    
-    
-    Returns
-    --------
-    
-    - out: pd.DataFrame : 
-        This is a dataframe, in which the entropy rate is located in the ```'value'``` column.
-    
-    
-    '''
-
-
-    assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
-
-    # Filter the sensors
-    if isinstance(sensors, list):
-        df = df[df.location.isin(sensors)]
-    elif isinstance(sensors, str):
-        assert sensors == 'all', 'only accept all as a string input for sensors'
-
-
-    df['week'] = compute_week_number(df['time'])
-
-    def entropy_rate_from_sequence_groupby(x):
-        x = entropy_rate_from_sequence(x.values)
-        return x
-
-    df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
-    df.columns = ['id', 'week', 'value']
-    df['location'] = 'entropy'
-
-    return df
-
 
 
 def kolmogorov_smirnov(freq1, freq2):

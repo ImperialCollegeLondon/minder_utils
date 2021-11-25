@@ -1,7 +1,7 @@
 import numpy as np
 from minder_utils.util.decorators import load_save
 from .adding_features import *
-from .calculation import calculate_entropy, calculate_entropy_rate, anomaly_detection_freq
+from .calculation import calculate_entropy, anomaly_detection_freq
 from .TimeFunctions import single_location_delta, rp_single_location_delta
 from .util import week_to_date
 
@@ -62,7 +62,9 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['entropy_rate']['save'])
     def entropy_rate(self):
-        return calculate_entropy_rate(self.formatter.activity_data, feature_config['entropy_rate']['sensors'])
+        return get_entropy_rate(df=self.formatter.activity_data, 
+                                sensors=feature_config['entropy_rate']['sensors'], 
+                                name='entropy_rate')
 
     @property
     @load_save(**feature_config['raw_activity']['save'])
@@ -86,4 +88,15 @@ class Feature_engineer:
     @load_save(**feature_config['outlier_score_activity']['save'])
     def outlier_score_activity(self):
         return get_outlier_freq(self.formatter.activity_data, anomaly_detection_freq, 'outlier_score_activity')
+
+    @property
+    @load_save(**feature_config['rp_location_delta']['save'])
+    def rp_location_delta(self):
+        print('This might take a bit of time...')
+        return get_subject_rp_location_delta(data=self.formatter.activity_data, 
+                                              columns = {'subject':'id', 'time':'time', 'location':'location'}, 
+                                              baseline_length_days = feature_config['rp_location_delta']['baseline_length_days'],
+                                              baseline_offset_days = feature_config['rp_location_delta']['baseline_offset_days'],
+                                              all_loc_as_baseline = feature_config['rp_location_delta']['all_loc_as_baseline'],
+                                              name='rp_location_delta')
 

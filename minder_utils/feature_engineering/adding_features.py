@@ -1,6 +1,11 @@
 from minder_utils.configurations import feature_config, config
+from .calculation import entropy_rate_from_sequence
+from .TimeFunctions import rp_location_delta
 from .util import *
+from minder_utils.util.util import PBar
 import pandas as pd
+from typing import Union
+import sys
 
 
 def get_bathroom_activity(data, time_range, name):
@@ -90,3 +95,140 @@ def get_outlier_freq(data, func, name):
     outlier_data['location'] = name
 
     return outlier_data
+
+
+
+def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='entropy_rate') -> pd.DataFrame:
+    '''
+    This function allows the user to return a pandas.DataFrame with the entropy rate calculated
+    for every week.
+    
+    
+    
+    Arguments
+    ---------
+    
+    - df: pandas.DataFrame: 
+        A pandas.DataFrame containing ```'id'```, ```'week'```, ```'location'```.
+    
+    - sensors: Union[list, str]: 
+        The values of the ```'location'``` column of ```df``` that will be 
+        used in the entropy calculations.
+        Defaults to ```'all'```.
+    
+    
+    
+    Returns
+    --------
+    
+    - out: pd.DataFrame : 
+        This is a dataframe, in which the entropy rate is located in the ```'value'``` column.
+    
+    
+    '''
+
+
+    assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
+
+    # Filter the sensors
+    if isinstance(sensors, list):
+        df = df[df.location.isin(sensors)]
+    elif isinstance(sensors, str):
+        assert sensors == 'all', 'only accept all as a string input for sensors'
+
+
+    df['week'] = compute_week_number(df['time'])
+
+    def entropy_rate_from_sequence_groupby(x):
+        x = entropy_rate_from_sequence(x.values)
+        return x
+
+    df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
+    df.columns = ['id', 'week', 'value']
+    df['location'] = name
+
+    return df
+
+
+
+def get_subject_rp_location_delta(data, 
+                                  columns = {'subject': 'patient_id', 'time': 'start_date', 'location': 'location_name'}, 
+                                  baseline_length_days = 7,
+                                  baseline_offset_days = 0,
+                                  all_loc_as_baseline = False,
+                                  name='rp_location_delta'):
+    '''
+    This function allows the user to calculate the rp delta for each subject and event.
+    
+    
+    Arguments
+    ---------
+    
+    - data: pandas dataframe:
+        This is the dataframe containing the time and locations that will be used to calculate the reverse 
+        percentage deltas
+    
+    - columns: dictionary:
+        This is the dictionary with the column names in ```input_df``` for each of the values of data that we need 
+        in our calculations.
+        This dictionary should be of the form:
+        ```
+        {'subject':   column containing the subjects IDs,
+         'time':      column containing the times of sensor triggers,
+         'location':  column containing the locations of the sensor triggers}
+        Defaults to ```{'subject': 'patient_id', 'time': 'start_date', 'location': 'location_name'}```.
+    
+    - baseline_length_days: integer:
+        This is the length of the baseline in days that will be used. This value is used when finding
+        the ```baseline_length_days``` complete days of ```single_location``` data to use as a baseline.
+        Defaults to 7.
+    
+    - baseline_offset_days: integer:
+        This is the offset to the baseline period. ```0``` corresponds to a time period ending the morning of the
+        current date being calculated on.
+        Defaults to 0.
+    
+    - all_loc_as_baseline: bool:
+        This argument dictates whether all the locations are used as part of the calculation for the reverse
+        percentage or if only the values from the ```to``` locations are used.
+        Defaults to True.
+    
+    Returns
+    ---------
+
+    - out: pandas dataframe:
+        This is the outputted dataframe with the rp delta values.
+    
+    
+    '''
+    subject_list = data[columns['subject']].unique()
+    bar = PBar(20, len(subject_list))
+
+    sys.stdout.write('Subject: {} {}/{}'.format(bar.give(), 0, len(subject_list)))
+    sys.stdout.flush()
+
+    def rp_location_delta_group_by(x):
+
+        x = rp_location_delta(x, 
+                        columns = columns, 
+                        baseline_length_days = baseline_length_days,
+                        baseline_offset_days = baseline_offset_days, 
+                        all_loc_as_baseline = all_loc_as_baseline)
+
+        bar.update(1)
+        sys.stdout.write('\r')
+        sys.stdout.write('Subject: {} {}/{}'.format(bar.give(), bar.progress, len(subject_list)))
+        sys.stdout.flush()
+
+        return x
+
+
+    out = data.groupby(by=columns['subject']).apply(rp_location_delta_group_by).reset_index().sort_values(columns['time'])
+
+    out = out[[columns['subject'], columns['time'], 'from', 'to', 'rp']]
+
+    out.columns = ['id', 'time', 'from', 'to', 'value']
+
+    out['location'] = name
+
+    return out
