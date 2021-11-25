@@ -93,6 +93,7 @@ def get_outlier_freq(data, func, name):
 
     outlier_data['week'] = compute_week_number(outlier_data.time)
     outlier_data['location'] = name
+    outlier_data.columns = ['id', 'time', 'value', 'week', 'location']
 
     return outlier_data
 
