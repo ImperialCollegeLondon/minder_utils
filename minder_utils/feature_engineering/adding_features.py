@@ -1,4 +1,5 @@
 from minder_utils.configurations import feature_config, config
+import numpy as np
 from .calculation import entropy_rate_from_sequence
 from .TimeFunctions import rp_location_delta
 from .util import *
@@ -6,6 +7,109 @@ from minder_utils.util.util import PBar
 import pandas as pd
 from typing import Union
 import sys
+
+
+def get_moving_average(df:pd.DataFrame, name, w:int = 3):
+    '''
+    This function calculates the moving average of the values in the ```'value'``` 
+    column. It will return the dataframe with the moving average in the column
+    ```'value'```.
+    
+    
+    Arguments
+    ---------
+    
+    - df: pandas.DataFrame: 
+        A dataframe containing at least a column called ```'value'```.
+    
+    - name: string: 
+        This string is the name that will be given in the column ```'location'```.
+        If this column does not already exist, it will be added.
+    
+    - w: int:
+        The size of the moving window when calculating the moving average.
+        Defaults to ```3```.
+        
+    Returns
+    --------
+    
+    - df: pandas.Dataframe : 
+        The original dataframe, with a new column containing the moving average. There
+        will be missing values in the first ```w-1``` rows, caused by the lack of values 
+        to calculate a mean using the moving window.
+    
+    
+    '''
+
+    
+    values = df['value'].values
+
+    if values.shape[0]<w:
+        df['value'] = pd.NA
+        df['location'] = name
+        return df
+
+    # moving average
+    w = 3
+    values_ma = np.convolve(values, np.ones(w), 'valid')/w
+    df['value'] = pd.NA
+    df.loc[df.index[w-1:],'value'] = values_ma
+    df['location'] = name
+
+    
+
+    return df
+
+
+
+def get_value_delta(df:pd.DataFrame, name):
+    '''
+    This function calculates the delta of the values in the ```'value'``` 
+    column. It will return the dataframe with thenew values in the column
+    ```'value'```.
+    
+    
+    Arguments
+    ---------
+    
+    - df: pandas.DataFrame: 
+        A dataframe containing at least a column called ```'values'```.
+    
+    - name: string: 
+        This string is the name that will be given in the column ```'location'```.
+        If this column does not already exist, it will be added.
+    
+        
+    Returns
+    --------
+    
+    - df: pandas.Dataframe : 
+        The original dataframe, with a new column containing the delta values. There
+        will be a missing value in the first row, since delta can not be calculated here.
+        
+    
+    
+    '''
+
+    
+    values = df['value'].values
+
+    if values.shape[0]<2:
+        df['value'] = pd.NA
+        df['location'] = name
+        return df
+
+
+    values_delta = values[1:]/values[:-1]
+    df['value'] = pd.NA
+    df.loc[df.index[1:],'value'] = values_delta
+    df['location'] = name
+
+    
+
+    return df
+
+
 
 
 def get_bathroom_activity(data, time_range, name):

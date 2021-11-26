@@ -10,8 +10,23 @@ nocturia:
 bathroom_night:
   save: *save_config
 
+bathroom_night_ma:
+  save: *save_config
+  w: 3
+
+bathroom_night_ma_delta:
+  save: *save_config
+
 bathroom_daytime:
   save: *save_config
+
+bathroom_daytime_ma:
+  save: *save_config
+  w: 3
+
+bathroom_daytime_ma_delta:
+  save: *save_config
+
 
 bathroom_urgent:
   recall_value: 2

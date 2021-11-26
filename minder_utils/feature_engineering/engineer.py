@@ -35,9 +35,60 @@ class Feature_engineer:
         return get_bathroom_activity(self.formatter.activity_data, feature_config['nocturia']['time_range'], 'bathroom_night')
 
     @property
+    @load_save(**feature_config['bathroom_night_ma']['save'])
+    def bathroom_night_ma(self):
+
+        def get_moving_average_groupby(x):
+            x = get_moving_average(x, 
+                                  w=feature_config['bathroom_night_ma']['w'], 
+                                  name='bathroom_night_ma')
+            return x
+
+        return (self.bathroom_night).groupby('id').apply(get_moving_average_groupby)
+
+
+    @property
+    @load_save(**feature_config['bathroom_night_ma_delta']['save'])
+    def bathroom_night_ma_delta(self):
+
+        def get_value_delta_groupby(x):
+            x = get_value_delta(x,
+                                name='bathroom_night_ma_delta')
+            return x
+
+        return (self.bathroom_night_ma).groupby('id').apply(get_value_delta_groupby)
+
+    @property
     @load_save(**feature_config['bathroom_daytime']['save'])
     def bathroom_daytime(self):
         return get_bathroom_activity(self.formatter.activity_data, feature_config['nocturia']['time_range'][::-1], 'bathroom_daytime')
+
+    @property
+    @load_save(**feature_config['bathroom_daytime_ma']['save'])
+    def bathroom_daytime_ma(self):
+
+        def get_moving_average_groupby(x):
+            x = get_moving_average(x, 
+                                  w=feature_config['bathroom_daytime_ma']['w'], 
+                                  name='bathroom_daytime_ma')
+            return x
+
+        return (self.bathroom_daytime).groupby(by='id').apply(get_moving_average_groupby)
+
+
+
+    @property
+    @load_save(**feature_config['bathroom_daytime_ma_delta']['save'])
+    def bathroom_daytime_ma_delta(self):
+
+        def get_value_delta_groupby(x):
+            x = get_value_delta(x,
+                                name='bathroom_daytime_ma_delta')
+            return x
+
+        return (self.bathroom_daytime_ma).groupby('id').apply(get_value_delta_groupby)
+
+
 
     @property
     @load_save(**feature_config['bathroom_urgent']['save'])
