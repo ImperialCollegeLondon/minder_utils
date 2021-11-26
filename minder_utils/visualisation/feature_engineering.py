@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import seaborn as sns
 from minder_utils.formatting.label import label_by_week
 from minder_utils.feature_engineering import Feature_engineer
@@ -64,6 +65,69 @@ def visualise_body_temperature(df):
     df = process_dataframe(df)
     visualise_flags(df)
     sns.lineplot(df.week, df.value)
+
+
+
+def visualise_data_time_lineplot(time_array, values_array, name, fill_either_side_array=None, fig = None, ax = None):
+    '''
+    This function accepts a dataframe that has a ```'time'``` column and 
+    and a ```'value'``` column.
+
+    '''
+    
+    if ax is None:
+        fig, ax = plt.subplots(1,1,figsize = (10,6))
+
+    ax.plot(time_array, values_array)
+    
+    if not fill_either_side_array is None:
+        ax.fill_between(time_array, 
+                        y1=values_array-fill_either_side_array, 
+                        y2=values_array+fill_either_side_array,
+                        alpha = 0.3)
+
+
+    return fig, ax
+
+
+
+
+def visualise_data_time_heatmap(data_plot, name, fig = None, ax = None):
+    '''
+    This function accepts a dataframe in which the columns are the days and 
+    the rows are the aggregated times of the day.
+
+
+    '''
+
+    if ax is None:
+        fig, axes = plt.subplots(1,1,figsize = (10,6))
+
+
+    ax = sns.heatmap(data_plot.values, cmap = 'Blues', cbar_kws={'label': name})
+    ax.invert_yaxis()
+
+    x_tick_loc = np.arange(0, data_plot.shape[1], 90)
+    ax.set_xticks(x_tick_loc + 0.5)
+    ax.set_xticklabels(data_plot.columns.astype(str)[x_tick_loc].values)
+
+    y_tick_loc = np.arange(0, data_plot.shape[0], 3)
+    ax.set_yticks(y_tick_loc + 0.5)
+    ax.set_yticklabels([pd.to_datetime(time).strftime("%H:%M") for time in data_plot.index.values[y_tick_loc]], rotation = 0)
+
+    ax.set_xlabel('Day')
+    ax.set_ylabel('Time of Day')
+
+    return fig, ax
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
