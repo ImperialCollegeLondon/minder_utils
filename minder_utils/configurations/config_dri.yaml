@@ -2,7 +2,7 @@ name: &save_config
   save_path: './data/pkl/raw_data'
   save_name: null
   verbose: True
-  refresh: False
+  refresh: True
 
 physiological:
   type: [ 'raw_body_weight', 'raw_skin_temperature',
@@ -33,7 +33,7 @@ activity:
   sensors: [ 'back door', 'bathroom1', 'bedroom1', 'dining room',
              'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
              'living room', 'lounge', 'microwave', 'study', 'toaster' ]
-  add_tihm: False
+  add_tihm: True
   save: *save_config
 
 environmental:

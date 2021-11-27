@@ -7,6 +7,7 @@ import os
 import numpy as np
 from minder_utils.configurations import feature_extractor_config
 from minder_utils.models.utils import get_device
+from minder_utils.dataloader import create_unlabelled_loader
 
 
 class Feature_extractor(ABC, nn.Module):
@@ -33,13 +34,28 @@ class Feature_extractor(ABC, nn.Module):
             else:
                 print(' ' * indent + str(key).ljust(10, ' '), str(value))
 
+    def create_loader(self, data, training=True):
+        if isinstance(data, torch.utils.data.DataLoader):
+            return data
+        elif not isinstance(data, (np.ndarray, list, tuple)):
+            raise TypeError('the input must be dataloader / numpy array, or a list/tuple'
+                            'containing the data and label')
+        if training:
+            return self._custom_loader(data)
+        else:
+            return create_unlabelled_loader(data, batch_size=1, shuffle=False, augmentation=False)
+
+    def _custom_loader(self, data):
+        return create_unlabelled_loader(data, **self.config['loader'])
+
     def fit(self, train_loader, save_name=None):
         if save_name is None:
             save_name = self.__class__.__name__
         if not self.config['train']['retrain']:
             if self.load_pre_trained_weights(save_name):
-                return
+                return self
 
+        train_loader = self.create_loader(train_loader, training=True)
         self.model = self.model.to(self.device)
 
         optimizer = torch.optim.Adam(self.model.parameters(), **self.config['optimiser'])
@@ -58,8 +74,7 @@ class Feature_extractor(ABC, nn.Module):
                 self.early_stop(loss.item(), self.model, save_name)
                 if self.early_stop.early_stop and self.config['early_stop']['enable']:
                     break
-            if self.early_stop.early_stop and self.config['early_stop']['enable']:
-                break
+        return self
 
     def load_pre_trained_weights(self, save_name):
         try:
@@ -74,13 +89,14 @@ class Feature_extractor(ABC, nn.Module):
 
     @staticmethod
     def which_data(data):
-        return data
+        return data[0]
 
     def transform(self, test_loader):
         """
         :param test_loader: sample validated date only
         :return:
         """
+        test_loader = self.create_loader(test_loader, training=False)
         # validation steps
         with torch.no_grad():
             self.model.eval()
@@ -95,7 +111,8 @@ class Feature_extractor(ABC, nn.Module):
 
         if self.config['test']['save']:
             save_mkdir(self.config['test']['save_path'])
-            np.save(os.path.join(self.config['test']['save_path'], self.__class__.__name__.lower() + '.npy'), np.concatenate(features))
+            np.save(os.path.join(self.config['test']['save_path'], self.__class__.__name__.lower() + '.npy'),
+                    np.concatenate(features))
             print('Test data has been transformed and saved to ',
                   os.path.join(self.config['test']['save_path'], self.__class__.__name__).lower() + '.npy')
 

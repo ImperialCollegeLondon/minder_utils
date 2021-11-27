@@ -8,61 +8,93 @@ from minder_utils.formatting.map_utils import map_raw_ids
 from minder_utils.evaluate.evaluate_models import evaluate
 from minder_utils.formatting.format_util import y_to_categorical
 
+pd.set_option('max_columns', None)
+pd.set_option('max_colwidth', None)
 
-def run_default(clf_type='bayes'):
-    '''
-    An example function for loading data and evaluating methods on the activity data
-    with UTIs as labels.
-    
-    Arguments
-    ---------
 
-    - reload_weekly: bool: 
-        Download the previous week's data.
-    
-    - reload_all: bool: 
-        Download all data.
+class Weekly_alerts:
+    def __init__(self, autoencoder='cnn'):
+        self.loader = Weekly_dataloader(num_days_extended=6)
+        # check the collate next week
+        self.loader.refresh()
+        self.reset()
 
-    '''
-    loader = Weekly_dataloader(num_days_extended=5)
-    loader.refresh()
-    unlabelled = np.load(os.path.join(loader.previous_unlabelled_data, 'activity.npy'))
-    X = np.load(os.path.join(loader.previous_labelled_data, 'activity.npy'))
-    y = np.load(os.path.join(loader.previous_labelled_data, 'label.npy'))
-    label_p_ids = np.load(os.path.join(loader.previous_labelled_data, 'patient_id.npy'))
+        unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))
+        unlabelled = unlabelled.reshape(-1, 3, 8, 14)
+        extractor = Extractor()
+        extractor.train(unlabelled, autoencoder)
 
-    unlabelled = unlabelled.reshape(-1, 3, 8, 14)
-    X = X[np.isin(y, [-1, 1])].reshape(-1, 3, 8, 14)
-    label_p_ids = label_p_ids[np.isin(y, [-1, 1])]
-    y = y[np.isin(y, [-1, 1])]
-    extractor = Extractor()
-    extractor.train(unlabelled, 'cnn')
-    # Evaluate models
-    print(evaluate(Classifiers(clf_type), extractor.transform(X, 'cnn'), y, label_p_ids, 10))
+        self.extractor = extractor
+        self.autoencoder = autoencoder
 
-    weekly_data = np.load(os.path.join(loader.current_data, 'activity.npy'))
-    p_ids = np.load(os.path.join(loader.current_data, 'patient_id.npy'))
-    dates = np.load(os.path.join(loader.current_data, 'dates.npy'), allow_pickle=True)
+    def reset(self, num_days_extended=0):
+        X = np.load(os.path.join(self.loader.previous_labelled_data, 'activity.npy'))
+        y = np.load(os.path.join(self.loader.previous_labelled_data, 'label.npy'))
+        label_p_ids = np.load(os.path.join(self.loader.previous_labelled_data, 'patient_id.npy'))
 
-    weekly_data = weekly_data.reshape(-1, 3, 8, 14)
+        # labelled data
+        indices = list(y[0][1: num_days_extended * 2 + 1]) + [-1, 1]
+        X = X[np.isin(y, indices)].reshape(-1, 3, 8, 14)
+        label_p_ids = label_p_ids[np.isin(y, indices)]
+        y = y[np.isin(y, indices)]
+        y[y > 0] = 1
+        y[y < 0] = -1
 
-    X = extractor.transform(X, 'cnn')
-    weekly_data = extractor.transform(weekly_data, 'cnn')
+        # test data
+        weekly_data = np.load(os.path.join(self.loader.current_data, 'activity.npy'))
+        p_ids = np.load(os.path.join(self.loader.current_data, 'patient_id.npy'))
+        dates = np.load(os.path.join(self.loader.current_data, 'dates.npy'), allow_pickle=True)
+        weekly_data = weekly_data.reshape(-1, 3, 8, 14)
 
-    y = np.argmax(y_to_categorical(y), axis=1)
-    clf = Classifiers(clf_type)
-    clf.fit(X, y)
-    print(clf.predict(weekly_data))
+        self.data = {
+            'labelled': (X, y, label_p_ids),
+            'test': (weekly_data, p_ids, dates)
+        }
 
-    prediction = clf.predict(weekly_data)
-    probability = clf.predict_probs(weekly_data)
-    df = {'patient id': p_ids, 'Date': dates, 'prediction': prediction,
-          'confidence': probability[np.arange(probability.shape[0]), prediction]}
-    df = pd.DataFrame(df)
-    df['TIHM ids'] = map_raw_ids(df['patient id'], True)
-    df.to_csv('../results/weekly_test/alerts.csv')
+    def evaluate(self):
+        df = []
+        for clf in Classifiers().methods:
+            df.append(self._evaluate(clf))
+        print(pd.concat(df))
 
-    return df
+    def _evaluate(self, clf_type):
+        X, y, label_p_ids = self.data['labelled']
+        return evaluate(Classifiers(clf_type), self.extractor.transform(X, self.autoencoder), y, label_p_ids, 10)
+
+    def predict(self):
+        weekly_data, p_ids, dates = self.data['test']
+
+        probability = []
+        for clf in Classifiers().methods:
+            prob = self._predict(clf)
+            probability.append(prob)
+
+        probability = np.mean(probability, axis=0)
+        prediction = np.argmax(probability, axis=1)
+        df = {'patient id': p_ids, 'Date': dates, 'prediction': prediction,
+              'confidence': probability[np.arange(probability.shape[0]), prediction]}
+        df['TIHM ids'] = map_raw_ids(df['patient id'], True)
+        df = pd.DataFrame(df)
+        df.to_csv('../results/weekly_test/alerts.csv')
+        return df
+
+    def _predict(self, clf_type, return_df=False):
+        weekly_data, p_ids, dates = self.data['test']
+        X, y, label_p_ids = self.data['labelled']
+        y[y < 0] = 0
+        y = y_to_categorical(y) if clf_type in ['nn', 'lstm'] else np.argmax(y_to_categorical(y), axis=1)
+        clf = Classifiers(clf_type)
+        clf.fit(self.extractor.transform(X, self.autoencoder), y)
+        probability = clf.predict_probs(weekly_data)
+        if return_df:
+            prediction = np.argmax(probability, axis=1)
+            df = {'patient id': p_ids, 'Date': dates, 'prediction': prediction,
+                  'confidence': probability[np.arange(probability.shape[0]), prediction]}
+            df['TIHM ids'] = map_raw_ids(df['patient id'], True)
+            df = pd.DataFrame(df)
+            df.to_csv('../results/weekly_test/alerts.csv')
+            return df
+        return probability
 
 
 def load_data_default(reload_weekly=False, reload_all=False):
@@ -90,15 +122,19 @@ def load_data_default(reload_weekly=False, reload_all=False):
     return
 
 
-def cal_confidence(df, p_id):
+def cal_confidence(df, p_id, by_days=False):
     df = df[df['patient id'] == p_id]
+    if by_days and df.prediction.sum() < 3:
+        return 0
     df.prediction = df.prediction.map({0: 1, 1: 0})
     df.confidence = np.abs(df.confidence - df.prediction)
     return df.confidence.mean()
 
 
 if __name__ == '__main__':
-    df = run_default('knn')
+    wa = Weekly_alerts()
+    wa.evaluate()
+    df = wa._predict('bayes', return_df=True)
     for p_id in df['patient id'].unique():
         value = cal_confidence(df, p_id)
         if value > 0.5:

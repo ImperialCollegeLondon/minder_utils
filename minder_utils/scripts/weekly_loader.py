@@ -3,7 +3,7 @@ import os
 import datetime as DT
 from minder_utils.download.download import Downloader
 from minder_utils.formatting.formatting import Formatting
-from minder_utils.dataloader.dataloader import Dataloader
+from minder_utils.dataloader import Dataloader
 import numpy as np
 from minder_utils.util.util import save_mkdir, delete_dir
 import json
@@ -167,8 +167,8 @@ class Weekly_dataloader:
                 previous_data = pd.concat([previous_data, current_data[current_mask]])
                 current_data = current_data[~current_mask]
 
-                current_data.drop_duplicates().to_csv(os.path.join(self.current_csv_data, filename))
-                previous_data.drop_duplicates().to_csv(os.path.join(self.previous_csv_data, filename))
+                current_data.drop_duplicates().to_csv(os.path.join(self.current_csv_data, filename), index=False)
+                previous_data.drop_duplicates()[current_data.columns].to_csv(os.path.join(self.previous_csv_data, filename), index=False)
         return
 
     @staticmethod

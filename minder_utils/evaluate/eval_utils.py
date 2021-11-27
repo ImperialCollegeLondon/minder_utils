@@ -22,8 +22,18 @@ def get_scores(y_true, y_pred):
     return sensitivity, specificity, acc, f1
 
 
-def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, seed=0):
-    train_ids, test_ids = train_test_split(np.unique(patient_ids), test_size=0.33, random_state=seed)
+def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, stratify=True, seed=0):
+    y[y == 0] = -1
+
+    # make sure the train and test set got both positive and negative patients
+    y_p_id = []
+    for p_id in np.unique(patient_ids):
+        _y = np.unique(y[patient_ids == p_id])
+        y_p_id.append(int(_y[0]) if len(_y) < 2 else np.random.randint(0, 2))
+    y_p_id = np.array(y_p_id)
+    y_p_id[y_p_id < 0] = 0
+
+    train_ids, test_ids = train_test_split(np.unique(patient_ids), test_size=0.33, random_state=seed, stratify=y_p_id if stratify else None)
     test_y = y[np.isin(patient_ids, test_ids)]
     if valid_only:
         test_filter = np.isin(test_y, [-1, 1])

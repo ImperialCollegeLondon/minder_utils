@@ -38,31 +38,13 @@ class Visualisation_Activity:
             activity_data = activity_data[activity_data.valid == valid]
 
         if patient_id is None:
-            patient_id = np.random.choice(activity_data.id.unique())
-
-        if isinstance(patient_id, str):
-            activity_data = activity_data[activity_data.id == patient_id]
-        elif isinstance(patient_id, list):
-            activity_data = activity_data[activity_data.id.isin(patient_id)]
-
-        available_dates = activity_data.time.dt.date.unique()
-        if date is None:
-            date = np.random.choice(available_dates)
+            activity_data = self.filter_dates(date, activity_data)
+            activity_data = self.filter_patient(patient_id, activity_data)
         else:
-            if isinstance(date, list):
-                visual_dates = []
-                for day in date:
-                    v_date = pd.to_datetime(day, format='%Y-%m-%d').date()
-                    visual_dates.append(v_date)
-                    assert v_date in available_dates, 'The date provided is not in the dataset'
-                date = visual_dates
-            elif isinstance(date, str):
-                date = pd.to_datetime(date, format='%Y-%m-%d').date()
-                assert date in available_dates, 'The date provided is not in the dataset'
-            else:
-                raise TypeError('The date only accepts str or list as input')
+            activity_data = self.filter_patient(patient_id, activity_data)
+            activity_data = self.filter_dates(date, activity_data)
 
-        self.data = {}
+        self.data = {'raw_data': activity_data}
 
         # Raw data
         if isinstance(date, datetime.date):
@@ -98,6 +80,41 @@ class Visualisation_Activity:
     @formatting_plots(save_path=visual_config['activity']['save_path'], rotation=0, legend=False)
     def normalised_data(self):
         self.subplots(self.data['normalise'], self._visual_heatmap)
+
+    @staticmethod
+    def filter_patient(patient_id, activity_data):
+        if patient_id is None:
+            patient_id = np.random.choice(activity_data.id.unique())
+        if isinstance(patient_id, str):
+            activity_data = activity_data[activity_data.id == patient_id]
+        elif isinstance(patient_id, list):
+            activity_data = activity_data[activity_data.id.isin(patient_id)]
+        return activity_data
+
+    @staticmethod
+    def filter_dates(date, activity_data):
+        available_dates = activity_data.time.dt.date.unique()
+        if date is None:
+            date = np.random.choice(available_dates)
+        else:
+            if isinstance(date, list):
+                visual_dates = []
+                for day in date:
+                    v_date = pd.to_datetime(day, format='%Y-%m-%d').date()
+                    visual_dates.append(v_date)
+                    assert v_date in available_dates, 'The date provided is not in the dataset'
+                date = visual_dates
+            elif isinstance(date, str):
+                date = pd.to_datetime(date, format='%Y-%m-%d').date()
+                assert date in available_dates, 'The date provided is not in the dataset'
+            else:
+                raise TypeError('The date only accepts str or list as input')
+        # Raw data
+        if isinstance(date, datetime.date):
+            activity_data = activity_data[activity_data.time.dt.date == date]
+        elif isinstance(date, list):
+            activity_data = activity_data[activity_data.time.dt.date.isin(date)]
+        return activity_data
 
     @staticmethod
     def _visual_scatter(data, ax):
@@ -136,8 +153,9 @@ class Visualisation_Activity:
                     func(data, axes)
                     ax = axes
                 except IndexError:
-                    func(data, axes[y_axis])
-                    ax = axes[y_axis]
+                    indices = np.max([x_axis, y_axis])
+                    func(data, axes[indices])
+                    ax = axes[indices]
 
                 ax.set_xlabel(None)
                 ax.set_ylabel('Participant {}'.format(x_axis))

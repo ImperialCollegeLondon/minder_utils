@@ -12,7 +12,7 @@ class Encoder(nn.Module):
         self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
         self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc = nn.Linear(336, 1024)
+        self.fc = nn.Linear(1792, 1024)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -65,7 +65,7 @@ class ResNetSimCLR(nn.Module):
 
     def forward(self, x):
         h = self.features(x)
-        h = nn.Flatten()(x) if self.base_model == 'basic' else h.squeeze()
+        h = nn.Flatten()(h) if self.base_model == 'basic' else h.squeeze()
 
         x = self.l1(h)
         x = F.relu(x)

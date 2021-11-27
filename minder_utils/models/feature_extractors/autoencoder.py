@@ -16,7 +16,8 @@ class AutoEncoder(Feature_extractor):
         return codes, decoded
 
     def step(self, data):
-        return self.criterion(self.decoder(self.encoder(data)), data[0])
+        data, label = data
+        return self.criterion(self.decoder(self.encoder(data)), data)
 
 
 class Encoder(nn.Module):
@@ -25,13 +26,13 @@ class Encoder(nn.Module):
         # Encoder
         if base_model == 'conv':
             self.encoder = nn.Sequential(
-                nn.Conv2d(3, 8, 2, padding=1),
+                nn.Conv2d(3, 8, kernel_size=2, padding=1),
                 nn.Tanh(),
-                nn.Conv2d(8, 16, 2, padding=1),
+                nn.Conv2d(8, 16, kernel_size=2, padding=1),
                 nn.Tanh(),
-                nn.Conv2d(16, 8, 2),
+                nn.Conv2d(16, 8, kernel_size=2),
                 nn.Tanh(),
-                nn.Conv2d(8, 3, 2),
+                nn.Conv2d(8, 3, kernel_size=2),
                 nn.Tanh()
             )
         else:
@@ -47,7 +48,7 @@ class Encoder(nn.Module):
             )
 
     def forward(self, inputs):
-        codes = self.encoder(inputs[0])
+        codes = self.encoder(inputs)
         return codes
 
 
@@ -57,13 +58,13 @@ class Decoder(nn.Module):
         # Decoder
         if base_model == 'conv':
             self.decoder = nn.Sequential(
-                nn.Conv2d(3, 8, 2, padding=1),
+                nn.Conv2d(3, 8, kernel_size=2, padding=1),
                 nn.Tanh(),
-                nn.Conv2d(8, 16, 2, padding=1),
+                nn.Conv2d(8, 16, kernel_size=2, padding=1),
                 nn.Tanh(),
-                nn.Conv2d(16, 8, 2),
+                nn.Conv2d(16, 8, kernel_size=2),
                 nn.Tanh(),
-                nn.Conv2d(8, 3, 2),
+                nn.Conv2d(8, 3, kernel_size=2),
                 nn.Sigmoid()
             )
         else:

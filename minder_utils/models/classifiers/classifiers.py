@@ -80,13 +80,13 @@ class Classifiers:
         if self.model_type in ['pnn', 'nn', 'lstm']:
             if self.model_type in ['lstm', 'pnn']:
                 data = data.reshape(data.shape[0], 24, -1)
-            return self.model.predict(data)[:, 1]
+            return self.model.predict(data)
         else:
             return self.model.predict_proba(data)
 
     @staticmethod
     def lr():
-        return LogisticRegression()
+        return LogisticRegression(max_iter=1000)
 
     @staticmethod
     def bayes():

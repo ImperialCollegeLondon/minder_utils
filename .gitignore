@@ -1,4 +1,5 @@
 -.idea
+..bfg*
 **/data
 **/ckpt
 **/.DS_Store

@@ -40,14 +40,16 @@ def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True):
 def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True):
     '''
     This function is to evaluate your features on the baseline models
-    Args:
-        X:
-        y:
-        p_ids:
-        num_runs:
-        valid_only:
+    Parameters
+    ----------
+    X
+    y
+    p_ids
+    num_runs
+    valid_only
 
-    Returns:
+    Returns Dataframe, contains the performance of the models
+    -------
 
     '''
     results = []
