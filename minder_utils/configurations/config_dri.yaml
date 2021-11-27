@@ -2,7 +2,7 @@ name: &save_config
   save_path: './data/pkl/raw_data'
   save_name: null
   verbose: True
-  refresh: True
+  refresh: False
 
 physiological:
   type: [ 'raw_body_weight', 'raw_skin_temperature',
@@ -50,4 +50,14 @@ individuals:
           'procedure', 'observation_notes', 'encounter',
           'issue' ]
   measure: ['raw_sleep_event', 'raw_wearable_walking']
+  save: *save_config
+
+labelled_data:
+  save:
+    save_path: './data/pkl/raw_data'
+    save_name: null
+    verbose: True
+    refresh: False
+
+unlabelled_data:
   save: *save_config

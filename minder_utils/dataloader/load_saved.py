@@ -2,44 +2,41 @@ import numpy as np
 import os
 
 
-def load_data(num_days_extended=0,
-              labelled_path='./minder_utils/data/weekly_test/previous/npy/labelled',
-              unlabelled_path='./minder_utils/data/weekly_test/previous/npy/unlabelled',
-              flatten=True):
+def process_data(data, unlabelled_data, num_days_extended=0, flatten=True):
     '''
-    This function is used to load the labelled data and unlabelled data.
-
-    You can get this data by
-        - weekly_loader, then the data will be saved into the subfolders in
-            ./data/weekly_test/previous/npy
-        - Alternatively, you can get theses data by Dataloader and Formatting.
-
+    This function is to process the data from dataloader and make it easy for
+    the models to use
     Parameters
     ----------
-    labelled_path
-    unlabelled_path
-    valid_only
+    data: dict, dictionary contains activity, p_ids, uti_labels
+    unlabelled_data: numpy array, unlabelled data
+    num_days_extended: int, How many consecutive days you want to extend the labelled data.
+        The data will be extended by 2 * num_days_extended (n days before and after)
+    flatten: bool, flatten the activity data or not.
 
-    Returns
+    Returns list contains unlabelled_data, X, y, p_ids
     -------
 
     '''
-    X = np.load(os.path.join(labelled_path, 'activity.npy'))
-    y = np.load(os.path.join(labelled_path, 'label.npy'))
-    p_ids = np.load(os.path.join(labelled_path, 'patient_id.npy'))
-    unlabelled = np.load(os.path.join(unlabelled_path, 'activity.npy'))
+    X, y, p_ids = data['activity'], data['uti_labels'], data['p_ids']
+    X_truncated = []
+    y_truncated = []
+    p_ids_truncated = []
+    for idx in range(len(X)):
+        truncated_len = 1 + num_days_extended * 2
+        if len(X[idx]) >= truncated_len:
+            X_truncated.append(X[idx][: truncated_len])
+            y_truncated.append(y[idx][: truncated_len])
+            p_ids_truncated.append(p_ids[idx][: truncated_len])
+    X, y, p_ids = np.array(X_truncated), np.array(y_truncated), np.array(p_ids_truncated)
 
     if flatten:
-        indices = list(y[0][1: num_days_extended * 2 + 1]) + [-1, 1]
-        X = X[np.isin(y, indices)].reshape(-1, 3, 8, 14)
-        p_ids = p_ids[np.isin(y, indices)]
-        y = y[np.isin(y, indices)]
+        X = X.reshape(X.shape[0], 3, 8, 14)
+        y = y.reshape(y.shape[0], -1)
         y[y > 0] = 1
         y[y < 0] = -1
-
-        unlabelled = unlabelled.reshape(unlabelled.shape[0], 3, 8, 14)
-        X.reshape(X.shape[0], 3, 8, 14)
     else:
         X = X.reshape(X.shape[0], X.shape[1], 3, 8, 14)
 
-    return unlabelled, X, y, p_ids
+    unlabelled_data = unlabelled_data.reshape(unlabelled_data.shape[0], 3, 8, 14)
+    return unlabelled_data, X, y, p_ids

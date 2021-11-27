@@ -6,7 +6,7 @@ name:
   - &train
       epochs: 50
       verbose: True
-      retrain: False
+      retrain: True
   - &loader
       batch_size: 512
       augmentation: False

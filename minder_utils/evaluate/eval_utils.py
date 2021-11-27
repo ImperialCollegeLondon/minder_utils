@@ -24,7 +24,8 @@ def get_scores(y_true, y_pred):
 
 def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, stratify=True, seed=0):
     y[y == 0] = -1
-
+    y = y.reshape(-1, )
+    patient_ids = patient_ids.reshape(-1, )
     # make sure the train and test set got both positive and negative patients
     y_p_id = []
     for p_id in np.unique(patient_ids):
