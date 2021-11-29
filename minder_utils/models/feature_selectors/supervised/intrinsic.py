@@ -7,7 +7,7 @@ from torch import nn
 import numpy as np
 
 
-class Intrinsic_selector(Feature_selector):
+class Intrinsic_Selector(Feature_selector):
     '''
     This class provide a set of supervised feature selection methods.
     Particularly, it contains a set of intrinsic methods, which will perform automatic feature selection
@@ -25,7 +25,7 @@ class Intrinsic_selector(Feature_selector):
         self.num_features = num_features
         super().__init__(model_name)
         self.name = self.methods[model_name]
-        self.early_stop = EarlyStopping()
+        self.early_stop = EarlyStopping(**self.config['early_stop'])
         self.freeze_classifier = freeze_classifier
         self.discrete = 'discrete' in model_name
         self.temperature = temperature
@@ -74,10 +74,12 @@ class Intrinsic_selector(Feature_selector):
                 optimiser.step()
                 print('Epoch: %d / %5d,  Loss: %.3f' %
                       (e + 1, num_epoch, loss.item()), end='\n')
-                self.early_stop(loss.item(), self.model)
-                if self.early_stop.early_stop:
+                self.early_stop(loss.item(), self.model, self.__class__.__name__)
+                if self.early_stop.early_stop and self.config['early_stop']['enable']:
                     break
-            print('')
+            if self.early_stop.early_stop and self.config['early_stop']['enable']:
+                break
+            return self
 
     def test(self, dataloader):
         correct = 0
@@ -94,7 +96,7 @@ class Intrinsic_selector(Feature_selector):
                 outputs = self.classifier(X)
                 _, predicted = torch.max(outputs.data, 1)
                 total += y.size(0)
-                correct += (predicted == np.argmax(y, axis=1)).sum().item()
+                correct += (predicted == y).sum().item()
 
         print('Accuracy: %d %%' % (100 * correct / total))
         return 100 * correct / total
@@ -105,7 +107,7 @@ class Intrinsic_selector(Feature_selector):
     def __name__(self):
         return 'Supervised Intrinsic Selector', self.name
 
-    def get_importance(self, dataloader, datatype):
+    def get_importance(self, dataloader, normalise=True):
         importance = []
         with torch.no_grad():
             for X, y in dataloader:
@@ -116,10 +118,8 @@ class Intrinsic_selector(Feature_selector):
                     features_importance = self.model(X)
                     importance.extend(list(F.softmax(features_importance, dim=1).detach().numpy()))
         importance = np.array(importance)
-        if datatype == 'activity':
-            importance = importance.reshape(importance.shape[0], 24, -1)
-            importance = np.sum(importance, axis=1)
-        importance -= np.min(importance, axis=1, keepdims=True) - 1e-5
-        importance /= np.max(importance, axis=1, keepdims=True)
+        if normalise:
+            importance -= np.min(importance, axis=1, keepdims=True) - 1e-5
+            importance /= np.max(importance, axis=1, keepdims=True)
         importance = np.mean(importance, axis=0)
         return importance

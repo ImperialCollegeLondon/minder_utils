@@ -8,7 +8,7 @@ class Ranking(torch.nn.Module):
         self._cosine_similarity = torch.nn.CosineSimilarity(dim=-1)
         self.measure_similarity = self._get_similarity_function(use_cosine_similarity)
         self.delta = delta
-        self.criterion = torch.nn.BCELoss(reduction='sum')
+        self.criterion = torch.nn.MSELoss(reduction='sum')
         if not use_cosine_similarity:
             dim = 64
             self.projector = torch.nn.Linear(dim, dim, bias=False)

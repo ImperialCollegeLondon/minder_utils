@@ -3,7 +3,7 @@ from minder_utils.models.utils import Feature_selector
 import numpy as np
 
 
-class Supervised_wrapper(Feature_selector):
+class Wrapper_Selector(Feature_selector):
     '''
     This class provide a set of supervised feature selection methods.
     Particularly, it contains a set of filter methods, which will perform SEPARATELY with the classifier.
@@ -30,10 +30,12 @@ class Supervised_wrapper(Feature_selector):
 
     def __init__(self, estimator, model_name='rfe', num_features=10):
         '''
-        Select a proportion of features
-        Args:
-            num_features: int / float, number / percentage of features to be selected
 
+        Parameters
+        ----------
+        estimator: sklearn estimator
+        model_name: 'rfe' or 'refcv'
+        num_features: int / float, number / percentage of features to be selected
         '''
         self.estimator = estimator
         self.num_features = num_features

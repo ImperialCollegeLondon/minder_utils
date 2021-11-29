@@ -74,6 +74,8 @@ class Feature_extractor(ABC, nn.Module):
                 self.early_stop(loss.item(), self.model, save_name)
                 if self.early_stop.early_stop and self.config['early_stop']['enable']:
                     break
+            if self.early_stop.early_stop and self.config['early_stop']['enable']:
+                break
         return self
 
     def load_pre_trained_weights(self, save_name):

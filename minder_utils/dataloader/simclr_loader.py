@@ -81,7 +81,8 @@ def create_labelled_loader(X, y, batch_size=10, normalise_data=True, shuffle=Tru
         return train_dataloader
 
 
-def create_unlabelled_loader(X, batch_size=10, shuffle=True, augmentation=False):
+def create_unlabelled_loader(X, batch_size=10, shuffle=True, augmentation=False,
+                             normalise_data=True):
     '''
     Create a dataloader for unlabelled data, note this function will label every datapoint
     with one.
@@ -91,13 +92,15 @@ def create_unlabelled_loader(X, batch_size=10, shuffle=True, augmentation=False)
     batch_size
     shuffle
     augmentation
+    normalise_data: normalise the data or not
 
     Returns torch dataloader
     -------
 
     '''
     transformers = DataTransform(augmentation_transformers()) if augmentation else None
-    train_dataset = CustomTensorDataset([torch.Tensor(X), torch.ones(X.shape[0])], transformers)
+    train_dataset = CustomTensorDataset([torch.Tensor(X), torch.ones(X.shape[0])], transformers,
+                                        normalise_data=normalise_data)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True)
     return train_dataloader
 
