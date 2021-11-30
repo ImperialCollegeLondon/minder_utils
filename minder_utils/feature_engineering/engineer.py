@@ -127,7 +127,7 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['entropy']['save'])
     def entropy(self):
-        return calculate_entropy(self.raw_activity, feature_config['entropy']['sensors'])
+        return calculate_entropy(self.formatter.activity_data, feature_config['entropy']['sensors'])
 
     @property
     @load_save(**feature_config['entropy_rate']['save'])
@@ -155,6 +155,7 @@ class Feature_engineer:
         data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
         data = data.pivot_table(index=['id', 'week'], columns='location',
                                 values='value').reset_index().replace(np.nan, 0)
+        return data
         data['time'] = week_to_date(data['week'])
         return data
 

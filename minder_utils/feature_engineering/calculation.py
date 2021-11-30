@@ -78,6 +78,8 @@ def calculate_entropy(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFra
     '''
     assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
 
+    df['week'] = compute_week_number(df.time)
+    
     # Filter the sensors
     if isinstance(sensors, list):
         df = df[df.location.isin(sensors)]
