@@ -319,7 +319,10 @@ class Downloader:
         if categories is None:
             raise TypeError('Please supply at least one category...')
         if type(categories) == str:
-            categories = [categories]
+            if categories == 'all':
+                categories = self.get_category_names('all')
+            else:
+                categories = [categories]
 
         export_dict = {}
         mode_dict = {}
