@@ -30,6 +30,8 @@ def format_tihm_data():
                'Microwave': 'microwave', 'Study': 'study',
                'Dining Room': 'dining room', 'Living Room': 'living room'}
     data = pd.read_csv(os.path.join(path_to_tihm, 'Observations.csv'))
+    # deleting rows that have times and dates before the year 2000
+    data = data[(pd.to_datetime(data.datetimeObserved) > pd.to_datetime('2000-01-01 00:00:00'))]
     data.subject = map_random_ids(data.subject, True)
     activity_data = data[data.location.isin(list(sensors.keys()))] \
         [['subject', 'datetimeObserved', 'location', 'valueQuantity']]
