@@ -155,7 +155,6 @@ class Feature_engineer:
         data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
         data = data.pivot_table(index=['id', 'week'], columns='location',
                                 values='value').reset_index().replace(np.nan, 0)
-        return data
         data['time'] = week_to_date(data['week'])
         return data
 
