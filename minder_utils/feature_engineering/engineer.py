@@ -26,8 +26,9 @@ class Feature_engineer:
         - Body temperature (Low)
     '''
 
-    def __init__(self, formatter):
+    def __init__(self, formatter, week_agg = 'sum'):
         self.formatter = formatter
+        self.week_agg = week_agg
 
     @property
     def info(self):
@@ -38,15 +39,16 @@ class Feature_engineer:
             'body_temperature': 'Mean of body temperature of the participant during the week',
             'entropy': 'Entropy of the activity',
             # 'raw_activity': 'Raw activity data (weekly)',
-            'entropy_rate': 'TODO',
-            'bathroom_night_ma': 'TODO',
-            'bathroom_night_ma_delta': 'TODO',
-            'bathroom_daytime_ma': 'TODO',
-            'bathroom_daytime_ma_delta': 'TODO',
+            'entropy_rate': 'Entropy rate of markov chain over the week',
+            'bathroom_night_ma': 'Moving average of bathroom activity during the night',
+            'bathroom_night_ma_delta': 'Delta in the moving average of bathroom activity during the night',
+            'bathroom_daytime_ma': 'Moving average of bathroom activity during the day',
+            'bathroom_daytime_ma_delta': 'Delta in the moving average of bathroom activity during the day',
             # 'bathroom_urgent_reverse_percentage': 'TODO',
-            'outlier_score_activity': 'TODO',
-            'rp_location_time_delta': 'TODO',
+            'outlier_score_activity': 'Outlier score of the activity',
+            'rp_location_time_delta': 'Reverse percentile of the time between activities',
         }
+    
 
     @property
     @load_save(**feature_config['bathroom_night']['save'])
@@ -152,7 +154,14 @@ class Feature_engineer:
         for feat in features:
             data.append(getattr(self, feat)[['id', 'week', 'location', 'value']])
         data = pd.concat(data)
-        data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
+        if self.week_agg == 'sum':
+            data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
+        elif self.week_agg == 'median':
+            data = data.groupby(['id', 'week', 'location'])['value'].median().reset_index()
+        elif self.week_agg == 'mean':
+            data = data.groupby(['id', 'week', 'location'])['value'].mean().reset_index()
+        else:
+            raise TypeError('week_agg={} is not implemented'.format(self.week_agg))
         data = data.pivot_table(index=['id', 'week'], columns='location',
                                 values='value').reset_index().replace(np.nan, 0)
         data['time'] = week_to_date(data['week'])
