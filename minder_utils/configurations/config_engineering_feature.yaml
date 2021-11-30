@@ -51,12 +51,12 @@ raw_activity:
   save: *save_config
 
 activity:
-  features: ['raw_activity', 'bathroom_night', 'bathroom_daytime', 'body_temperature', 'entropy']
+  features: null
   save:
     save_path: [ './data', 'pkl', 'feature_engineering' ]
     save_name: null
     verbose: True
-    refresh: True
+    refresh: False
 
 
 outlier_score_activity:

@@ -175,6 +175,8 @@ def get_weekly_activity_data(data):
     data = data.groupby(['id', 'time', 'location'])['value'].sum().reset_index()
     data['week'] = compute_week_number(data.time)
     data = data[data.location.isin(config['activity']['sensors'])]
+    data = data.pivot_table(index=['id', 'week'], columns='location',
+                            values='value').reset_index().replace(np.nan, 0)
     return data
 
 
@@ -335,5 +337,5 @@ def get_subject_rp_location_delta(data,
     out.columns = ['id', 'time', 'from', 'to', 'value']
 
     out['location'] = name
-
+    out['week'] = compute_week_number(out['time'])
     return out

@@ -1,2 +1,5 @@
 activity:
   save_path: './results/visual/activity'
+
+evaluation:
+  save_path: './results/visual/evaluation'

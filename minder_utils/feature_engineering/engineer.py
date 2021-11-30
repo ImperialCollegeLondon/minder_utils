@@ -30,6 +30,25 @@ class Feature_engineer:
         self.formatter = formatter
 
     @property
+    def info(self):
+        return {
+            'bathroom_night': 'Bathroom activity during the night',
+            'bathroom_daytime': 'Bathroom activity during the day',
+             # 'bathroom_urgent': 'TODO',
+            'body_temperature': 'Mean of body temperature of the participant during the week',
+            'entropy': 'Entropy of the activity',
+            # 'raw_activity': 'Raw activity data (weekly)',
+            'entropy_rate': 'TODO',
+            'bathroom_night_ma': 'TODO',
+            'bathroom_night_ma_delta': 'TODO',
+            'bathroom_daytime_ma': 'TODO',
+            'bathroom_daytime_ma_delta': 'TODO',
+            # 'bathroom_urgent_reverse_percentage': 'TODO',
+            'outlier_score_activity': 'TODO',
+            'rp_location_time_delta': 'TODO',
+        }
+
+    @property
     @load_save(**feature_config['bathroom_night']['save'])
     def bathroom_night(self):
         return get_bathroom_activity(self.formatter.activity_data, feature_config['nocturia']['time_range'], 'bathroom_night')
@@ -126,7 +145,11 @@ class Feature_engineer:
     @load_save(**feature_config['activity']['save'])
     def activity(self):
         data = []
-        for feat in feature_config['activity']['features']:
+        if feature_config['activity']['features'] is None:
+            features = self.info.keys()
+        else:
+            features = feature_config['activity']['features']
+        for feat in features:
             data.append(getattr(self, feat)[['id', 'week', 'location', 'value']])
         data = pd.concat(data)
         data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
