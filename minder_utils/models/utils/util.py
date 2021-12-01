@@ -2,12 +2,24 @@ import torch
 import numpy as np
 from sklearn.base import clone as sklearn_reset
 import inspect
+from sklearn.preprocessing import StandardScaler
 
 
 def get_device():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Running on:", device)
     return device
+
+
+def train_test_scale(X_train, X_test):
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    return X_train, X_test
+
+
 
 class SklearnModelWrapper:
     '''

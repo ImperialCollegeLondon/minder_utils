@@ -1,11 +1,13 @@
 from minder_utils.evaluate.eval_utils import split_by_ids, get_scores
 from minder_utils.formatting.format_util import format_mean_std
 from minder_utils.models.classifiers.classifiers import Classifiers as keras_clf
+from minder_utils.models.utils.util import train_test_scale
 import pandas as pd
 import numpy as np
 
 
-def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True, return_raw=False):
+
+def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True, return_raw=False, scale_data=False):
     '''
     This function is used to evaluate the performance of your model
     Parameters
@@ -26,6 +28,10 @@ def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True, return_raw=False)
     header = ['model', 'sensitivity', 'specificity', 'acc', 'f1']
     for run in range(num_runs):
         X_train, y_train, X_test, y_test = split_by_ids(X, y, p_ids, seed=run, cat=valid_only, valid_only=valid_only)
+        
+        if scale_data:
+            X_train, X_test = train_test_scale(X_train, X_test)
+
         model.reset()
         model.fit(X_train, y_train)
         sensitivity, specificity, acc, f1 = get_scores(y_test, model.predict(X_test))
@@ -45,7 +51,7 @@ def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True, return_raw=False)
     return df_results
 
 
-def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=False, verbose = True):
+def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=False, verbose = True, scale_data=False):
     '''
     This function is to evaluate your features on the baseline models
     Parameters
@@ -66,14 +72,14 @@ def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=Fals
         if verbose:
             print('Evaluating ', model_type)
         clf = keras_clf(model_type)
-        results.append(evaluate(clf, X, y, p_ids, valid_only=valid_only, num_runs=num_runs, return_raw=return_raw))
+        results.append(evaluate(clf, X, y, p_ids, valid_only=valid_only, num_runs=num_runs, return_raw=return_raw, scale_data=scale_data))
     return pd.concat(results)
 
 
 
 
 
-def evaluate_features_loo(X, y, p_ids, num_runs = 10, nice_names_X_columns = None):
+def evaluate_features_loo(X, y, p_ids, num_runs = 10, nice_names_X_columns = None, scale_data=True):
     '''
     This function makes use of the above two functions to calculate the relative metrics
     when one of the features is left out.
@@ -81,7 +87,7 @@ def evaluate_features_loo(X, y, p_ids, num_runs = 10, nice_names_X_columns = Non
 
     '''
 
-    results_all = evaluate_features(X=X, y=y, p_ids=p_ids, num_runs=num_runs, return_raw=True,  verbose = False)
+    results_all = evaluate_features(X=X, y=y, p_ids=p_ids, num_runs=num_runs, return_raw=True,  verbose = False, scale_data=scale_data)
     results_all_mean = results_all.groupby('model').mean()
 
     dividing_values = results_all_mean.to_dict('index')
