@@ -2,6 +2,7 @@ from minder_utils.evaluate.eval_utils import split_by_ids, get_scores
 from minder_utils.formatting.format_util import format_mean_std
 from minder_utils.models.classifiers.classifiers import Classifiers as keras_clf
 import pandas as pd
+import numpy as np
 
 
 def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True, return_raw=False):
@@ -44,7 +45,7 @@ def evaluate(model, X, y, p_ids, num_runs=10, valid_only=True, return_raw=False)
     return df_results
 
 
-def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=False):
+def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=False, verbose = True):
     '''
     This function is to evaluate your features on the baseline models
     Parameters
@@ -62,7 +63,53 @@ def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=Fals
     '''
     results = []
     for model_type in keras_clf().get_info():
-        print('Evaluating ', model_type)
+        if verbose:
+            print('Evaluating ', model_type)
         clf = keras_clf(model_type)
         results.append(evaluate(clf, X, y, p_ids, valid_only=valid_only, num_runs=num_runs, return_raw=return_raw))
     return pd.concat(results)
+
+
+
+
+
+def evaluate_features_loo(X, y, p_ids, num_runs = 10, nice_names_X_columns = None):
+    '''
+    This function makes use of the above two functions to calculate the relative metrics
+    when one of the features is left out.
+
+
+    '''
+
+    results_all = evaluate_features(X=X, y=y, p_ids=p_ids, num_runs=num_runs, return_raw=True,  verbose = False)
+    results_all_mean = results_all.groupby('model').mean()
+
+    dividing_values = results_all_mean.to_dict('index')
+
+    relative_result_list = []
+
+    def relative_group_by(x):
+        model_name = x['model'][0]
+        divide_vector = np.asarray(list(dividing_values[model_name].values()))
+        x = x[['sensitivity', 'specificity', 'acc', 'f1']]/divide_vector
+        return x
+
+    for col_index_out in range(X.shape[1]):
+        
+        X_to_test = np.delete(X, obj=col_index_out, axis=1)
+
+        results_to_test = evaluate_features(X=X_to_test, y=y, p_ids=p_ids, num_runs=num_runs, return_raw=True, verbose = False)
+        
+        results_to_test['column_out'] = col_index_out if nice_names_X_columns is None else nice_names_X_columns[col_index_out]
+
+        results_to_test[['sensitivity', 'specificity', 'acc', 'f1']] = results_to_test.groupby(by=['model']).apply(relative_group_by)
+
+
+        relative_result_list.append(results_to_test)
+
+    relative_result_all = pd.concat(relative_result_list)
+    relative_result_all_melt = relative_result_all.melt(id_vars=['model', 'column_out'], var_name = 'metric', value_name='value')
+
+    return relative_result_all_melt
+
+
