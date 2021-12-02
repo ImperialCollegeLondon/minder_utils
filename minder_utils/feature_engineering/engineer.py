@@ -26,9 +26,9 @@ class Feature_engineer:
         - Body temperature (Low)
     '''
 
-    def __init__(self, formatter, week_agg = 'sum'):
+    def __init__(self, formatter, agg_method = 'sum'):
         self.formatter = formatter
-        self.week_agg = week_agg
+        self.agg_method = agg_method
 
     @property
     def info(self):
@@ -44,10 +44,34 @@ class Feature_engineer:
             'bathroom_night_ma_delta': 'Delta in the moving average of bathroom activity during the night',
             'bathroom_daytime_ma': 'Moving average of bathroom activity during the day',
             'bathroom_daytime_ma_delta': 'Delta in the moving average of bathroom activity during the day',
-            # 'bathroom_urgent_reverse_percentage': 'TODO',
+            'bathroom_urgent_reverse_percentage': 'Reverse percentile of the time to the bathroom',
             'outlier_score_activity': 'Outlier score of the activity',
             'rp_location_time_delta': 'Reverse percentile of the time between activities',
         }
+
+    @property
+    def agg_info(self):
+        '''
+        These are the time aggregations of each of the datasets.
+        '''
+        return {'evently': ['rp_location_time_delta'], 
+
+                'daily': ['bathroom_night',
+                          'bathroom_daytime',
+                          'outlier_score_activity',
+                          'bathroom_night_ma',
+                          'bathroom_night_ma_delta',
+                          'bathroom_daytime_ma',
+                         #'bathroom_urgent',
+                          'bathroom_urgent_reverse_percentage',
+                          'bathroom_daytime_ma_delta'], 
+
+                'weekly': ['body_temperature', 
+                           'entropy', 
+                           'entropy_rate']}
+
+
+
     
 
     @property
@@ -119,7 +143,13 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['bathroom_urgent_reverse_percentage']['save'])
     def bathroom_urgent_reverse_percentage(self):
-        return get_bathroom_delta(self.formatter.activity_data, rp_single_location_delta, 'bathroom_urgent_reverse_percentage')
+        data = get_bathroom_delta(self.formatter.activity_data, rp_single_location_delta, 'bathroom_urgent_reverse_percentage')
+        def value_group_by(x):
+            x[np.where(x == -1)] = np.nan
+            x = np.nanmean(x)
+            return x
+        data['value'] = data['value'].apply(value_group_by)
+        return data
 
     @property
     @load_save(**feature_config['body_temperature']['save'])
@@ -154,14 +184,14 @@ class Feature_engineer:
         for feat in features:
             data.append(getattr(self, feat)[['id', 'week', 'location', 'value']])
         data = pd.concat(data)
-        if self.week_agg == 'sum':
+        if self.agg_method == 'sum':
             data = data.groupby(['id', 'week', 'location'])['value'].sum().reset_index()
-        elif self.week_agg == 'median':
+        elif self.agg_method == 'median':
             data = data.groupby(['id', 'week', 'location'])['value'].median().reset_index()
-        elif self.week_agg == 'mean':
+        elif self.agg_method == 'mean':
             data = data.groupby(['id', 'week', 'location'])['value'].mean().reset_index()
         else:
-            raise TypeError('week_agg={} is not implemented'.format(self.week_agg))
+            raise TypeError('agg_method={} is not implemented'.format(self.agg_method))
         data = data.pivot_table(index=['id', 'week'], columns='location',
                                 values='value').reset_index().replace(np.nan, 0)
         data['time'] = week_to_date(data['week'])
@@ -183,3 +213,67 @@ class Feature_engineer:
                                               all_loc_as_baseline = feature_config['rp_location_time_delta']['all_loc_as_baseline'],
                                               name='rp_location_time_delta')
 
+    def activity_specific_agg(self, agg='daily', load_smaller_aggs = False):
+        
+        accepted_agg = ['evently', 'daily', 'weekly']
+        if not agg in accepted_agg:
+            raise TypeError('Please use an agg from the list {}'.format(accepted_agg))
+
+        data = []
+
+        '''
+        if feature_config['activity_{}'.format(agg)]['features'] is None:
+            features = self.info.keys()
+        
+        else:
+            features = feature_config['activity_{}'.format(agg)]['features']
+        '''
+
+        features = self.agg_info[agg]
+        if load_smaller_aggs:
+            if agg == 'weekly':
+                features.extend(self.agg_info['daily'])
+                #features.extend(self.agg_info['evently'])
+            elif agg == 'daily':
+                features.extend(self.agg_info['evently'])
+        for feat in features:
+            if agg =='weekly':
+                feat_data = getattr(self, feat)[['id', 'week', 'location', 'value']]
+            elif agg =='daily':
+                feat_data = getattr(self, feat)[['id', 'week', 'time', 'location', 'value']]
+            elif agg =='evently':
+                feat_data = getattr(self, feat)
+            data.append(feat_data)
+        data = pd.concat(data)
+        if agg == 'weekly':
+            data['time'] = week_to_date(data['week'])
+        data['time'] = pd.to_datetime(data['time'])
+        if not agg == 'evently':
+            columns_agg = ['id', 'week', 'location']
+            grouper = pd.Grouper(key = 'time', freq = '1d' if agg=='daily' else '1W', dropna = False)
+            columns_agg.append(grouper)
+            if self.agg_method == 'sum':
+                data = data.groupby(columns_agg)['value'].sum().reset_index()
+            elif self.agg_method == 'median':
+                data = data.groupby(columns_agg)['value'].median().reset_index()
+            elif self.agg_method == 'mean':
+                data = data.groupby(columns_agg)['value'].mean().reset_index()
+            else:
+                raise TypeError('agg_method={} is not implemented'.format(self.agg_method))
+
+        return data
+
+    @property
+    @load_save(**feature_config['activity_daily']['save'])
+    def activity_daily(self):
+        return self.activity_specific_agg(agg='daily')
+
+    @property
+    @load_save(**feature_config['activity_evently']['save'])
+    def activity_evently(self):
+        return self.activity_specific_agg(agg='evently')
+
+    @property
+    @load_save(**feature_config['activity_weekly']['save'])
+    def activity_weekly(self):
+        return self.activity_specific_agg(agg='weekly')

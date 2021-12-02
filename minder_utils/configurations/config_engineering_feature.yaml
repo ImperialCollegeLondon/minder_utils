@@ -59,6 +59,33 @@ activity:
     refresh: False
 
 
+activity_evently:
+  features: null
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: False
+
+activity_daily:
+  features: null
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: False
+
+
+activity_weekly:
+  features: null
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: False
+
+
+
 outlier_score_activity:
   outlier_class: 'zscore'
   tp_for_outlier_hours: 3
