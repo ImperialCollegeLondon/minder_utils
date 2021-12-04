@@ -131,11 +131,18 @@ def cal_confidence(df, p_id, by_days=False):
     return df.confidence.mean()
 
 
+def feature_engineering():
+    from minder_utils.feature_engineering import Feature_engineer
+    from minder_utils.formatting import Formatting
+    fe = Feature_engineer(Formatting('./data/weekly_test/current/csv'))
+    return fe.activity
+
 if __name__ == '__main__':
+    # data = feature_engineering()
     wa = Weekly_alerts()
     wa.evaluate()
-    df = wa._predict('bayes', return_df=True)
+    df = wa.predict()
     for p_id in df['patient id'].unique():
         value = cal_confidence(df, p_id)
         if value > 0.5:
-            print(p_id, value)
+            print(p_id, value, df[df['patient id'] == p_id]['TIHM ids'].unique())

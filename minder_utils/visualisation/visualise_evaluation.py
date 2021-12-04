@@ -18,13 +18,14 @@ class Visual_Evaluation:
     @formatting_plots('Evaluation Results', save_path=visual_config['evaluation']['save_path'], rotation=0, legend=True)
     def boxplot(self):
         sns.set(font_scale=3.0)
-        fig, axes = plt.subplots(2, 2, figsize=(30, 30), sharex=True, sharey=True)
+        fig, axes = plt.subplots(2, 2, figsize=(30, 30), sharey=True)
         for idx, metric in enumerate(['sensitivity', 'specificity', 'acc', 'f1']):
             g_ = sns.boxplot(ax=axes[idx // 2, idx % 2], data=self.results, x='model', y=metric, hue='feature_type')
             if idx < 3:
                 g_.legend_.remove()
 
-    @formatting_plots('Importance', save_path=visual_config['evaluation']['save_path'], rotation=90, legend=True)
+    @formatting_plots('Importance', save_path=visual_config['evaluation']['save_path'], rotation=90, legend=False)
     def importance_bar(self):
         sns.set(font_scale=1.5)
-        sns.barplot(x='sensors', y='importance', data=self.importance)
+        self.importance['importance'] *= 100 / self.importance['importance'].max()
+        sns.barplot(x='importance', y='sensors', data=self.importance)

@@ -10,6 +10,7 @@ import platform
 
 
 def save_file(obj, file_path, file_name):
+    save_mkdir(file_path)
     with open(os.path.join(file_path, file_name + '.pickle'), 'wb') as handle:
         pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

@@ -52,11 +52,7 @@ raw_activity:
 
 activity:
   features: null
-  save:
-    save_path: [ './data', 'pkl', 'feature_engineering' ]
-    save_name: null
-    verbose: True
-    refresh: False
+  save: *save_config
 
 
 outlier_score_activity:

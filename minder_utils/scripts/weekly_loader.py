@@ -157,8 +157,8 @@ class Weekly_dataloader:
         date_dict = self.get_dates()
         for filename in iter_dir(self.previous_csv_data, split=False):
             if filename not in ['device_types.csv', 'homes.csv', 'patients.csv']:
-                previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename))
-                current_data = pd.read_csv(os.path.join(self.current_csv_data, filename))
+                previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename), index_col=0)
+                current_data = pd.read_csv(os.path.join(self.current_csv_data, filename), index_col=0)
                 current_data = current_data[current_data.start_date != 'start_date']
                 previous_data = previous_data[previous_data.start_date != 'start_date']
 
@@ -168,7 +168,7 @@ class Weekly_dataloader:
                 current_data = current_data[~current_mask]
 
                 current_data.drop_duplicates().to_csv(os.path.join(self.current_csv_data, filename), index=False)
-                previous_data.drop_duplicates()[current_data.columns].to_csv(os.path.join(self.previous_csv_data, filename), index=False)
+                previous_data.drop_duplicates().to_csv(os.path.join(self.previous_csv_data, filename), index=False)
         return
 
     @staticmethod
@@ -190,3 +190,16 @@ class Weekly_dataloader:
             for time in date_dict[state]:
                 date_dict[state][time] = pd.to_datetime(date_dict[state][time])
         return date_dict
+
+    @staticmethod
+    def clean_df(path):
+        '''
+        Use to clean dataframe contains unnamed columns.
+        Returns
+        -------
+
+        '''
+        for filename in iter_dir(path, split=False):
+            df = pd.read_csv(os.path.join(path, filename), index_col=0)
+            df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+            df.to_csv(os.path.join(path, filename), index=False)

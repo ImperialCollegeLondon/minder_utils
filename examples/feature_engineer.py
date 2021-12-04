@@ -21,9 +21,15 @@ data = label_by_week(fe.activity)
 
 
 def evaluate_data(input_data, sensors, name):
-    input_data = label_by_week(input_data)
-    raw_data = input_data[~input_data.valid.isna()]
-    X = raw_data[sensors].to_numpy()
+    if not isinstance(input_data, list):
+        input_data = [input_data]
+        sensors = [sensors]
+    X = []
+    for idx, portion_data in enumerate(input_data):
+        input_data = label_by_week(portion_data)
+        raw_data = input_data[~portion_data.valid.isna()]
+        X.append(raw_data[sensors[idx]].to_numpy())
+    X = np.concatenate(X, axis=1)
     y = raw_data.valid.to_numpy()
     p_ids = raw_data.id.to_numpy()
     df = evaluate_features(X, y, p_ids, return_raw=True)
@@ -45,6 +51,12 @@ importance.append(res[1])
 res = evaluate_data(fe.activity, fe.info.keys(), 'Feature engineer')
 results.append(res[0])
 importance.append(res[1])
+
+# ----------------- Concatenate ----------------- #
+res = evaluate_data([fe.raw_activity, fe.activity], [config['activity']['sensors'], fe.info.keys()], 'Concatenate')
+results.append(res[0])
+importance.append(res[1])
+
 
 results = pd.concat(results)
 
