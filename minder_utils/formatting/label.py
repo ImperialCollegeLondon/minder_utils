@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from .map_utils import map_numeric_ids, map_url_to_flag
 from importlib.machinery import SourceFileLoader
@@ -6,6 +7,8 @@ from ..download.download import Downloader
 from minder_utils.configurations import data_path
 from minder_utils.util.util import reformat_path
 import os
+import datetime
+
 
 # import python function from path:
 with open(data_path, 'r') as file_read:
@@ -17,7 +20,7 @@ dri_data_util_validate = SourceFileLoader('dri_data_util_validate', reformat_pat
 from dri_data_util_validate import validated_date
 
 
-def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
+def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_side = 0):
     '''
     This function will label the input dataframe based on the information in ```procedure.csv``` and
     manual labels from TIHM.
@@ -60,9 +63,18 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/'):
     manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     label_df = pd.concat([manual_label, df])
     label_df = label_df.drop_duplicates()
+    if not days_either_side == 0:
+        def dates_either_side_group_by(x):
+            date = pd.to_datetime(x['date'].values[0])
+            x = [x]*(2*days_either_side+1)
+            new_date_values = np.arange(-days_either_side, days_either_side + 1)
+            new_dates = [date + datetime.timedelta(int(value)) for value in new_date_values]
+            x = pd.concat(x)
+            x['date'] = new_dates
+            return x
+        label_df = label_df.groupby(['patient id', 'date', 'valid']).apply(dates_either_side_group_by).reset_index(drop=True)
     label_df['time'] = label_df['patient id'].astype(str) + label_df['date'].astype(str)
     mapping = label_df[['time', 'valid']].set_index('time').to_dict()['valid']
-
     unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
     unlabelled_df['valid'] = unlabelled_df['valid'].map(mapping)
     return unlabelled_df

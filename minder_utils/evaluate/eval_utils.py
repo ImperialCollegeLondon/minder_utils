@@ -30,7 +30,9 @@ def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, stratify=True, se
     y_p_id = []
     for p_id in np.unique(patient_ids):
         _y = np.unique(y[patient_ids == p_id])
-        y_p_id.append(int(_y[0]) if len(_y) < 2 else np.random.randint(0, 2))
+        rng = np.random.default_rng(seed)
+        y_p_id.append(int(_y[0]) if len(_y) < 2 else rng.integers(0,2))
+        seed += 1
     y_p_id = np.array(y_p_id)
     y_p_id[y_p_id < 0] = 0
 

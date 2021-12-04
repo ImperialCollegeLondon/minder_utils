@@ -332,10 +332,22 @@ def get_subject_rp_location_delta(data,
 
     out = data.groupby(by=columns['subject']).apply(rp_location_delta_group_by).reset_index().sort_values(columns['time'])
 
+    bar.update(1)
+    sys.stdout.write('\r')
+    sys.stdout.write('Subject: {} {}/{}'.format(bar.give(), bar.progress, len(subject_list)))
+    sys.stdout.flush()
+
     out = out[[columns['subject'], columns['time'], 'from', 'to', 'rp']]
 
     out.columns = ['id', 'time', 'from', 'to', 'value']
 
     out['location'] = name
     out['week'] = compute_week_number(out['time'])
+
+
+    values = out['value'].values
+    values[values == -1] = np.nan
+    out['value'] = values
+
+
     return out

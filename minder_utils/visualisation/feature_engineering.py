@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
-from minder_utils.formatting.label import label_by_week
+import pandas as pd
+from minder_utils.formatting.label import label_by_week, label_dataframe
 from minder_utils.feature_engineering import Feature_engineer
 from minder_utils.feature_engineering.calculation import *
 from minder_utils.util import formatting_plots
@@ -121,9 +122,115 @@ def visualise_data_time_heatmap(data_plot, name, fig = None, ax = None):
     return fig, ax
 
 
+def visualise_activity_daily_data(fe):
+    '''
+    Arguments
+    ---------
+
+    - fe: class:
+        The feature engineering class that produces the data.
+
+    '''
+
+    activity_daily = fe.activity_specific_agg(agg='daily', load_smaller_aggs = True)
+    activity_daily = label_dataframe(activity_daily, days_either_side=0)
+    activity_daily=activity_daily.rename(columns = {'valid':'UTI Label'})
+    activity_daily['Feature'] = activity_daily['location'].map(fe.info)
+
+    sns.set_theme('talk')
+
+    fig_list = []
+    axes_list = []
+
+    for feature in activity_daily['location'].unique():
+        data_plot = activity_daily[activity_daily['location'].isin([feature])]
+
+        fig, ax = plt.subplots(1,1,figsize = (8,6))
+        ax = sns.boxplot(data=data_plot, x='value', y = 'Feature', hue='UTI Label', ax=ax, **{'showfliers':False})
+        ax.set_ylabel(None)
+        ax.set_yticks([])
+        ax.set_title('{}'.format(fe.info[feature]))
+        ax.set_xlabel('Value')
+
+        fig_list.append(fig)
+        axes_list.append(ax)
+
+    return fig_list, axes_list
 
 
 
+
+def visualise_activity_weekly_data(fe):
+    '''
+    Arguments
+    ---------
+
+    - fe: class:
+        The feature engineering class that produces the data.
+
+    '''
+
+    activity_weekly = fe.activity_specific_agg(agg='weekly', load_smaller_aggs = True)
+    activity_weekly = label_by_week(activity_weekly)
+    activity_weekly=activity_weekly.rename(columns = {'valid':'UTI Label'})
+    activity_weekly['Feature'] = activity_weekly['location'].map(fe.info)
+
+    sns.set_theme('talk')
+
+    fig_list = []
+    axes_list = []
+
+    for feature in activity_weekly['location'].unique():
+        data_plot = activity_weekly[activity_weekly['location'].isin([feature])]
+
+        fig, ax = plt.subplots(1,1,figsize = (8,6))
+        ax = sns.boxplot(data=data_plot, x='value', y = 'Feature', hue='UTI Label', ax=ax, **{'showfliers':False})
+        ax.set_ylabel(None)
+        ax.set_yticks([])
+        ax.set_title('{}'.format(fe.info[feature]))
+        ax.set_xlabel('Value')
+
+        fig_list.append(fig)
+        axes_list.append(ax)
+
+    return fig_list, axes_list
+
+
+
+def visualise_activity_evently_data(fe):
+    '''
+    Arguments
+    ---------
+
+    - fe: class:
+        The feature engineering class that produces the data.
+
+    '''
+
+    activity_evently = fe.activity_specific_agg(agg='evently', load_smaller_aggs = True)
+    activity_evently = label_dataframe(activity_evently, days_either_side=0)
+    activity_evently=activity_evently.rename(columns = {'valid':'UTI Label'})
+    activity_evently['Feature'] = activity_evently['location'].map(fe.info)
+
+    sns.set_theme('talk')
+
+    fig_list = []
+    axes_list = []
+
+    for feature in activity_evently['location'].unique():
+        data_plot = activity_evently[activity_evently['location'].isin([feature])]
+
+        fig, ax = plt.subplots(1,1,figsize = (8,6))
+        ax = sns.boxplot(data=data_plot, x='value', y = 'Feature', hue='UTI Label', ax=ax, **{'showfliers':False})
+        ax.set_ylabel(None)
+        ax.set_yticks([])
+        ax.set_title('{}'.format(fe.info[feature]))
+        ax.set_xlabel('Value')
+
+        fig_list.append(fig)
+        axes_list.append(ax)
+
+    return fig_list, axes_list
 
 
 
