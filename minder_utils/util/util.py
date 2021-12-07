@@ -26,9 +26,9 @@ def reformat_path(path):
     if 'mac' in platform.platform().lower():
         return path
     elif 'windows' in platform.platform().lower():
-        return path.replace(os.sep, ntpath.sep)
+        return str(path).replace(os.sep, ntpath.sep)
     elif 'unix' in platform.platform().lower():
-        return path.replace(os.sep, posixpath.sep)
+        return str(path).replace(os.sep, posixpath.sep)
 
 
 def save_mkdir(path):
