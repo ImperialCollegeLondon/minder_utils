@@ -382,6 +382,16 @@ class Downloader:
                     sys.stdout.flush()
                 else:
                     current_data = pd.read_csv(io.StringIO(content.text))
+                    
+                    if Path(save_path + category + '.csv').exists():
+                        data_to_save = pd.read_csv(save_path + category + '.csv', index_col=0)
+                        data_to_save = data_to_save.append(current_data, ignore_index=True)
+                        data_to_save = data_to_save.drop_duplicates(ignore_index=True)
+
+                    else:
+                        data_to_save = current_data
+
+                    '''
                     header = (not Path(save_path + category + '.csv').exists()) or mode_dict[category] == 'w'
                     # checking whether the first line is a duplicate of the end of the previous file
                     if np.all(current_data[['start_date', 'id']].iloc[0, :] == last_rows[category]):
@@ -391,6 +401,12 @@ class Downloader:
                     else:
                         current_data.to_csv(save_path + category + '.csv', mode=mode_dict[category],
                                             header=header)
+                    '''
+
+                    data_to_save.to_csv(save_path + category + '.csv', mode='w',
+                                            header=True)
+
+
             sys.stdout.write('\n')
 
         print('Success')
