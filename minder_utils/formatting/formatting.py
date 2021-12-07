@@ -27,7 +27,7 @@ class Formatting:
             print('Downloading required files for formatting')
             dl = Downloader()
             dl.export(categories=['device_types', 'homes', 'patients'],
-                      reload=True, since=None, until=None, save_path=path)
+                      reload=True, since=None, until=None, save_path=path, append = False)
             print('Required files downloaded')
 
         self.device_type = \
