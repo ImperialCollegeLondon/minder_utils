@@ -16,9 +16,10 @@ setup(
     packages=['minder_utils',],
     long_description=open('README.txt').read(),
     install_requires=["numpy==1.19.5",
-                        "pandas==1.1.5",
+                        "pandas==1.3.4",
                         "requests",
                         "argparse",
-                        "pyyaml"
+                        "pyyaml",
+                        "typing-extensions==3.7.4"
     ]
 )
