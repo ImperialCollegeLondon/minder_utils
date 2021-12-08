@@ -1,8 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
 from minder_utils.util import formatting_plots
 from minder_utils.formatting import Formatting
+from minder_utils.feature_engineering import Feature_engineer
 import pandas as pd
 from minder_utils.configurations import visual_config, config
 import matplotlib
@@ -13,7 +15,11 @@ from minder_utils.formatting import standardise_activity_data
 from minder_utils.formatting import l2_norm
 
 from minder_utils.formatting.label import label_by_week as week_label
+from minder_utils.formatting.label import label_dataframe
 from minder_utils.feature_engineering.calculation import calculate_entropy_rate, build_p_matrix
+
+
+
 
 
 
@@ -355,6 +361,64 @@ class Visualisation_Entropy():
 
         return fig, ax
 
+    def plot_boxplot_entropy_rate(self, fig=None, ax=None, by_flag=False):
+        '''
+        This class allows the user to plot the entropy rate of each week in
+        a box plot.
+        
+        
+        
+        Arguments
+        ---------
+        
+        - fig: matplotlib.pyplot.figure, optional:
+            This is the figure to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            This is the axes to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+
+        - by_flag: bool, optional:
+            Dictates whether the violin plots should be split on their flags.
+            Defaults to ```False```.
+        
+        
+        
+        Returns
+        --------
+        
+        - fig: matplotlib.pyplot.figure, optional:
+            The figure that the axes are plotted on.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            The axes that contain the graph.
+        
+        '''
+
+        self._get_entropy_rate_data(by_flag=by_flag)
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+
+        if by_flag:
+            ax = sns.boxplot(x='value', y='data_label',
+                                data=self.entropy_data, hue ='valid', ax=ax,
+                                orient='h', color='xkcd:light teal')
+
+        else:
+            ax = sns.boxplot(x='value', y='data_label',
+                                data=self.entropy_data, ax=ax,
+                                orient='h', color='xkcd:light teal')
+
+        ax.set_ylabel('Dataset')
+        ax.set_xlabel('Normalised Entropy Rate')
+        ax.set_xlim(0, 1)
+        ax.set_title('Entropy Rate Of PWLD Homes Each Week')
+
+        return fig, ax
+
+
     def plot_p_matrix(self, combine_data_list=True, fig=None, ax=None):
         '''
         This class allows the user to plot the stochastic matrix of the data 
@@ -414,3 +478,115 @@ class Visualisation_Entropy():
             raise TypeError('combine_data_list=False is not currently supported.')
 
         return fig, ax
+
+
+
+
+class Visualisation_Bathroom():
+    '''
+    This class allows the user to produce visualisations 
+    of the features engineered around bathroom visits.
+
+
+    '''
+    def __init__(self, patient_id='all'):
+
+        self.fmg = Formatting()
+        self.fe = Feature_engineer(self.fmg)
+
+        if type(patient_id) == str:
+            if patient_id == 'all':
+                self.id = patient_id
+            else:
+                self.id = [patient_id]
+        elif patient_id == list:
+            self.id = patient_id
+        else:
+            raise TypeError("patient_id must be a string, 'all' or a list")
+
+        return
+    
+    def _get_data(self, time_name, ma=False, delta=False):
+        attr = 'bathroom'
+        time_name_accept = ['daytime', 'night']
+        if not time_name in time_name_accept:
+            raise TypeError('Please use a time_name from {}'.format(time_name_accept))
+        attr += '_' + time_name
+        if ma:
+            attr += '_' + 'ma'
+            if delta:
+                attr += '_' + 'delta'
+        else:
+            if delta:
+                raise TypeError('Cannot use delta=True if ma=False')
+        
+        data = getattr(self.fe, attr)
+        data['time'] = pd.to_datetime(data['time'])
+        data = label_dataframe(data)
+
+        self.attr = attr
+        
+        if not self.id == 'all':
+            data = data[data.id.isin(self.id)]
+
+        return data
+
+    def plot_night(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
+        
+        data = self._get_data('night', ma=ma, delta=delta)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        ax.set_title(self.attr)
+        
+        return fig, ax
+
+
+    def plot_day(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
+        
+        data = self._get_data('daytime', ma=ma, delta=delta)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        ax.set_title(self.attr)
+        
+        return fig, ax
+    
+
+
+    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None):
+        
+        data = data.dropna(subset=['value'])
+        data['value'] = data['value'].astype(float)
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+        
+        if plot_type=='boxplot':
+            if by_flag:
+                ax = sns.boxplot(x='value',
+                                    data=data, y ='valid', ax=ax,
+                                    orient='h', color='xkcd:light teal')
+            else:
+                ax = sns.boxplot(x='value',
+                                    data=data, ax=ax,
+                                    orient='h', color='xkcd:light teal')
+            ax.set_xlabel('Value')
+            
+        elif plot_type == 'violin':
+            if by_flag:
+                ax = sns.violinplot(x='value', y = 'valid',
+                                    data=data, ax=ax, inner='quartile',
+                                    orient='h', cut=0, color='xkcd:light teal')
+
+            else:
+                ax = sns.violinplot(x='value',
+                                    data=data, ax=ax, inner='quartile',
+                                    orient='h', cut=0, color='xkcd:light teal')
+            ax.set_xlabel('Value')
+
+        elif plot_type == 'line':
+            ax = sns.lineplot(x='time', y='value', data=data)
+            ax.tick_params(axis='x', rotation=90)
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Value')
+
+
+        return fig, ax
+            
