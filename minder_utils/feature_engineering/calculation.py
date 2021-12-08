@@ -156,28 +156,37 @@ def entropy_rate_from_p_matrix(p_matrix, normalised=True):
     return np.abs(h)
 
 
-def build_p_matrix(sequence):
+def build_p_matrix(sequence, return_events=False):
     '''
-    This function allows the user to create a stochastic matrix from a
+    This function allows the user to create a stochastic matrix from a 
     sequence of events.
-
-
-
+    
+    
+    
     Arguments
     ---------
-
-    - sequence: numpy.array:
+    
+    - sequence: numpy.array: 
         A sequence of events that will be used to calculate the stochastic matrix.
 
-
-
+    - return_events: bool:
+        Dictates whether a list of the events should be returned, in the 
+        order of their appearance in the stochastic matrix, ```p_martix```.
+        Defaults to ```False```
+    
+    
+    
     Returns
     --------
-
-    - p_matrix: numpy.array :
+    
+    - p_matrix: numpy.array : 
         A stochastic matrix, in which all of the rows sum to 1.
 
-
+    - unique_locations: list:
+        A list of the events in the order of their appearance in the stochastic
+        matrix, ```p_martix```. This is only returned if ```return_events=True```
+    
+    
     '''
 
     sequence_df = pd.DataFrame()
@@ -186,29 +195,37 @@ def build_p_matrix(sequence):
     sequence_df['to'] = sequence[1:]
     sequence_df['count'] = 1
 
-    pm = sequence_df.groupby(by=['from', 'to']).count().reset_index()
+    pm = sequence_df.groupby(by=['from','to']).count().reset_index()
     pm_total = pm.groupby(by='from')['count'].sum().to_dict()
     pm['total'] = pm['from'].map(pm_total)
 
     def calc_prob(x):
-        return x['count'] / x['total']
+        return x['count']/x['total']
 
     if pm.shape[0] < 2:
         return np.nan
 
-    pm['probability'] = pm.apply(calc_prob, axis=1)
+    pm['probability'] = pm.apply(calc_prob, axis = 1)
+
+    
 
     unique_locations = list(np.unique(pm[['from', 'to']].values.ravel()))
-
-    p_matrix = np.zeros((len(unique_locations), len(unique_locations)))
+    
+    p_matrix = np.zeros((len(unique_locations),len(unique_locations)))
 
     for (from_loc, to_loc, probability_loc) in pm[['from', 'to', 'probability']].values:
+        
+
         i = unique_locations.index(from_loc)
         j = unique_locations.index(to_loc)
 
-        p_matrix[i, j] = probability_loc
 
-    return p_matrix
+        p_matrix[i,j] = probability_loc
+    
+    if return_events:
+        return p_matrix, unique_locations
+    else:
+        return p_matrix
 
 
 def entropy_rate_from_sequence(sequence):

@@ -12,6 +12,12 @@ import datetime
 from minder_utils.formatting import standardise_activity_data
 from minder_utils.formatting import l2_norm
 
+from minder_utils.formatting.label import label_by_week as week_label
+from minder_utils.feature_engineering.calculation import calculate_entropy_rate, build_p_matrix
+
+
+
+
 sns.set()
 
 
@@ -169,3 +175,242 @@ class Visualisation_Activity:
 
 if __name__ == '__main__':
     visual = Visualisation_Activity()
+
+
+
+
+class Visualisation_Entropy():
+    '''
+    This class allows the user to visualise the entropy of the data.
+    
+    
+    Arguments
+    ---------
+
+    - activity_data_list: list:
+        A list of the ```pandas.DataFrames``` that will be used to calculate 
+        the entropy and plots. Each dataframe should have an id, location and time
+        column.
+    
+    - id: string or list, optional:
+        A list or string that contains the ids that are to be plotted.
+        Defaults to ```'all'```
+
+    - data_list_names: list, optional:
+        A list that has the names corresponding to the different datasets given as
+        each element of ```activity_data_list```. If ```None```, names will be
+        automatically generated.
+        Defaults to ```None```.
+
+    
+    
+    '''
+
+    def __init__(self, activity_data_list, id='all', data_list_names=None):
+        '''
+        This function is used to initialise the class.
+        '''
+
+        if type(activity_data_list) == list:
+            self.activity_data_list = activity_data_list
+        else:
+            self.activity_data_list = [activity_data_list]
+
+        if not data_list_names is None:
+            if type(data_list_names) == str:
+                if len(self.activity_data_list) == 1:
+                    self.data_list_names = data_list_names
+                else:
+                    raise TypeError('Please supply data_list_names as a list with as many' \
+                                    'elements as activity_data_list')
+            elif type(data_list_names) == list:
+                if len(self.activity_data_list) == len(data_list_names):
+                    self.data_list_names = data_list_names
+                else:
+                    raise TypeError('Please supply data_list_names as a list with as many' \
+                                    'elements as activity_data_list')
+            else:
+                raise TypeError('Please supply data_list_names as a list with as many' \
+                                'elements as activity_data_list')
+        else:
+            self.data_list_names = ['Set {}'.format(i + 1) for i in range(len(self.activity_data_list))]
+
+        if type(id) == str:
+            if not id == 'all':
+                self.id = [id]
+            else:
+                self.id = id
+        else:
+            self.id = id
+
+        if not self.id == 'all':
+            filtered_activity_data_list = []
+            for data in self.activity_data_list:
+                filtered_activity_data_list.append(data[data.id.isin(self.id)])
+
+            self.activity_data_list = filtered_activity_data_list
+
+        self.entropy_data_list = None
+        self.entropy_data = None
+
+
+        return
+
+    def _get_entropy_rate_data(self, by_flag=False):
+        '''
+        This is an internal function that is used to calculate the entropy and 
+        filter the data based on the ```id``` given in the initialisation of the class.
+        '''
+        entropy_data_list = []
+        for nd, data in enumerate(self.activity_data_list):
+
+            movement_data = data[['id', 'time', 'location']]
+            movement_data = movement_data.dropna(subset=['location'])
+
+            movement_data = calculate_entropy_rate(movement_data)
+            movement_data['data_label'] = self.data_list_names[nd]
+            movement_data = week_label(movement_data)
+
+            entropy_data_list.append(movement_data)
+
+        self.entropy_data_list = entropy_data_list
+        self.entropy_data = pd.concat(entropy_data_list)
+
+        return
+
+    def _get_p_matrix_data(self, combine_data_list=True):
+        '''
+        This is an internal function that is used to calculate the p_matrix and 
+        filter the data based on the ```id``` given in the initialisation of the class.
+        '''
+        if combine_data_list:
+            data_full = pd.concat(self.activity_data_list)
+            p_matrix, unique_locations = build_p_matrix(data_full['location'].values, return_events=True)
+            return p_matrix, unique_locations
+
+        else:
+            p_matrix_list = []
+            unique_locations_list = []
+            for nd, data in enumerate(self.activity_data_list):
+                p_matrix, unique_locations = build_p_matrix(data['location'].values, return_events=True)
+                p_matrix_list.append(p_matrix)
+                unique_locations_list.append(unique_locations)
+            return p_matrix_list, unique_locations_list
+
+    def plot_violin_entropy_rate(self, fig=None, ax=None, by_flag=False):
+        '''
+        This class allows the user to plot the entropy rate of each week in
+        a violin plot.
+        
+        
+        
+        Arguments
+        ---------
+        
+        - fig: matplotlib.pyplot.figure, optional:
+            This is the figure to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            This is the axes to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+
+        - by_flag: bool, optional:
+            Dictates whether the violin plots should be split on their flags.
+            Defaults to ```False```.
+        
+        
+        
+        Returns
+        --------
+        
+        - fig: matplotlib.pyplot.figure, optional:
+            The figure that the axes are plotted on.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            The axes that contain the graph.
+        
+        '''
+
+        self._get_entropy_rate_data(by_flag=by_flag)
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+
+        if by_flag:
+            ax = sns.violinplot(x='value', y='data_label',
+                                data=self.entropy_data, ax=ax, inner='quartile',
+                                split=True, hue='valid',
+                                orient='h', cut=0, color='xkcd:light teal')
+
+        else:
+            ax = sns.violinplot(x='value', y='data_label',
+                                data=self.entropy_data, ax=ax, inner='quartile',
+                                orient='h', cut=0, color='xkcd:light teal')
+
+        ax.set_ylabel('Dataset')
+        ax.set_xlabel('Normalised Entropy Rate')
+        ax.set_xlim(0, 1)
+        ax.set_title('Entropy Rate Of PWLD Homes Each Week')
+
+        return fig, ax
+
+    def plot_p_matrix(self, combine_data_list=True, fig=None, ax=None):
+        '''
+        This class allows the user to plot the stochastic matrix of the data 
+        in a heatmap.
+        
+        
+        
+        Arguments
+        ---------
+        
+        - combine_data_list: bool, optional:
+            Dictates whether each element of ```activity_data_list``` will be plotted
+            together or separately.
+            Defaults to ```True```.
+
+        - fig: matplotlib.pyplot.figure, optional:
+            This is the figure to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            This is the axes to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+        
+        
+        
+        Returns
+        --------
+        
+        - fig: matplotlib.pyplot.figure, optional:
+            The figure that the axes are plotted on.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            The axes that contain the graph.
+        
+        '''
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+
+        p_matrix, unique_locations = self._get_p_matrix_data(combine_data_list=True)
+
+        if combine_data_list:
+
+            ax = sns.heatmap(data=p_matrix, vmin=0, vmax=np.max(p_matrix), cmap='Blues', cbar=False, square=True)
+            ax.invert_yaxis()
+
+            ax.set_yticks(np.arange(len(unique_locations)) + 0.5)
+            ax.set_yticklabels(unique_locations, rotation=0)
+
+            ax.set_xticks(np.arange(len(unique_locations)) + 0.5)
+            ax.set_xticklabels(unique_locations, rotation=90)
+
+            ax.set_title('Stochastic Matrix Of Locations Visited')
+
+
+        else:
+            raise TypeError('combine_data_list=False is not currently supported.')
+
+        return fig, ax
