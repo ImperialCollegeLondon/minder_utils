@@ -16,8 +16,9 @@ from minder_utils.formatting import l2_norm
 
 from minder_utils.formatting.label import label_by_week as week_label
 from minder_utils.formatting.label import label_dataframe
-from minder_utils.feature_engineering.calculation import calculate_entropy_rate, build_p_matrix
-
+from minder_utils.feature_engineering.calculation import build_p_matrix
+from minder_utils.feature_engineering.adding_features import get_entropy_rate as calculate_entropy_rate
+from minder_utils.feature_engineering.util import week_to_date
 
 
 
@@ -185,7 +186,7 @@ if __name__ == '__main__':
 
 
 
-class Visualisation_Entropy():
+class Visualisation_Entropy:
     '''
     This class allows the user to visualise the entropy of the data.
     
@@ -212,7 +213,7 @@ class Visualisation_Entropy():
     
     '''
 
-    def __init__(self, activity_data_list, id='all', data_list_names=None):
+    def __init__(self, activity_data_list, id='all', data_list_names=None, week_or_day = 'week'):
         '''
         This function is used to initialise the class.
         '''
@@ -259,6 +260,7 @@ class Visualisation_Entropy():
         self.entropy_data_list = None
         self.entropy_data = None
 
+        self.week_or_day = week_or_day
 
         return
 
@@ -273,9 +275,15 @@ class Visualisation_Entropy():
             movement_data = data[['id', 'time', 'location']]
             movement_data = movement_data.dropna(subset=['location'])
 
-            movement_data = calculate_entropy_rate(movement_data)
+            movement_data = calculate_entropy_rate(movement_data, week_or_day = self.week_or_day)
             movement_data['data_label'] = self.data_list_names[nd]
-            movement_data = week_label(movement_data)
+            if self.week_or_day == 'week':
+                movement_data = week_label(movement_data)
+                movement_data['date'] = week_to_date(movement_data['week'])
+            elif self.week_or_day == 'day':
+                movement_data = movement_data.rename(columns = {'date':'time'})
+                movement_data = label_dataframe(movement_data)
+                movement_data = movement_data.rename(columns = {'time':'date'})
 
             entropy_data_list.append(movement_data)
 
@@ -417,6 +425,24 @@ class Visualisation_Entropy():
         ax.set_title('Entropy Rate Of PWLD Homes Each Week')
 
         return fig, ax
+
+
+    def plot_line_entropy_rate(self, fig=None, ax=None):
+        self._get_entropy_rate_data()
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(15, 4))
+
+
+        sns.lineplot(data=self.entropy_data, x='date', y='value', hue = 'id')
+        ax.set_ylabel('Normalised Entropy Rate')
+        ax.set_xlabel('Date')
+        ax.set_ylim(0,1)
+
+        ax.set_title('Weekly Entropy Rate')
+
+        return fig, ax
+
 
 
     def plot_p_matrix(self, combine_data_list=True, fig=None, ax=None):
