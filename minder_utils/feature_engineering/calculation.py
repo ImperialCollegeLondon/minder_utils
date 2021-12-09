@@ -70,6 +70,10 @@ def calculate_entropy(df: pd.DataFrame, sensors: Union[list, str]) -> pd.DataFra
             of sensors; if string, only accept 'all', which means use all sensors.
     Returns:
     '''
+
+    
+    df['week'] = compute_week_number(df['time'])
+
     assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
 
     # Filter the sensors
@@ -228,7 +232,7 @@ def build_p_matrix(sequence, return_events=False):
         return p_matrix
 
 
-def entropy_rate_from_sequence(sequence):
+def entropy_rate_from_sequence(sequence, pydtmc = False):
     '''
     This function allows the user to calculate the entropy rate based on
     a sequence of events.
@@ -257,7 +261,14 @@ def entropy_rate_from_sequence(sequence):
     if type(p_matrix) != np.ndarray:
         return np.nan
 
-    return entropy_rate_from_p_matrix(p_matrix)
+    if pydtmc:
+        from pydtmc import MarkovChain
+        mc = MarkovChain(p_matrix)
+        return mc.entropy_rate_normalized
+
+
+    else:
+        return entropy_rate_from_p_matrix(p_matrix)
 
 
 def calculate_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all') -> pd.DataFrame:
