@@ -77,7 +77,7 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['bathroom_night']['save'])
     def bathroom_night(self):
-        return get_bathroom_activity(self.formatter.activity_data, feature_config['nocturia']['time_range'], 'bathroom_night')
+        return get_bathroom_activity(self.formatter.activity_data.sort_values('time'), feature_config['nocturia']['time_range'], 'bathroom_night')
 
     @property
     @load_save(**feature_config['bathroom_night_ma']['save'])
@@ -106,7 +106,7 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['bathroom_daytime']['save'])
     def bathroom_daytime(self):
-        return get_bathroom_activity(self.formatter.activity_data, feature_config['nocturia']['time_range'][::-1], 'bathroom_daytime')
+        return get_bathroom_activity(self.formatter.activity_data.sort_values('time'), feature_config['nocturia']['time_range'][::-1], 'bathroom_daytime')
 
     @property
     @load_save(**feature_config['bathroom_daytime_ma']['save'])
@@ -138,12 +138,12 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['bathroom_urgent']['save'])
     def bathroom_urgent(self):
-        return get_bathroom_delta(self.formatter.activity_data, single_location_delta, 'bathroom_urgent')
+        return get_bathroom_delta(self.formatter.activity_data.sort_values('time'), single_location_delta, 'bathroom_urgent')
 
     @property
     @load_save(**feature_config['bathroom_urgent_reverse_percentage']['save'])
     def bathroom_urgent_reverse_percentage(self):
-        data = get_bathroom_delta(self.formatter.activity_data, rp_single_location_delta, 'bathroom_urgent_reverse_percentage')
+        data = get_bathroom_delta(self.formatter.activity_data.sort_values('time'), rp_single_location_delta, 'bathroom_urgent_reverse_percentage')
         def value_group_by(x):
             x[np.where(x == -1)] = np.nan
             x = np.nanmean(x)
@@ -159,12 +159,12 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['entropy']['save'])
     def entropy(self):
-        return calculate_entropy(self.formatter.activity_data, feature_config['entropy']['sensors'])
+        return calculate_entropy(self.formatter.activity_data.sort_values('time'), feature_config['entropy']['sensors'])
 
     @property
     @load_save(**feature_config['entropy_rate']['save'])
     def entropy_rate(self):
-        return get_entropy_rate(df=self.formatter.activity_data, 
+        return get_entropy_rate(df=self.formatter.activity_data.sort_values('time'), 
                                 sensors=feature_config['entropy_rate']['sensors'], 
                                 name='entropy_rate',
                                 week_or_day='week')
@@ -172,7 +172,7 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['entropy_rate_daily']['save'])
     def entropy_rate_daily(self):
-        return get_entropy_rate(df=self.formatter.activity_data, 
+        return get_entropy_rate(df=self.formatter.activity_data.sort_values('time'), 
                                 sensors=feature_config['entropy_rate_daily']['sensors'], 
                                 name='entropy_rate_daily',
                                 week_or_day='day')
@@ -210,13 +210,13 @@ class Feature_engineer:
     @property
     @load_save(**feature_config['outlier_score_activity']['save'])
     def outlier_score_activity(self):
-        return get_outlier_freq(self.formatter.activity_data, anomaly_detection_freq, 'outlier_score_activity')
+        return get_outlier_freq(self.formatter.activity_data.sort_values('time'), anomaly_detection_freq, 'outlier_score_activity')
 
     @property
     @load_save(**feature_config['rp_location_time_delta']['save'])
     def rp_location_time_delta(self):
         print('This might take a bit of time...')
-        return get_subject_rp_location_delta(data=self.formatter.activity_data, 
+        return get_subject_rp_location_delta(data=self.formatter.activity_data.sort_values('time'), 
                                               columns = {'subject':'id', 'time':'time', 'location':'location'}, 
                                               baseline_length_days = feature_config['rp_location_time_delta']['baseline_length_days'],
                                               baseline_offset_days = feature_config['rp_location_time_delta']['baseline_offset_days'],
