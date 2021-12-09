@@ -51,22 +51,26 @@ class Weekly_alerts:
             'test': (weekly_data, p_ids, dates)
         }
 
-    def evaluate(self):
+    def evaluate(self, transform=True, boosting=True):
         df = []
         for clf in Classifiers().methods:
-            df.append(self._evaluate(clf))
+            df.append(self._evaluate(clf, transform, boosting))
         print(pd.concat(df))
 
-    def _evaluate(self, clf_type):
+    def _evaluate(self, clf_type, transform=True, boosting=True):
         X, y, label_p_ids = self.data['labelled']
-        return evaluate(Classifiers(clf_type), self.extractor.transform(X, self.autoencoder), y, label_p_ids, 10)
+        if transform:
+            X = self.extractor.transform(X, self.autoencoder)
+        else:
+            X = X.reshape(X.shape[0], -1)
+        return evaluate(Classifiers(clf_type, boosting), X, y, label_p_ids, 10)
 
-    def predict(self):
+    def predict(self, transform=True, boosting=True):
         weekly_data, p_ids, dates = self.data['test']
 
         probability = []
         for clf in Classifiers().methods:
-            prob = self._predict(clf)
+            prob = self._predict(clf, transform=transform, boosting=boosting)
             probability.append(prob)
 
         probability = np.mean(probability, axis=0)
@@ -78,13 +82,19 @@ class Weekly_alerts:
         df.to_csv('../results/weekly_test/alerts.csv')
         return df
 
-    def _predict(self, clf_type, return_df=False):
+    def _predict(self, clf_type, return_df=False, transform=True, boosting=True):
         weekly_data, p_ids, dates = self.data['test']
         X, y, label_p_ids = self.data['labelled']
+        if transform:
+            X = self.extractor.transform(X, self.autoencoder)
+            weekly_data = self.extractor.transform(weekly_data, self.autoencoder)
+        else:
+            X = X.reshape(X.shape[0], -1)
+            weekly_data = weekly_data.reshape(weekly_data.shape[0], -1)
         y[y < 0] = 0
         y = y_to_categorical(y) if clf_type in ['nn', 'lstm'] else np.argmax(y_to_categorical(y), axis=1)
-        clf = Classifiers(clf_type)
-        clf.fit(self.extractor.transform(X, self.autoencoder), y)
+        clf = Classifiers(clf_type, boosting)
+        clf.fit(X, y)
         probability = clf.predict_probs(weekly_data)
         if return_df:
             prediction = np.argmax(probability, axis=1)
@@ -137,12 +147,25 @@ def feature_engineering():
     fe = Feature_engineer(Formatting('./data/weekly_test/current/csv'))
     return fe.activity
 
-if __name__ == '__main__':
-    # data = feature_engineering()
-    wa = Weekly_alerts()
-    wa.evaluate()
-    df = wa.predict()
+
+def get_results(model, transform, boosting):
+    df = model.predict(transform=transform, boosting=boosting)
     for p_id in df['patient id'].unique():
         value = cal_confidence(df, p_id)
         if value > 0.5:
             print(p_id, value, df[df['patient id'] == p_id]['TIHM ids'].unique())
+
+
+if __name__ == '__main__':
+    # data = feature_engineering()
+    wa = Weekly_alerts()
+    for trans in [True, False]:
+        for boost in [True, False]:
+            print('------', trans, boost)
+            # wa.evaluate(trans, boost)
+            df = wa.predict(trans, boost)
+            for p_id in df['patient id'].unique():
+                res = cal_confidence(df, p_id, True)
+                if res > 0.5:
+                    print(p_id, res, df[df['patient id'] == p_id]['TIHM ids'].unique())
+            print('------' * 10)

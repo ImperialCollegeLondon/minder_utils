@@ -18,7 +18,7 @@ figure_title = {
     'bathroom_daytime': 'Bathroom activity during the day',
 }
 
-patient_id = 'JYN9EVX3wyv76VbubFPpUB'
+patient_id = ''
 
 
 def process_dataframe(df, week_shift=0):
