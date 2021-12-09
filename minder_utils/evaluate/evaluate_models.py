@@ -68,7 +68,7 @@ def evaluate_features(X, y, p_ids, num_runs=10, valid_only=True, return_raw=Fals
 
     '''
     results = []
-    for model_type in keras_clf().get_info():
+    for model_type in keras_clf(boosting=False).get_info():
         if verbose:
             print('Evaluating ', model_type)
         clf = keras_clf(model_type)
