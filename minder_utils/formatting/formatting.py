@@ -51,8 +51,8 @@ class Formatting:
         if add_tihm:
             data = self.process_data('activity')
             tihm_data = format_tihm_data()
-            return pd.concat([data, tihm_data['activity']]).drop_duplicates()
-        return label_dataframe(self.process_data('activity'))
+            return pd.concat([data, tihm_data['activity']]).drop_duplicates().sort_values('time')
+        return label_dataframe(self.process_data('activity')).sort_values('time')
 
     @property
     @load_save(**config['environmental']['save'])
