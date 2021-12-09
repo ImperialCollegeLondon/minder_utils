@@ -166,7 +166,17 @@ class Feature_engineer:
     def entropy_rate(self):
         return get_entropy_rate(df=self.formatter.activity_data, 
                                 sensors=feature_config['entropy_rate']['sensors'], 
-                                name='entropy_rate')
+                                name='entropy_rate',
+                                week_or_day='week')
+
+    @property
+    @load_save(**feature_config['entropy_rate_daily']['save'])
+    def entropy_rate_daily(self):
+        return get_entropy_rate(df=self.formatter.activity_data, 
+                                sensors=feature_config['entropy_rate_daily']['sensors'], 
+                                name='entropy_rate_daily',
+                                week_or_day='day')
+
 
     @property
     @load_save(**feature_config['raw_activity']['save'])

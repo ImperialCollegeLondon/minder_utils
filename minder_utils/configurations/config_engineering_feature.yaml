@@ -47,6 +47,10 @@ entropy_rate:
   sensors: 'all'
   save: *save_config
 
+entropy_rate_daily:
+  sensors: 'all'
+  save: *save_config
+
 raw_activity:
   save: *save_config
 

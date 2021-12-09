@@ -205,7 +205,7 @@ def get_outlier_freq(data, func, name):
 
 
 
-def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='entropy_rate') -> pd.DataFrame:
+def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='entropy_rate', week_or_day='week') -> pd.DataFrame:
     '''
     This function allows the user to return a pandas.DataFrame with the entropy rate calculated
     for every week.
@@ -250,8 +250,16 @@ def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='
         x = entropy_rate_from_sequence(x.values)
         return x
 
-    df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
-    df.columns = ['id', 'week', 'value']
+    if week_or_day == 'week':
+        df = df.groupby(by=['id','week'])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
+        df.columns = ['id', 'week', 'value']
+
+    elif week_or_day == 'day':
+        df = df.groupby(by=['id',
+                            pd.Grouper(key='time', freq='1d')])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
+        df.columns = ['id', 'date', 'value']
+
+
     df['location'] = name
 
     return df
