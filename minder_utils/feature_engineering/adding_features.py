@@ -234,6 +234,7 @@ def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='
     
     '''
 
+    df = df.sort_values('time')
 
     assert len(sensors) >= 2, 'need at least two sensors to calculate the entropy'
 
