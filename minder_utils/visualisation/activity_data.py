@@ -138,13 +138,9 @@ class Visualisation_Activity:
         ax.xaxis.set_major_formatter(h_fmt)
 
         ax.set_xlabel('Time')
-        ax.set_ylabel('Frequency (Thousands)')
+        ax.set_ylabel('Frequency')
 
         ax.set_title('Stacked Frequency of Firings for the Top 5 Sensors')
-
-        ylabels = ['{:.0f}'.format(x) for x in ax.get_yticks()/1000]
-        ax.set_yticks(ax.get_yticks()[::2])
-        ax.set_yticklabels(ylabels[::2])
 
         ax.tick_params(axis='x', rotation = 0)
 
