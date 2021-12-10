@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import seaborn as sns
-import matplotlib.pyplot as plt
 from minder_utils.util import formatting_plots
 from minder_utils.formatting import Formatting
 from minder_utils.feature_engineering import Feature_engineer
@@ -18,8 +18,7 @@ from minder_utils.formatting.label import label_by_week as week_label
 from minder_utils.formatting.label import label_dataframe
 from minder_utils.feature_engineering.calculation import build_p_matrix
 from minder_utils.feature_engineering.adding_features import get_entropy_rate as calculate_entropy_rate
-from minder_utils.feature_engineering.util import week_to_date
-
+from minder_utils.feature_engineering.util import week_to_date, datetime_to_time
 
 
 
@@ -93,6 +92,64 @@ class Visualisation_Activity:
     @formatting_plots(save_path=visual_config['activity']['save_path'], rotation=0, legend=False)
     def normalised_data(self):
         self.subplots(self.data['normalise'], self._visual_heatmap)
+
+    def top_5_hist_plot(self, fig=None, ax=None):
+
+        data_plot = self.data['raw_data'][['time', 'location']].copy()
+
+        unique_locations, counts = np.unique(data_plot['location'].values, return_counts=True)
+        unique_locations_to_plot = unique_locations[np.argsort(counts)[::-1]][:5]
+
+        data_plot['TOD'] = datetime_to_time(data_plot['time'])
+        data_plot = data_plot[data_plot.location.isin(unique_locations_to_plot)]
+
+        unique_locations = data_plot.location.unique()
+        location_dict = {i: unique_locations[i] for i in range(len(unique_locations))}
+        data_plot = data_plot.dropna().reset_index()
+
+        sns.set_theme('talk')
+
+        cp = [
+            sns.color_palette("muted")[4],
+            sns.color_palette("bright")[2],
+            sns.color_palette('Paired', 9)[-2],  
+            sns.color_palette('bright', desat=0.75)[-1],
+            sns.color_palette("deep")[3]
+        ]
+
+
+        sns.set_palette(sns.color_palette(cp), len(unique_locations_to_plot))
+
+        if ax is None:
+            fig, ax = plt.subplots(1,1,figsize = (12,8))
+
+        ax = sns.histplot(data=data_plot.reset_index(), x = 'TOD', 
+                        hue = 'location', ax=ax, legend=True, 
+                        multiple='stack', bins = 100, hue_order = unique_locations_to_plot)
+
+
+        xlim = (pd.to_datetime('1900-01-01 00:00:00'), pd.to_datetime('1900-01-02 00:00:00'))
+        ax.set_xlim(xlim)
+
+        hours = mdates.HourLocator(interval = 6)
+        h_fmt = mdates.DateFormatter('%H:%M')
+
+        ax.xaxis.set_major_locator(hours)
+        ax.xaxis.set_major_formatter(h_fmt)
+
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Frequency (Thousands)')
+
+        ax.set_title('Stacked Frequency of Firings for the Top 5 Sensors')
+
+        ylabels = ['{:.0f}'.format(x) for x in ax.get_yticks()/1000]
+        ax.set_yticks(ax.get_yticks()[::2])
+        ax.set_yticklabels(ylabels[::2])
+
+        ax.tick_params(axis='x', rotation = 0)
+
+        return fig, ax
+
 
     @staticmethod
     def filter_patient(patient_id, activity_data):
