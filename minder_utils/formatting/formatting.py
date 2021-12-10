@@ -21,6 +21,33 @@ class Formatting:
     def __init__(self, path=os.path.join('./data', 'raw_data'), add_tihm=None):
         self.path = reformat_path(path)
         self.add_tihm = add_tihm
+        self.activity_nice_locations = {
+        'hallway': 'Hallway', 
+        'kitchen': 'Kitchen', 
+        'lounge':'Lounge', 
+        'bathroom1': 'Bathroom', 
+        'bedroom1':'Bedroom',
+        'kettle': 'Kettle',
+        'toaster': 'Toaster',
+        'fridge door': 'Fridge Door',
+        'back door': 'Back Door',
+        'front door': 'Front Door',
+        'microwave': 'Microwave',
+        'study': 'Study',
+        'dining room': 'Dining Room',
+        'living room': 'Living Room',
+        'iron': 'Iron',
+        'corridor1': 'Corridor',
+        'WC1': 'WC',
+        'main door': 'Main Door',
+        'utility': 'Utility', 
+        'office': 'Office', 
+        'multi': 'Multi', 
+        'conservatory': 'Conservatory',
+        'garage': 'Garage', 
+        'secondary': 'Secondary', 
+        'cellar': 'Cellar'
+                                                        }
 
         categories_check = ['device_types', 'homes', 'patients']
         if not np.all([os.path.exists(os.path.join(path, category + '.csv')) for category in categories_check]):
