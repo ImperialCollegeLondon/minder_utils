@@ -53,12 +53,13 @@ def normalise(X, technique='l2'):
             std = 1 if np.max(data) == np.min(data) else np.max(data) - np.min(data)
             X[:, i] = (data - np.min(data)) / std
     elif technique in ['l1', 'l2', 'max']:
-        X = X.reshape(X.shape[0], -1)
-        X = Normalizer(technique).fit_transform(X.transpose(1, 0)).transpose(0, 1)
-        # for i in range(X.shape[2]):
-        # data = X[:, i].reshape(-1, 1)
-        # X[:, i] = Normalizer(technique).fit_transform(data).reshape(-1)
-        #   X[:, :, i] = Normalizer(technique).fit_transform(X[:, :, i])
+        # X.shape = (N, 24, F), where N is the number of samples, F is the features.
+        # X = X.reshape(X.shape[0], -1)
+        # X = Normalizer(technique).fit_transform(X.transpose(1, 0)).transpose(0, 1)
+        for i in range(X.shape[1]):
+            data = X[:, i, :]
+            X[:, i, :] = Normalizer(technique).fit_transform(X[:, i, :])
+            # X[:, i] = Normalizer(technique).fit_transform(data).reshape(-1)
     return X
 
 

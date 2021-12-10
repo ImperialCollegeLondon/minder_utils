@@ -6,7 +6,7 @@ evaluation:
 
 sleep:
   stages: ['light_duration (s)', 'deep_duration (s)', 'rem_duration (s)',
-            'awake_duration (s)', 'Sleep Time', 'age' ]
+            'awake_duration (s)', 'Sleep Time', 'age', 'user_id']
   phy_stages: ['weight (kg)', 'height (m)', 'nb_awakenings', 'nb_snoring_episodes',
                 'rr_average', 'hr_average', 'age']
   hue_order: ['<=50', '50-60', '60-70', '70-80', '>80']

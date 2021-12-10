@@ -61,12 +61,12 @@ class Visual_Sleep:
 
         df = self.data[self.config['stages']]
         for col in self.config['stages']:
-            if col not in ['Sleep Time', 'age']:
-                df[col] = self.filter_df(df, col)
+            if col not in ['Sleep Time', 'age', 'user_id']:
+                df = self.filter_df(df, col)
                 df[col] /= 3600
         df['Sleep'] = df['light_duration (s)'] + df['deep_duration (s)'] + df['rem_duration (s)']
-        df = df[['awake_duration (s)', 'Sleep Time', 'age', 'Sleep']]
-        df = df.melt(id_vars=['Sleep Time', 'age'], var_name='State', value_name='Duration (H)')
+        df = df[['user_id', 'awake_duration (s)', 'Sleep Time', 'age', 'Sleep']]
+        df = df.melt(id_vars=['user_id', 'Sleep Time', 'age'], var_name='State', value_name='Duration (H)')
         mapping = {
             'awake_duration (s)': 'Awake in bed',
             'Sleep': 'Sleep'
@@ -96,12 +96,15 @@ class Visual_Sleep:
     @staticmethod
     def filter_df(df, col, width=1.5):
         # Computing IQR
-        Q1 = df[col].quantile(0.25)
-        Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
-        indices = (df[col] >= Q1 - width * IQR) & (df[col] <= Q3 + width * IQR)
+        new_df = []
+        for age in df.age.unique():
+            Q1 = df[df.age == age][col].quantile(0.25)
+            Q3 = df[df.age == age][col].quantile(0.75)
+            IQR = Q3 - Q1
+            indices = (df[df.age == age][col] >= Q1 - width * IQR) & (df[df.age == age][col] <= Q3 + width * IQR)
+            new_df.append(df[df.age == age].loc[indices])
         # Filtering Values between Q1-1.5IQR and Q3+1.5IQR
-        return df[col].loc[indices]
+        return pd.concat(new_df)
 
     def plt_func(self, func, x_name='State', y_name='Duration (H)', hue_name='age'):
         if self.style == 'age':
@@ -165,17 +168,43 @@ class Visual_Sleep:
 if __name__ == '__main__':
     vs = Visual_Sleep('/Users/mozzie/Desktop/DATA.nosync/sleep_mat', 'age')
     vs.visualise_counts()
-    # vs.boxplot_joint()
-    vs.boxplot_separate()
+    vs.boxplot_joint()
+    # vs.boxplot_separate()
 
     vs_with = Visual_Sleep('/Users/mozzie/Desktop/DATA.nosync/sleep_mat', 'age', filename='withings_sleep_dataset')
 
-    # Joint
+    # Joint, Controlled age group
     minder = vs.df
-    minder['Dataset'] = 'Control Group Dementia'
+    minder['Dataset'] = 'Dementia'
 
     withings = vs_with.df
-    withings['Dataset'] = 'Withings'
+
+    withings_ages = dict(withings.age.value_counts())
+    minder_ages = dict(minder.age.value_counts())
+    min_times = 100000
+    for age in minder_ages:
+        times = withings_ages[age] / minder_ages[age]
+        if times < min_times:
+            min_times = times
+    withings_df = []
+    mappings = {}
+    for age in minder_ages:
+        num = minder_ages[age] * min_times
+        mappings[age] = age + ' (' + str(round(minder_ages[age] / len(minder) * 100))[:2] + '%' + ')'
+        withings_df.append(withings[withings.age == age].sample(n=int(num)))
+    withings = pd.concat(withings_df)
+    withings['Dataset'] = 'Aged Matched Control Group'
+    withings.age = withings.age.map(mappings)
+    minder.age = minder.age.map(mappings)
+
     df = pd.concat([minder, withings])
     sns.boxplot(x='State', y='Duration (H)', hue='Dataset', data=df)
-    plt.savefig('')
+    plt.savefig('joint.png')
+
+    plt.clf()
+    g = sns.FacetGrid(df, col='age', col_order=['60-70 (59%)', '70-80 (27%)', '>80 (14%)'])
+    g.map(sns.boxplot, 'State', 'Duration (H)', 'Dataset')
+    g.set(xlabel=None)
+    plt.legend(loc='center left', bbox_to_anchor=(-1.4, -0.2),
+               fancybox=True, shadow=True, ncol=5)
+    plt.savefig('joint_face.png')

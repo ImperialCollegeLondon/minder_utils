@@ -195,8 +195,8 @@ def build_p_matrix(sequence, return_events=False):
 
     sequence_df = pd.DataFrame()
 
-    sequence_df['from'] = sequence[:-1]
-    sequence_df['to'] = sequence[1:]
+    sequence_df['from'] = sequence[:-1].values
+    sequence_df['to'] = sequence[1:].values
     sequence_df['count'] = 1
 
     pm = sequence_df.groupby(by=['from','to']).count().reset_index()

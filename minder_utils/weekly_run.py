@@ -7,16 +7,18 @@ import os
 from minder_utils.formatting.map_utils import map_raw_ids
 from minder_utils.evaluate.evaluate_models import evaluate
 from minder_utils.formatting.format_util import y_to_categorical
+from minder_utils.formatting.format_util import normalise
 
 pd.set_option('max_columns', None)
 pd.set_option('max_colwidth', None)
 
 
 class Weekly_alerts:
-    def __init__(self, autoencoder='cnn'):
+    def __init__(self, autoencoder='cnn', normalisation=True):
+        self.normalisation = normalisation
         self.loader = Weekly_dataloader(num_days_extended=6)
         # check the collate next week
-        self.loader.refresh()
+        # self.loader.refresh()
         self.reset()
 
         unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))
@@ -46,6 +48,9 @@ class Weekly_alerts:
         dates = np.load(os.path.join(self.loader.current_data, 'dates.npy'), allow_pickle=True)
         weekly_data = weekly_data.reshape(-1, 3, 8, 14)
 
+        if self.normalisation:
+            X = normalise(X.reshape(X.shape[0], 24, -1)).reshape(X.shape)
+            weekly_data = normalise(weekly_data.reshape(weekly_data.shape[0], 24, -1)).reshape(weekly_data.shape)
         self.data = {
             'labelled': (X, y, label_p_ids),
             'test': (weekly_data, p_ids, dates)
@@ -169,3 +174,12 @@ if __name__ == '__main__':
                 if res > 0.5:
                     print(p_id, res, df[df['patient id'] == p_id]['TIHM ids'].unique())
             print('------' * 10)
+    X = np.load(os.path.join(wa.loader.previous_unlabelled_data, 'activity.npy'))
+    p_ids = np.load(os.path.join(wa.loader.previous_unlabelled_data, 'patient_id.npy'))
+    dates = np.load(os.path.join(wa.loader.previous_unlabelled_data, 'dates.npy'), allow_pickle=True)
+    test_data = X[p_ids == '']
+    test_dates = dates[p_ids == '']
+    test_data = normalise(test_data.reshape(test_data.shape[0], 24, -1)).reshape(test_data.shape)
+    wa.data['test'] = (test_data.reshape(137, 3, 8, 14), p_ids[p_ids == ''], test_dates)
+    df = wa.predict(True, True)
+    print(df[df.prediction == 1])
