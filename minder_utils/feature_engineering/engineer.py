@@ -40,6 +40,7 @@ class Feature_engineer:
             'entropy': 'Entropy of the activity',
             # 'raw_activity': 'Raw activity data (weekly)',
             'entropy_rate': 'Entropy rate of markov chain over the week',
+            'entropy_rate_daily': 'Entropy rate of markov chain over the day',
             'bathroom_night_ma': 'Moving average of bathroom activity during the night',
             'bathroom_night_ma_delta': 'Delta in the moving average of bathroom activity during the night',
             'bathroom_daytime_ma': 'Moving average of bathroom activity during the day',
@@ -64,7 +65,8 @@ class Feature_engineer:
                           'bathroom_daytime_ma',
                          #'bathroom_urgent',
                           'bathroom_urgent_reverse_percentage',
-                          'bathroom_daytime_ma_delta'], 
+                          'bathroom_daytime_ma_delta',
+                          'entropy_rate_daily'], 
 
                 'weekly': ['body_temperature', 
                            'entropy', 
