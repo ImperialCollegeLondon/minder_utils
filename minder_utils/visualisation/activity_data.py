@@ -11,6 +11,8 @@ import matplotlib
 import time
 from .util import time_to_seconds
 import datetime
+import networkx as nx
+
 from minder_utils.formatting import standardise_activity_data
 from minder_utils.formatting import l2_norm
 
@@ -541,7 +543,9 @@ class Visualisation_Entropy:
 
         if combine_data_list:
 
-            ax = sns.heatmap(data=p_matrix, vmin=0, vmax=np.max(p_matrix), cmap='Blues', cbar=False, square=True)
+            ax = sns.heatmap(data=p_matrix, vmin=0, 
+                            vmax=np.max(p_matrix), cmap='Blues', cbar=False, 
+                            square=True)
             ax.invert_yaxis()
 
             ax.set_yticks(np.arange(len(unique_locations)) + 0.5)
@@ -558,7 +562,71 @@ class Visualisation_Entropy:
 
         return fig, ax
 
+    def plot_p_matrix_graph(self, combine_data_list=True, fig=None, ax=None):
+        '''
+        Plots a directed graph using networkx that represents the stochastic matrix.
 
+
+        Arguments
+        ---------
+
+        - combine_data_list: bool, optional:
+            Dictates whether each element of ```activity_data_list``` will be plotted
+            together or separately.
+            Defaults to ```True```.
+
+        - fig: matplotlib.pyplot.figure, optional:
+            This is the figure to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            This is the axes to draw the plot on. If ```None```, then one will be created. 
+            Defaults to ```None```.
+
+        Returns
+        ---------
+
+        
+        - fig: matplotlib.pyplot.figure, optional:
+            The figure that the axes are plotted on.
+        
+        - ax: matplotlib.pyplot.axes, optional:
+            The axes that contain the graph.
+            
+
+        '''
+
+        if combine_data_list:
+            if ax is None:
+                fig, ax = plt.subplots(1,1,figsize=(15,10))
+
+            a_matrix, labels = self._get_p_matrix_data(combine_data_list=True)
+
+            G = nx.convert_matrix.from_numpy_array(a_matrix, create_using=nx.DiGraph)
+            G = nx.relabel.relabel_nodes(G, {i:labels[i] for i in range(len(labels))})
+
+            pos=nx.shell_layout(G)
+            nx.draw_networkx_nodes(G, pos=pos)
+
+
+            edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
+
+
+            ax = nx.draw(G, pos, node_color='black', edgelist=edges, 
+                            edge_color=weights, width=3.0, edge_cmap=plt.cm.Blues,  
+                            arrowsize=30, ax = ax)
+
+            for label in nx.nodes(G):
+                plt.text(pos[label][0],pos[label][1]-0.1,s=label, 
+                        bbox=dict(boxstyle="round", facecolor='blue', alpha=0.2),
+                        horizontalalignment='center')
+
+
+        else:
+            raise TypeError('combine_data_list=False is not currently supported.')
+
+
+        return fig, ax
 
 
 class Visualisation_Bathroom():

@@ -21,6 +21,7 @@ setup(
                         "argparse",
                         "pyyaml",
                         "typing-extensions==3.7.4",
-                        "pydtmc"
+                        "pydtmc",
+                        "networkx==2.6.3"
     ]
 )
