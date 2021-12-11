@@ -259,7 +259,7 @@ class Feature_engineer:
         data = pd.concat(data)
         if agg == 'weekly':
             data['time'] = week_to_date(data['week'])
-        data['time'] = pd.to_datetime(data['time'])
+        data['time'] = pd.to_datetime(data['time'], utc=True)
         if not agg == 'evently':
             columns_agg = ['id', 'week', 'location']
             grouper = pd.Grouper(key = 'time', freq = '1d' if agg=='daily' else '1W', dropna = False)

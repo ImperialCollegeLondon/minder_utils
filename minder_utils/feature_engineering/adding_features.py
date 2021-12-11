@@ -261,6 +261,7 @@ def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='
         df.columns = ['id', 'date', 'value']
         df['week'] = compute_week_number(df.date)
         df['time'] = df['date']
+        df['time'] = pd.to_datetime(df['time'], utc=True)
 
 
     df['location'] = name
