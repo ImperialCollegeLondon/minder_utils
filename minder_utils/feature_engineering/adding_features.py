@@ -259,6 +259,8 @@ def get_entropy_rate(df: pd.DataFrame, sensors: Union[list, str] = 'all', name='
         df = df.groupby(by=['id',
                             pd.Grouper(key='time', freq='1d')])['location'].apply(entropy_rate_from_sequence_groupby).reset_index()
         df.columns = ['id', 'date', 'value']
+        df['week'] = compute_week_number(df.date)
+        df['time'] = df['date']
 
 
     df['location'] = name
