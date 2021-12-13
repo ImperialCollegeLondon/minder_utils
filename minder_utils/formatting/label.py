@@ -60,7 +60,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
     df.date = pd.to_datetime(df.date).dt.date
     df = df.dropna()
     manual_label = validated_date(True)
-    manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
+    #manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     label_df = pd.concat([manual_label, df])
     label_df = label_df.drop_duplicates()
     if not days_either_side == 0:
@@ -126,7 +126,7 @@ def label_by_week(df):
 
     '''
     manual_label = validated_date(True)
-    manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
+    #manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     manual_label.date = pd.to_datetime(manual_label.date)
     manual_label['week'] = manual_label.date.dt.isocalendar().week + \
                            (manual_label.date.dt.isocalendar().year - 2000) * 100
