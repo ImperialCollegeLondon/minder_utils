@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
+import warnings
 import datetime
-# import torch
-# import torch.nn.functional as F
-from ..formatting.format_util import normalise as normalized
-from ..formatting.label import label_dataframe
+from minder_utils.util import load_save
+from minder_utils.formatting.format_util import normalise as normalized
+from minder_utils.formatting.label import label_dataframe
 from minder_utils.formatting.standardisation import standardise_physiological_environmental, standardise_activity_data
 from minder_utils.configurations import config
 
@@ -25,6 +25,9 @@ class Dataloader:
     """
 
     def __init__(self, activity, physiological=None, environmental=None, max_days=3, label_data=False):
+        if activity is None:
+            warnings.warn('Activity data is None, this class can be only used to load the processed data')
+            return
         activity = pd.read_csv(activity) if type(activity) == str else activity
         shared_id = None
         for data in [activity, physiological, environmental]:
@@ -67,6 +70,32 @@ class Dataloader:
 
     def __len__(self):
         return int(len(self.labelled_df) / 24)
+
+    @property
+    @load_save(**config['labelled_data']['save'])
+    def labelled_data(self):
+        activity_data, physiological_data, environmental_data, patient_ids, uti_labels = \
+            self.get_labelled_data(normalise=False)
+        return {
+            'activity': activity_data,
+            'phy': physiological_data,
+            'env': environmental_data,
+            'p_ids': patient_ids,
+            'uti_labels': uti_labels
+        }
+
+    @property
+    @load_save(**config['unlabelled_data']['save'])
+    def unlabelled_data(self):
+        activity_data, physiological_data, environmental_data, patient_ids, dates = \
+            self.get_unlabelled_data(normalise=False)
+        return {
+            'activity': activity_data,
+            'phy': physiological_data,
+            'env': environmental_data,
+            'p_ids': patient_ids,
+            'dates': dates
+        }
 
     def get_labelled_data(self, normalise=False):
         # get p ids
@@ -119,7 +148,19 @@ class Dataloader:
 
         return activity_data, physiological_data, environmental_data, patient_ids, uti_labels
 
-    def get_unlabelled_data(self, normalise=False, date=None):
+    def get_unlabelled_data(self, normalise=False, date='2021-03-01'):
+        '''
+        Get the unlabelled data,
+        Parameters
+        ----------
+        normalise: bool, normalise the data or not
+        date: str, only return the data later than the date provided. By default,
+            it will not return the tihm unlabelled
+
+        Returns activity, physiological, environmental data, patient ids, dates
+        -------
+
+        '''
         # May need to change the for loop to dataframe operations
         # df = self.activity.reset_index().set_index(['id', 'Date'])
         # phy_df = self.physiological.reset_index()
@@ -130,6 +171,7 @@ class Dataloader:
         df = self.activity.reset_index().set_index(['id', 'Date'])
         if date is not None:
             df = df[df.index.get_level_values(1) > date]
+
         p_ids = df.index.get_level_values(0).unique()
         outputs = []
         phy_data, env_data = [], []

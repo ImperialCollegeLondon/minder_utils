@@ -68,7 +68,9 @@ class Supervised_Filter(Feature_selector):
     def fit(self, X, y):
         if y.ndim > 1:
             y = np.argmax(y, axis=1)
-        return self.selector.fit(X, y)
+        y[y < 0] = 0
+        y[y > 0] = 1
+        return self.selector.fit(X, y.astype(float))
 
     def transform(self, X):
         return self.selector.transform(X)
@@ -76,3 +78,5 @@ class Supervised_Filter(Feature_selector):
     def __name__(self):
         return 'Supervised Filter', self.name
 
+    def get_importance(self):
+        return self.selector.scores_

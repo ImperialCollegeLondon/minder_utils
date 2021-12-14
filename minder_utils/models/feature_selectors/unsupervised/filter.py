@@ -1,8 +1,8 @@
 from sklearn.feature_selection import VarianceThreshold
-from minder_utils.models.feature_selectors import Feature_selector_template
+from minder_utils.models.utils import Feature_selector
 
 
-class Unsupervised_Filter(Feature_selector_template):
+class Unsupervised_Filter(Feature_selector):
     '''
     This class provide a set of unsupervised feature selection methods.
 

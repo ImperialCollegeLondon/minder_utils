@@ -202,7 +202,8 @@ class Downloader:
 
         return job_id_dict, request_url_dict
 
-    def export(self, since=None, until=None, reload=True, categories='all', save_path='./data/raw_data/', append=True):
+    def export(self, since=None, until=None, reload=True, 
+                categories='all', save_path='./data/raw_data/', append=True, export_index=None):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -248,32 +249,39 @@ class Downloader:
             If ```True```, the downloaded data will be appended to the previous data, if it exists.
             If ```False```, the previous data will be overwritten if it exists.
 
+        - export_index: integer:
+            You may use this argument to download a previous request. ```-1``` will download
+            the most recent request. This argument will over rule the ```reload``` argument.
+            Defaults to ```None```.
+
         '''
         save_path = reformat_path(save_path)
         p = Path(save_path)
         if not p.exists():
             print('Target directory does not exist, creating a new folder')
             save_mkdir(save_path)
-        if reload:
-            self._export_request(categories=categories, since=since, until=until)
+        if export_index is None:
+            if reload:
+                self._export_request(categories=categories, since=since, until=until)
 
         data = requests.get(self.url + 'export', headers=self.params).json()
-        export_index = -1
-        if not reload:
-            if len(data) > 1:
-                print('Multiple export requests exist, please choose one to download')
-                for idx, job in enumerate(data):
-                    print('Job {} '.format(idx).center(50, '='))
-                    print('ID: ', job['id'])
-                    print('Transaction Time', job['jobRecord']['transactionTime'])
-                    print('Export sensors: ', end='')
-                    for record in job['jobRecord']['output']:
-                        print(record['type'], end=' ')
-                    print('')
-                export_index = int(input('Enter the index of the job ...'))
-                while export_index not in range(len(data)):
-                    print('Not a valid input')
+        export_index = -1 if export_index is None else export_index
+        if export_index is None:
+            if not reload:
+                if len(data) > 1:
+                    print('Multiple export requests exist, please choose one to download')
+                    for idx, job in enumerate(data):
+                        print('Job {} '.format(idx).center(50, '='))
+                        print('ID: ', job['id'])
+                        print('Transaction Time', job['jobRecord']['transactionTime'])
+                        print('Export sensors: ', end='')
+                        for record in job['jobRecord']['output']:
+                            print(record['type'], end=' ')
+                        print('')
                     export_index = int(input('Enter the index of the job ...'))
+                    while export_index not in range(len(data)):
+                        print('Not a valid input')
+                        export_index = int(input('Enter the index of the job ...'))
         print('Start to export job')
         categories_downloaded = []
         for idx, record in enumerate(data[export_index]['jobRecord']['output']):
@@ -325,7 +333,10 @@ class Downloader:
         if categories is None:
             raise TypeError('Please supply at least one category...')
         if type(categories) == str:
-            categories = [categories]
+            if categories == 'all':
+                categories = self.get_category_names('all')
+            else:
+                categories = [categories]
 
         export_dict = {}
         mode_dict = {}

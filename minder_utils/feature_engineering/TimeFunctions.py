@@ -257,6 +257,144 @@ def rp_single_location_delta(input_df, single_location, baseline_length_days = 7
     return out
 
 
+def rp_location_delta(data, columns = {'time': 'start_date', 'location': 'location_name'}, baseline_length_days = 7,
+                           baseline_offset_days = 0, all_loc_as_baseline = False):
+    ''' 
+    This funciton allows you to calculate the reverse percentage of the delta for each of the locations based on a baseline.
+    This function allows you to specify whether to calculate the rp values based on the deltas to the same location or 
+    whether to calculate them using all locations.
+
+    Arguments
+    ---------
+
+    - data: pandas dataframe:
+        This is the dataframe containing the time and locations that will be used to calculate the reverse 
+        percentage deltas
+    
+    - columns: dictionary:
+        This is the dictionary with the column names in ```input_df``` for each of the values of data that we need 
+        in our calculations.
+        This dictionary should be of the form:
+        ```
+        {'time':      column containing the times of sensor triggers,
+         'location':  column containing the locations of the sensor triggers}
+         ```
+
+    - baseline_length_days: integer:
+        This is the length of the baseline in days that will be used. This value is used when finding
+        the ```baseline_length_days``` complete days of ```single_location``` data to use as a baseline.
+    
+    - baseline_offset_days: integer:
+        This is the offset to the baseline period. ```0``` corresponds to a time period ending the morning of the
+        current date being calculated on.
+
+    - all_loc_as_baseline: bool:
+        This argument dictates whether all the locations are used as part of the calculationg for the reverse
+        percentage or if only the values from the ```to``` locations are used.
+
+    Returns
+    ---------
+        
+    - out: pandas dataframe:
+        This is the outputted data frame, complete with rp values.
+        
+    
+    '''
+    
+    import time
+    
+    time_col = columns['time']
+    location_col = columns['location']
+
+    data[time_col] = pd.to_datetime(data[time_col])
+
+    data = data.sort_values(time_col)
+
+    if all_loc_as_baseline:
+
+
+
+        times = data[time_col].values
+        raw_delta = raw_delta_calc(times)
+
+        locations = data[location_col].values
+
+        df_dict = {'from': locations[:-1], 'to': locations[1:], 'delta': raw_delta, time_col: times}
+
+        out = pd.DataFrame(dict([(k,pd.Series(v)) for k,v in df_dict.items()]))
+        out['date'] = out[time_col].dt.date
+
+        baseline_df = out.groupby(by='date')['delta'].apply(list).reset_index()
+
+        dates = baseline_df['date'].values
+        deltas = baseline_df['delta'].values
+
+        rp_col = []
+
+
+        for nd in range(dates.shape[0]):
+            date = dates[nd]
+            this_delta = deltas[nd]
+            index_baseline_end = np.where(dates <= date)[0][-1]
+            index_baseline_end = index_baseline_end - baseline_offset_days
+            index_baseline_start = index_baseline_end - baseline_length_days
+
+            if index_baseline_start < 0:
+                rp_col.extend([np.NAN]*len(this_delta))
+            
+            else:
+                X_fit = np.hstack(deltas[index_baseline_start:index_baseline_end]).reshape(-1,1)
+                X_transform = np.asarray(this_delta).reshape(-1,1)
+                td = TimeDeltaDensity(sample = True, sample_size = 10000, seed = nd, verbose = False)
+                td.fit(X_fit)
+                rp_col.extend(td.transform(X_transform).reshape(-1,))
+
+        out['rp'] = rp_col
+
+
+        return out
+    
+    else:
+
+
+        unique_locations = data[location_col].unique()
+        data['date'] = pd.to_datetime(data[time_col].dt.date)
+
+        rp_col = -1*np.ones(data.shape[0])
+
+
+        for location in unique_locations:
+            start_func = time.time()
+            delta_dict = rp_single_location_delta(input_df=data, 
+                                single_location=location, 
+                                baseline_length_days=7, 
+                                baseline_offset_days=0, 
+                                columns=columns, 
+                                recall_value=1)
+            end_func = time.time()
+            location_index = np.where(data[location_col] == location)[0]
+            for date in delta_dict:
+                deltas = delta_dict[pd.Timestamp(date)]
+                
+                start_search = time.time()
+                index_add = location_index[np.where(data['date'].iloc[location_index] == pd.Timestamp(date))[0]]
+                end_search = time.time()
+                
+                # This accounts for rp_single_location_delta function not calculating 
+                index_add = index_add[-deltas.shape[0]:]
+                rp_col[index_add] = deltas.reshape(-1,)
+
+        data['rp'] = rp_col
+
+        df_dict = {'from': data[location_col].values[:-1], 'to': data[location_col].values[1:],
+                    'rp': data['rp'].values[1:], time_col: data[time_col].values[1:]}
+
+        out = pd.DataFrame(dict([(k,pd.Series(v)) for k,v in df_dict.items()]))
+        
+        return out
+
+
+
 
 def datetime_to_clock(times):
     '''

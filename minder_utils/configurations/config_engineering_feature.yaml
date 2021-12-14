@@ -10,8 +10,23 @@ nocturia:
 bathroom_night:
   save: *save_config
 
+bathroom_night_ma:
+  save: *save_config
+  w: 3
+
+bathroom_night_ma_delta:
+  save: *save_config
+
 bathroom_daytime:
   save: *save_config
+
+bathroom_daytime_ma:
+  save: *save_config
+  w: 3
+
+bathroom_daytime_ma_delta:
+  save: *save_config
+
 
 bathroom_urgent:
   recall_value: 2
@@ -32,21 +47,54 @@ entropy_rate:
   sensors: 'all'
   save: *save_config
 
+entropy_rate_daily:
+  sensors: 'all'
+  save: *save_config
+
 raw_activity:
   save: *save_config
 
 activity:
-  features: ['raw_activity', 'bathroom_night', 'bathroom_daytime', 'body_temperature', 'entropy']
+  features: null
+  save: *save_config
+
+
+activity_evently:
+  features: null
   save:
     save_path: [ './data', 'pkl', 'feature_engineering' ]
     save_name: null
     verbose: True
-    refresh: True
+    refresh: False
+
+activity_daily:
+  features: null
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: False
+
+
+activity_weekly:
+  features: null
+  save:
+    save_path: [ './data', 'pkl', 'feature_engineering' ]
+    save_name: null
+    verbose: True
+    refresh: False
+
 
 
 outlier_score_activity:
   outlier_class: 'zscore'
   tp_for_outlier_hours: 3
+  baseline_length_days: 7
+  baseline_offset_days: 0
+  save: *save_config
+
+rp_location_time_delta:
+  all_loc_as_baseline: False
   baseline_length_days: 7
   baseline_offset_days: 0
   save: *save_config

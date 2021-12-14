@@ -1,13 +1,18 @@
-from minder_utils.models.feature_extractors.simclr.basic import ResNetSimCLR
-from minder_utils.models.feature_extractors.partial_order.loss import Ranking
+from .basic import Partial_Order_Models
+from .loss import Ranking
 from minder_utils.models.utils import Feature_extractor
+from minder_utils.dataloader import Partial_Order_Loader
 
 
 class Partial_Order(Feature_extractor):
     def __init__(self):
         super(Partial_Order, self).__init__()
-        self.model = ResNetSimCLR(**self.config["model"])
+        self.model = Partial_Order_Models(**self.config["model"])
         self.criterion = Ranking(**self.config["loss"])
+
+    def _custom_loader(self, data):
+        X, y = data
+        return Partial_Order_Loader(X, y, **self.config['loader'])
 
     def step(self, data):
         pre_anchor, anchor, post_anchor = data
@@ -17,13 +22,12 @@ class Partial_Order(Feature_extractor):
             loss += self._step(pre_anchor[idx_day], pre_anchor[idx_day + 1], anchor)
         return loss
 
-    @staticmethod
-    def which_data(data):
-        pre_anchor, anchor, post_anchor = data
-        return anchor
-
     def _step(self, xi, xj, anchor):
         ris, zis = self.model(xi)
         rjs, zjs = self.model(xj)
         ras, zas = self.model(anchor)
         return self.criterion(zis, zjs, zas)
+
+    @staticmethod
+    def which_data(data):
+        return data[0]

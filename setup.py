@@ -20,6 +20,8 @@ setup(
                         "requests",
                         "argparse",
                         "pyyaml",
-                        "typing-extensions==3.7.4"
+                        "typing-extensions==3.7.4",
+                        "pydtmc",
+                        "networkx==2.6.3"
     ]
 )

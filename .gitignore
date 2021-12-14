@@ -1,4 +1,6 @@
 -.idea
+..bfg*
+/examples/weekly_test_fe.py
 **/data
 **/ckpt
 **/.DS_Store

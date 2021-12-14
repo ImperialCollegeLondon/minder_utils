@@ -1,10 +1,15 @@
 from abc import ABC, abstractmethod
+from minder_utils.configurations import feature_selector_config
 
 
 class Feature_selector(ABC):
     def __init__(self, model):
         self.name = self.methods[model]
         self.model = getattr(self, model)()
+
+    @property
+    def config(self) -> dict:
+        return feature_selector_config[self.__class__.__name__.lower()]
 
     @property
     @abstractmethod

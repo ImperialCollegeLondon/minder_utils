@@ -33,7 +33,7 @@ activity:
   sensors: [ 'back door', 'bathroom1', 'bedroom1', 'dining room',
              'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
              'living room', 'lounge', 'microwave', 'study', 'toaster' ]
-  add_tihm: False
+  add_tihm: True
   save: *save_config
 
 environmental:
@@ -50,4 +50,14 @@ individuals:
           'procedure', 'observation_notes', 'encounter',
           'issue' ]
   measure: ['raw_sleep_event', 'raw_wearable_walking']
+  save: *save_config
+
+labelled_data:
+  save:
+    save_path: './data/pkl/raw_data'
+    save_name: null
+    verbose: True
+    refresh: False
+
+unlabelled_data:
   save: *save_config

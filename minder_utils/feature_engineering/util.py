@@ -1,9 +1,65 @@
 import pandas as pd
+import datetime as dt
+import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 
 def compute_week_number(df):
     df = pd.to_datetime(df)
     return df.dt.isocalendar().week + (df.dt.isocalendar().year - 2000) * 100
+
+
+def datetime_to_time(datetimes):
+    '''
+    This function simply conerts date time strings to just times.
+    This can be useful when we want to plot histograms of average
+    events on a daily basis.
+
+    Arguments
+    ---------
+    datetimes: iterable
+       This is an iterable list, array or series of strings
+       of datetimes. This must be understandable by 
+       dt.datetime.time().
+
+
+    Returns
+    --------
+    times: DatetimeIndex
+        This is a series contaning the new times. They will all
+        have date value of 1900-01-01.
+
+    ''' 
+    times = [dt.datetime.time(d) for d in datetimes]
+    times = pd.to_datetime(times, format="%H:%M:%S")
+    
+    return times
+
+def datetime_to_day(datetimes):
+    '''
+    This function simply conerts date time strings to just days.
+    This can be useful when we want to plot histograms of average
+    events on a daily basis.
+
+    Arguments
+    ---------
+    datetimes: iterable
+       This is an iterable list, array or series of strings
+       of datetimes. This must be understandable by 
+       dt.datetime.date().
+
+
+    Returns
+    --------
+    days: DatetimeIndex
+        This is a series contaning the new days.
+
+    ''' 
+    days = [dt.datetime.date(d) for d in datetimes]
+    days = pd.to_datetime(days, format="%Y-%m-%d")
+    
+    return days
+
 
 
 def week_to_date(df: pd.DataFrame, day_of_week: int = 1):

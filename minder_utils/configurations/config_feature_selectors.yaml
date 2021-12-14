@@ -24,6 +24,15 @@ name:
       save: True
       save_path: './data/extracted_features'
 
+intrinsic_selector:
+  model:
+    model_name: 'linear'
+    num_features: 14
+    freeze_classifier: False
+    temperature: 5
+  early_stop:
+    <<: *early_stop
+
 
 simclr:
   model:

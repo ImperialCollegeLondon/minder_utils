@@ -7,10 +7,12 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn import tree
 from sklearn.neighbors import KNeighborsClassifier
 from minder_utils.formatting.format_util import y_to_categorical
+from sklearn.ensemble import AdaBoostClassifier
 
 
 class Classifiers:
-    def __init__(self, model_type='nn'):
+    def __init__(self, model_type='nn', boosting=True):
+        self.boosting = boosting
         self.model_type = model_type
         self.model = getattr(self, model_type)()
         self.callbacks = [EarlyStopping(monitor='loss', patience=3)]
@@ -23,7 +25,7 @@ class Classifiers:
     @property
     def methods(self):
         return {
-            'nn': 'neural network',
+            # 'nn': 'neural network',
             # 'lstm': 'LSTM',
             'lr': 'logistic regression',
             'bayes': 'naive bayesian',
@@ -80,24 +82,26 @@ class Classifiers:
         if self.model_type in ['pnn', 'nn', 'lstm']:
             if self.model_type in ['lstm', 'pnn']:
                 data = data.reshape(data.shape[0], 24, -1)
-            return self.model.predict(data)[:, 1]
+            return self.model.predict(data)
         else:
             return self.model.predict_proba(data)
 
-    @staticmethod
-    def lr():
-        return LogisticRegression()
+    def lr(self):
+        if self.boosting:
+            return AdaBoostClassifier(LogisticRegression(max_iter=1000), n_estimators=100, random_state=0)
+        return LogisticRegression(max_iter=1000)
 
-    @staticmethod
-    def bayes():
+    def bayes(self):
+        if self.boosting:
+            return AdaBoostClassifier(GaussianNB(), n_estimators=100, random_state=0)
         return GaussianNB()
 
-    @staticmethod
-    def dt():
+    def dt(self):
+        if self.boosting:
+            return AdaBoostClassifier(tree.DecisionTreeClassifier(), n_estimators=100, random_state=0)
         return tree.DecisionTreeClassifier()
 
-    @staticmethod
-    def knn():
+    def knn(self):
         return KNeighborsClassifier()
 
     def __name__(self):

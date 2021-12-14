@@ -49,7 +49,24 @@ class CustomTensorDataset(Dataset):
         return self.tensors[0].size(0)
 
 
-def torch_loader(X, y, batch_size=10, normalise_data=True, shuffle=True, seed=0, split=True, augmentation=False):
+def create_labelled_loader(X, y, batch_size=10, normalise_data=True, shuffle=True, seed=0, split=True, augmentation=False):
+    '''
+    Create a dataloader for labelled data
+    Parameters
+    ----------
+    X: numpy array, data
+    y: numpy array, label
+    batch_size
+    normalise_data
+    shuffle
+    seed
+    split
+    augmentation: augment data or not
+
+    Returns torch dataloader
+    -------
+
+    '''
     transformers = DataTransform(augmentation_transformers()) if augmentation else None
     if split:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=seed, stratify=y)
@@ -64,11 +81,27 @@ def torch_loader(X, y, batch_size=10, normalise_data=True, shuffle=True, seed=0,
         return train_dataloader
 
 
-def torch_unlabelled_loader(X, batch_size=10, shuffle=True, augmentation=False):
+def create_unlabelled_loader(X, batch_size=10, shuffle=True, augmentation=False,
+                             normalise_data=True):
+    '''
+    Create a dataloader for unlabelled data, note this function will label every datapoint
+    with one.
+    Parameters
+    ----------
+    X: unlabelled data
+    batch_size
+    shuffle
+    augmentation
+    normalise_data: normalise the data or not
+
+    Returns torch dataloader
+    -------
+
+    '''
     transformers = DataTransform(augmentation_transformers()) if augmentation else None
-    train_dataset = CustomTensorDataset([torch.Tensor(X), torch.ones(X.shape[0])], transformers)
+    train_dataset = CustomTensorDataset([torch.Tensor(X), torch.ones(X.shape[0])], transformers,
+                                        normalise_data=normalise_data)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True)
     return train_dataloader
 
 
-__all__ = ['torch_loader', 'torch_unlabelled_loader']
