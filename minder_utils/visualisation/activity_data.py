@@ -35,7 +35,7 @@ class Visualisation_Activity:
 
     @staticmethod
     def get_label_info():
-        activity_data = Formatting().activity_data
+        activity_data = label_dataframe(Formatting().activity_data)
         labelled_data = activity_data[activity_data.valid.isin([True, False])]
         labelled_data.time = labelled_data.time.dt.date
         labelled_data = labelled_data[['id', 'time', 'valid']].drop_duplicates()
@@ -46,7 +46,7 @@ class Visualisation_Activity:
         assert valid in [None, True, False], 'the valid must be in [None, True, False]'
 
         # select data according to patient id, date, valid
-        activity_data = Formatting().activity_data
+        activity_data = label_dataframe(Formatting().activity_data)
 
         if valid is not None:
             activity_data = activity_data[activity_data.valid == valid]
@@ -55,7 +55,8 @@ class Visualisation_Activity:
             activity_data = self.filter_dates(date, activity_data)
             activity_data = self.filter_patient(patient_id, activity_data)
         else:
-            activity_data = self.filter_patient(patient_id, activity_data)
+            if patient_id != 'all':
+                activity_data = self.filter_patient(patient_id, activity_data)
             activity_data = self.filter_dates(date, activity_data)
 
         self.data = {'raw_data': activity_data}
@@ -232,7 +233,6 @@ class Visualisation_Activity:
 
         fig.supxlabel('Time')
         fig.supylabel('Location')
-        print(mappings)
 
 
 if __name__ == '__main__':
@@ -268,11 +268,11 @@ class Visualisation_Entropy:
     
     '''
 
-    def __init__(self, activity_data_list, id='all', data_list_names=None, week_or_day = 'week'):
+    def __init__(self, activity_data_list, patient_id='all', data_list_names=None, week_or_day = 'week'):
         '''
         This function is used to initialise the class.
         '''
-
+        
         if type(activity_data_list) == list:
             self.activity_data_list = activity_data_list
         else:
@@ -297,13 +297,13 @@ class Visualisation_Entropy:
         else:
             self.data_list_names = ['Set {}'.format(i + 1) for i in range(len(self.activity_data_list))]
 
-        if type(id) == str:
-            if not id == 'all':
-                self.id = [id]
+        if type(patient_id) == str:
+            if not patient_id == 'all':
+                self.id = [patient_id]
             else:
-                self.id = id
+                self.id = patient_id
         else:
-            self.id = id
+            self.id = patient_id
 
         if not self.id == 'all':
             filtered_activity_data_list = []
