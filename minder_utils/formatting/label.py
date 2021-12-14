@@ -10,14 +10,18 @@ import os
 import datetime
 
 
-# import python function from path:
-with open(data_path, 'r') as file_read:
-    path = file_read.read()
-    path_path = Path(reformat_path(path + '/validated_date.py'))
+def load_manual_labels():
+
+    # import python function from path:
+    with open(data_path, 'r') as file_read:
+        path = file_read.read()
+        path_path = Path(reformat_path(path + '/validated_date.py'))
+    dri_data_util_validate = SourceFileLoader('dri_data_util_validate', reformat_path(path + '/validated_date.py')).load_module()
+    from dri_data_util_validate import validated_date
+
+    return validated_date
 
 
-dri_data_util_validate = SourceFileLoader('dri_data_util_validate', reformat_path(path + '/validated_date.py')).load_module()
-from dri_data_util_validate import validated_date
 
 
 def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_side = 0):
@@ -44,6 +48,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
         which contains the labels.
 
     '''
+    validated_date = load_manual_labels()
     save_path = reformat_path(save_path)
     try:
         df = pd.read_csv(os.path.join(save_path, 'procedure.csv'))
@@ -125,6 +130,7 @@ def label_by_week(df):
     Returns:
 
     '''
+    validated_date = load_manual_labels()
     manual_label = validated_date(True)
     #manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     manual_label.date = pd.to_datetime(manual_label.date)
