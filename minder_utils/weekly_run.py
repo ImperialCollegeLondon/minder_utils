@@ -18,7 +18,7 @@ class Weekly_alerts:
         self.normalisation = normalisation
         self.loader = Weekly_dataloader(num_days_extended=6)
         # check the collate next week
-        # self.loader.refresh()
+        self.loader.initialise()
         self.reset()
 
         unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))
@@ -164,8 +164,8 @@ def get_results(model, transform, boosting):
 if __name__ == '__main__':
     # data = feature_engineering()
     wa = Weekly_alerts()
-    for trans in [True, False]:
-        for boost in [True, False]:
+    for trans in [False, True]:
+        for boost in [False, True]:
             print('------', trans, boost)
             # wa.evaluate(trans, boost)
             df = wa.predict(trans, boost)
