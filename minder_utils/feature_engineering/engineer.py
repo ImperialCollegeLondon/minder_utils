@@ -24,6 +24,9 @@ class Feature_engineer:
 
     5. a very low temperature below 36C
         - Body temperature (Low)
+
+    To view the descriptions of each of the attributes, please use the property
+    ```.info```
     '''
 
     def __init__(self, formatter, agg_method = 'sum'):
@@ -32,6 +35,9 @@ class Feature_engineer:
 
     @property
     def info(self):
+        '''
+        Descriptions of the attributes.
+        '''
         return {
             'bathroom_night': 'Bathroom activity during the night',
             'bathroom_daytime': 'Bathroom activity during the day',
