@@ -18,7 +18,7 @@ class Weekly_alerts:
         self.normalisation = normalisation
         self.loader = Weekly_dataloader(num_days_extended=6)
         # check the collate next week
-        self.loader.initialise()
+        self.loader.refresh()
         self.reset()
 
         unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))

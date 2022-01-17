@@ -10,6 +10,7 @@ if not p.exists():
 data_path = os.path.join(os.path.dirname(__file__), 'confidential', 'data_path.txt')
 token_path = os.path.join(os.path.dirname(__file__), 'confidential', 'token_real.json')
 dates_path = os.path.join(os.path.dirname(__file__), 'confidential', 'dates.json')
+dates_path_backup = os.path.join(os.path.dirname(__file__), 'confidential', 'dates_backup.json')
 delta_path = os.path.join(os.path.dirname(__file__), 'confidential', 'delta.txt')
 tihm_data_path = os.path.join(os.path.dirname(__file__), 'confidential', 'tihm_data_path.txt')
 

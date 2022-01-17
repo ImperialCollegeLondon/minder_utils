@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 import datetime as DT
-from minder_utils.configurations import data_path, dates_path, token_path, delta_path, tihm_data_path
+from minder_utils.configurations import data_path, dates_path, token_path, delta_path, tihm_data_path, dates_path_backup
 
 
 def token_save(token):
@@ -49,6 +49,19 @@ def set_delta(delta=1):
     return
 
 
+def date_backup(reload):
+    if reload:
+        with open(dates_path_backup) as json_file:
+            date_dict = json.load(json_file)
+        with open(dates_path, 'w') as file_write:
+            json.dump(date_dict, file_write, default=str)
+    else:
+        with open(dates_path) as json_file:
+            date_dict = json.load(json_file)
+        with open(dates_path_backup, 'w') as file_write:
+            json.dump(date_dict, file_write, default=str)
+
+
 def dates_save(refresh=False):
     '''
     Only used in ```minder_utils``` and not ```minder_utils_lite```.
@@ -86,7 +99,9 @@ def dates_save(refresh=False):
         date_dict = {'previous': {'since': None, 'until': today - DT.timedelta(days=7)},
                      'current': {'since': today - DT.timedelta(days=7), 'until': today},
                      'gap': {'since': None, 'until': None}}
+        date_backup(False)
     else:
+        date_backup(False)
         with open(dates_path) as json_file:
             date_dict = json.load(json_file)
         for state in date_dict:

@@ -25,8 +25,8 @@ class Classifiers:
     @property
     def methods(self):
         return {
-            'nn': 'neural network',
-            'lstm': 'LSTM',
+            # 'nn': 'neural network',
+            # 'lstm': 'LSTM',
             'lr': 'logistic regression',
             'bayes': 'naive bayesian',
             'dt': 'decision tree',
@@ -102,7 +102,7 @@ class Classifiers:
         return tree.DecisionTreeClassifier()
 
     def knn(self):
-        return KNeighborsClassifier()
+        return KNeighborsClassifier(n_neighbors=4)
 
     def __name__(self):
         return self.model_type

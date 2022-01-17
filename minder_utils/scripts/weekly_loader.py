@@ -7,7 +7,7 @@ from minder_utils.dataloader import Dataloader
 import numpy as np
 from minder_utils.util.util import save_mkdir, delete_dir
 import json
-from minder_utils.settings import dates_save
+from minder_utils.settings import dates_save, date_backup
 import pandas as pd
 from minder_utils.configurations import dates_path
 from minder_utils.configurations import config
@@ -145,9 +145,13 @@ class Weekly_dataloader:
             return
         dates_save(refresh=False)
         date_dict = self.get_dates()
-        if date_dict['gap']['until'] > date_dict['gap']['since']:
-            self.download('gap')
-        self.download('current')
+        try:
+            if date_dict['gap']['until'] > date_dict['gap']['since']:
+                self.download('gap')
+            self.download('current')
+        except TypeError:
+            date_backup(True)
+            return False
         self.collate()
         for folder in refresh_period:
             self.format(folder)

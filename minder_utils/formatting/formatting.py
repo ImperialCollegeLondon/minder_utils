@@ -142,6 +142,7 @@ class Formatting:
         data = data.groupby(['patient_id', 'start_date', 'location_name']).mean().reset_index()
         data.columns = self.config['environmental']['columns']
         data.time = pd.to_datetime(data.time, utc=True)
+        data['type'] = name
         return df.append(data)
 
     @staticmethod
