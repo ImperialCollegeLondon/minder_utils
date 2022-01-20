@@ -737,3 +737,102 @@ class Visualisation_Bathroom():
 
         return fig, ax
             
+
+
+class Visualisation_Location():
+    '''
+    This class allows the user to produce visualisations 
+    of the features engineered around bathroom visits.
+
+
+    '''
+    def __init__(self, location, patient_id='all'):
+
+        self.fmg = Formatting()
+        self.fe = Feature_engineer(self.fmg)
+        self.location = location
+
+        if type(patient_id) == str:
+            if patient_id == 'all':
+                self.id = patient_id
+            else:
+                self.id = [patient_id]
+        elif patient_id == list:
+            self.id = patient_id
+        else:
+            raise TypeError("patient_id must be a string, 'all' or a list")
+
+        return
+    
+    def _get_data(self, ma=False, delta=False):
+        attr = self.location
+        attr += '_activity'
+        if ma:
+            attr += '_' + 'ma'
+            if delta:
+                attr += '_' + 'delta'
+        else:
+            if delta:
+                raise TypeError('Cannot use delta=True if ma=False')
+        
+        data = getattr(self.fe, attr)
+        data['time'] = pd.to_datetime(data['time'])
+        data = label_dataframe(data)
+
+        self.attr = attr
+        
+        if not self.id == 'all':
+            data = data[data.id.isin(self.id)]
+
+        return data
+
+    def plot_data(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
+        
+        data = self._get_data(ma=ma, delta=delta)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        ax.set_title(self.attr)
+        
+        return fig, ax
+    
+
+
+    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None):
+        
+        data = data.dropna(subset=['value'])
+        data['value'] = data['value'].astype(float)
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+        
+        if plot_type=='boxplot':
+            if by_flag:
+                ax = sns.boxplot(x='value',
+                                    data=data, y ='valid', ax=ax,
+                                    orient='h', color='xkcd:light teal')
+            else:
+                ax = sns.boxplot(x='value',
+                                    data=data, ax=ax,
+                                    orient='h', color='xkcd:light teal')
+            ax.set_xlabel('Value')
+            
+        elif plot_type == 'violin':
+            if by_flag:
+                ax = sns.violinplot(x='value', y = 'valid',
+                                    data=data, ax=ax, inner='quartile',
+                                    orient='h', cut=0, color='xkcd:light teal')
+
+            else:
+                ax = sns.violinplot(x='value',
+                                    data=data, ax=ax, inner='quartile',
+                                    orient='h', cut=0, color='xkcd:light teal')
+            ax.set_xlabel('Value')
+
+        elif plot_type == 'line':
+            ax = sns.lineplot(x='time', y='value', data=data)
+            ax.tick_params(axis='x', rotation=90)
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Value')
+
+
+        return fig, ax
+            

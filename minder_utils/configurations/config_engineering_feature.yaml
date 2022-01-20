@@ -28,6 +28,17 @@ bathroom_daytime_ma_delta:
   save: *save_config
 
 
+bedroom_activity:
+  save: *save_config
+
+bedroom_activity_ma:
+  save: *save_config
+  w: 3
+
+bedroom_activity_ma_delta:
+  save: *save_config 
+
+
 bathroom_urgent:
   recall_value: 2
   save: *save_config

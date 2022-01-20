@@ -144,6 +144,37 @@ class Feature_engineer:
 
 
     @property
+    @load_save(**feature_config['bedroom_activity']['save'])
+    def bedroom_activity(self):
+        return get_bedroom_activity(self.formatter.activity_data.sort_values('time'), time_range=None, name='bedroom_activity')
+
+    @property
+    @load_save(**feature_config['bedroom_activity_ma']['save'])
+    def bedroom_activity_ma(self):
+
+        def get_moving_average_groupby(x):
+            x = get_moving_average(x, 
+                                  w=feature_config['bedroom_activity_ma']['w'], 
+                                  name='bedroom_activity_ma')
+            return x
+
+        return (self.bedroom_activity).groupby('id').apply(get_moving_average_groupby)
+
+
+    @property
+    @load_save(**feature_config['bedroom_activity_ma_delta']['save'])
+    def bedroom_activity_ma_delta(self):
+
+        def get_value_delta_groupby(x):
+            x = get_value_delta(x,
+                                name='bedroom_activity_ma_delta')
+            return x
+
+        return (self.bedroom_activity_ma).groupby('id').apply(get_value_delta_groupby)
+
+
+
+    @property
     @load_save(**feature_config['bathroom_urgent']['save'])
     def bathroom_urgent(self):
         return get_bathroom_delta(self.formatter.activity_data.sort_values('time'), single_location_delta, 'bathroom_urgent')
