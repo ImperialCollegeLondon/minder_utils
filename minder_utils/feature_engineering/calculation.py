@@ -225,6 +225,30 @@ def build_p_matrix(sequence, return_events=False):
 
 
         p_matrix[i,j] = probability_loc
+
+    # dealing with edge case. The last element in the sequence
+    # is a location only visited at that point. This means it 
+    # has 0 probability leaving it.
+    zero_rows = np.sum(p_matrix,axis=1) == 0
+    if any(zero_rows):
+        p_matrix_temp = np.delete(p_matrix, zero_rows, axis = 0)
+        p_matrix = np.delete(p_matrix_temp, zero_rows, axis = 1)
+        unique_locations = np.asarray(unique_locations)
+        unique_locations = np.delete(unique_locations, zero_rows)
+        unique_locations = list(unique_locations)
+    
+    # we also need to deal with the case in which the last n items
+    # are the same and are the first time we see them.
+    # this manifests in a row with a single one. We need
+    # to remove this index also.
+    incomplete_rows = np.diag(p_matrix) == 1
+    if any(incomplete_rows):
+        p_matrix_temp = np.delete(p_matrix, incomplete_rows, axis = 0)
+        p_matrix = np.delete(p_matrix_temp, incomplete_rows, axis = 1)
+        unique_locations = np.asarray(unique_locations)
+        unique_locations = np.delete(unique_locations, incomplete_rows)
+        unique_locations = list(unique_locations)
+
     
     if return_events:
         return p_matrix, unique_locations
