@@ -6,9 +6,10 @@ class ZScore:
         return
 
     def fit(self, X):
-        self.mean = np.mean(X)
-        self.std = np.std(X)
+        self.mean = np.mean(X, axis=0)
+        self.std = np.std(X, axis=0)
+        self.std[self.std == 0] = np.nan
         return
 
     def decision_function(self, X):
-        return np.mean((X - self.mean) / self.std)
+        return np.nanmean((X - self.mean) / self.std)
