@@ -8,6 +8,7 @@ import os
 from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir
 from minder_utils.configurations import token_path
 import numpy as np
+from datetime import date, datetime
 
 
 class Downloader:
@@ -329,6 +330,8 @@ class Downloader:
         
 
         '''
+        if until is None:
+            until = datetime.now()
         save_path = reformat_path(save_path)
         if categories is None:
             raise TypeError('Please supply at least one category...')
