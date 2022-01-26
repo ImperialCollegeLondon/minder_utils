@@ -22,7 +22,7 @@ def load_manual_labels():
     try:
         dri_data_util_validate = SourceFileLoader('dri_data_util_validate', reformat_path(path + '/validated_date.py')).load_module()
     except FileNotFoundError:
-        print('Manual label file not found')
+        print('Manual label file not found, you might be missing labels!!')
         return None
     
     from dri_data_util_validate import validated_date
