@@ -47,11 +47,16 @@ class Downloader:
         - _: dict: 
             This returns a dictionary of the available datasets.
         '''
+        print('Sending Request...')
+        r = requests.get(self.url + 'info/datasets', headers=self.params)
+        if r.status_code == 401:
+            raise TypeError('Authentication failed!'\
+                ' Please check your token - it might be out of date.')
         try:
-            print('Sending Request...')
-            return requests.get(self.url + 'info/datasets', headers=self.params).json()
+            return r.json()
         except json.decoder.JSONDecodeError:
-            print('Get response ', requests.get(self.url + 'info/datasets', headers=self.params))
+            print('Get response ', r)
+            
 
     def _export_request(self, categories='all', since=None, until=None):
         '''
@@ -94,7 +99,11 @@ class Downloader:
         print('From ', since, 'to', until)
         schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
         job_id = schedule_job.headers['Content-Location']
-        response = requests.get(job_id, headers=self.params).json()
+        response = requests.get(job_id, headers=self.params)
+        if response.status_code == 401:
+            raise TypeError('Authentication failed!'\
+                ' Please check your token - it might be out of date.')
+        response = response.json()
         waiting = True
         while waiting:
 
@@ -176,7 +185,11 @@ class Downloader:
                     continue
 
                 request_url = request_url_dict[category]
-                response = requests.get(request_url, headers=self.params).json()
+                response = requests.get(request_url, headers=self.params)
+                if response.status_code == 401:
+                    raise TypeError('Authentication failed!'\
+                        ' Please check your token - it might be out of date.')
+                response = response.json()
                 job_id_dict[category] = response['id']
 
                 if response['status'] == 202:
@@ -187,6 +200,9 @@ class Downloader:
                     sys.stdout.write("Request failed for category {}".format(category))
                     sys.stdout.flush()
                     waiting_for[category] = False
+
+                elif response['status'] == 401:
+                    raise TypeError('Authentication failed! Please check your token.')
 
                 else:
                     waiting_for[category] = False
