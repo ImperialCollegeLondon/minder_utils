@@ -679,9 +679,26 @@ class Visualisation_Bathroom():
         return data
 
     def plot_night(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
-        
+
+        cp = [
+                sns.color_palette("muted")[4],
+                sns.color_palette("tab10")[2],
+                sns.color_palette("tab10")[0],
+                sns.color_palette('Paired', 9)[-2],  
+                sns.color_palette('bright', desat=0.75)[-1],
+                sns.color_palette("deep")[3],
+            ]
+
+        palette_index = 0
+        if ma:
+            palette_index += 1
+            if delta: palette_index += 1
+
+
+        palette = cp[palette_index]
+
         data = self._get_data('night', ma=ma, delta=delta)
-        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax, palette=palette)
         ax.set_title(self.attr)
         
         return fig, ax
@@ -689,15 +706,32 @@ class Visualisation_Bathroom():
 
     def plot_day(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
         
+        cp = [
+                sns.color_palette("muted")[4],
+                sns.color_palette("tab10")[2],
+                sns.color_palette("tab10")[0],
+                sns.color_palette('Paired', 9)[-2],  
+                sns.color_palette('bright', desat=0.75)[-1],
+                sns.color_palette("deep")[3],
+            ]
+
+        palette_index = 0
+        if ma:
+            palette_index += 1
+            if delta: palette_index += 1
+
+
+        palette = cp[palette_index]
+
         data = self._get_data('daytime', ma=ma, delta=delta)
-        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax, palette=palette)
         ax.set_title(self.attr)
         
         return fig, ax
     
 
 
-    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None):
+    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None, palette=None):
         
         data = data.dropna(subset=['value'])
         data['value'] = data['value'].astype(float)
@@ -729,7 +763,8 @@ class Visualisation_Bathroom():
             ax.set_xlabel('Value')
 
         elif plot_type == 'line':
-            ax = sns.lineplot(x='time', y='value', data=data)
+            print(palette)
+            ax = sns.lineplot(x='time', y='value', data=data, color=palette)
             ax.tick_params(axis='x', rotation=90)
             ax.set_xlabel('Date')
             ax.set_ylabel('Value')
@@ -788,15 +823,32 @@ class Visualisation_Location():
 
     def plot_data(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
         
+        cp = [
+                sns.color_palette("muted")[4],
+                sns.color_palette("tab10")[2],
+                sns.color_palette("tab10")[0],
+                sns.color_palette('Paired', 9)[-2],  
+                sns.color_palette('bright', desat=0.75)[-1],
+                sns.color_palette("deep")[3],
+            ]
+
+        palette_index = 0
+        if ma:
+            palette_index += 1
+            if delta: palette_index += 1
+
+
+        palette = cp[palette_index]
+        
         data = self._get_data(ma=ma, delta=delta)
-        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax, palette=palette)
         ax.set_title(self.attr)
         
         return fig, ax
     
 
 
-    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None):
+    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None, palette=None):
         
         data = data.dropna(subset=['value'])
         data['value'] = data['value'].astype(float)
@@ -828,7 +880,7 @@ class Visualisation_Location():
             ax.set_xlabel('Value')
 
         elif plot_type == 'line':
-            ax = sns.lineplot(x='time', y='value', data=data)
+            ax = sns.lineplot(x='time', y='value', data=data, color=palette)
             ax.tick_params(axis='x', rotation=90)
             ax.set_xlabel('Date')
             ax.set_ylabel('Value')
