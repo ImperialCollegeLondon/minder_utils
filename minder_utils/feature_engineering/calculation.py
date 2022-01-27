@@ -225,7 +225,8 @@ def build_p_matrix(sequence, return_events=False):
 
 
         p_matrix[i,j] = probability_loc
-
+    
+    '''
     # dealing with edge case. The last element in the sequence
     # is a location only visited at that point. This means it 
     # has 0 probability leaving it.
@@ -248,7 +249,7 @@ def build_p_matrix(sequence, return_events=False):
         unique_locations = np.asarray(unique_locations)
         unique_locations = np.delete(unique_locations, incomplete_rows)
         unique_locations = list(unique_locations)
-
+    '''
     
     if return_events:
         return p_matrix, unique_locations
@@ -283,6 +284,14 @@ def entropy_rate_from_sequence(sequence, pydtmc = False):
     p_matrix = build_p_matrix(sequence)
 
     if type(p_matrix) != np.ndarray:
+        return np.nan
+
+    # we do not want to calculate the entropy for those graphs that
+    # have a zero in the rows or only have a one in the rows,
+    # since this is a consequence of cutting the sequences by a time period
+    incomplete_rows = np.diag(p_matrix) == 1
+    zero_rows = np.sum(p_matrix,axis=1) == 0
+    if any(incomplete_rows) or any(zero_rows):
         return np.nan
 
     if pydtmc:
