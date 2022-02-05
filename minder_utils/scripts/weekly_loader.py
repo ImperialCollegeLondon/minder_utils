@@ -126,15 +126,14 @@ class Weekly_dataloader:
             save_path = os.path.join(self.default_dir, period, 'npy', data_type)
             save_mkdir(save_path)
             attr = 'get_{}_data'.format(data_type)
-            activity_data, physiological_data, environmental_data, p_ids, dates = getattr(dataloader, attr)()
+            activity_data, physiological_data, environmental_data, p_ids, labels, dates = getattr(dataloader, attr)()
             np.save(os.path.join(save_path, 'activity.npy'.format(data_type)), activity_data)
             np.save(os.path.join(save_path, 'physiological.npy'.format(data_type)), physiological_data)
             np.save(os.path.join(save_path, 'environmental.npy'.format(data_type)), environmental_data)
             np.save(os.path.join(save_path, 'patient_id.npy'), p_ids)
             if data_type == 'labelled':
-                np.save(os.path.join(save_path, 'label.npy'), dates)
-            else:
-                np.save(os.path.join(save_path, 'dates.npy'), dates)
+                np.save(os.path.join(save_path, 'label.npy'), labels)
+            np.save(os.path.join(save_path, 'dates.npy'), dates)
 
     def refresh(self, refresh_period=None):
         if refresh_period is None:

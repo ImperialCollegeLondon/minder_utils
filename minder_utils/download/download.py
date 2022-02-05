@@ -300,7 +300,7 @@ class Downloader:
                 
                 pd.read_csv(io.StringIO(content.text)).to_csv(os.path.join(save_path, record['type'] + '.csv'),
                                                               mode=mode,
-                                                              header=header)
+                                                              header=header, index=False)
                 categories_downloaded.append(record['type'])
                 print('Success')
 

@@ -199,7 +199,7 @@ class Dataloader:
                 outputs_p_ids.append(p_ids[idx])
                 outputs_dates.append(date)
         return np.array(outputs), np.array(phy_data), np.array(env_data), \
-               np.array(outputs_p_ids), np.array(outputs_dates)
+               np.array(outputs_p_ids), None, np.array(outputs_dates)
 
     @staticmethod
     def laplace_smooth(i, lam=3, denominator=1):
