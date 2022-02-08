@@ -370,7 +370,7 @@ class Downloader:
                 data = pd.read_csv(file_path + '.csv')
                 # add the following to avoid a duplicate of the last and first row
                 last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
-                since = pd.to_datetime(data[['start_date']].iloc[-1, 0])
+                since = pd.to_datetime(data['start_date'].loc[data['start_date'].last_valid_index()])
                 if self.convert_to_ISO(since) > self.convert_to_ISO(until):
                     # change since to earliest date and overwrite all data for this category
                     since = pd.to_datetime(data[['start_date']].iloc[0, 0])
