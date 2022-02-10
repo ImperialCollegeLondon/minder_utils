@@ -54,6 +54,15 @@ class Feature_engineer:
             'bathroom_urgent_reverse_percentage': 'Reverse percentile of the time to the bathroom',
             'outlier_score_activity': 'Outlier score of the activity',
             'rp_location_time_delta': 'Reverse percentile of the time between activities',
+            'snore_freq': 'Number of snoring activities detected',
+            'state_awake_freq' : 'Number of awake sleep instances',
+            'state_deep_freq' : 'Number of deep sleep instances',
+            'state_light_freq' : 'Number of light sleep instances',
+            'state_rem_freq' : 'Number of REM sleep instances',
+            'sleep_hr_mean' : 'Mean of sleeping heart rate',
+            'sleep_hr_std' : 'Standard Deviation of sleeping heart rate',
+            'sleep_rr_mean' : 'Mean of sleeping respiratory rate',
+            'sleep_rr_std' : 'Standard Deviation of sleeping respiratory rate',
         }
 
     @property
@@ -63,7 +72,8 @@ class Feature_engineer:
         '''
         return {'evently': ['rp_location_time_delta'], 
 
-                'daily': ['bathroom_night',
+                'daily': [
+                          'bathroom_night',
                           'bathroom_daytime',
                           'outlier_score_activity',
                           'bathroom_night_ma',
@@ -72,7 +82,17 @@ class Feature_engineer:
                          #'bathroom_urgent',
                           'bathroom_urgent_reverse_percentage',
                           'bathroom_daytime_ma_delta',
-                          'entropy_rate_daily'], 
+                          'entropy_rate_daily',
+                          'snore_freq',
+                          'state_awake_freq',
+                          'state_deep_freq',
+                          'state_rem_freq',
+                          'state_light_freq',
+                          'sleep_hr_mean',
+                          'sleep_hr_std',
+                          'sleep_rr_mean',
+                          'sleep_rr_std'
+                          ], 
 
                 'weekly': ['body_temperature', 
                            'entropy', 
@@ -189,6 +209,86 @@ class Feature_engineer:
             return x
         data['value'] = data['value'].apply(value_group_by)
         return data
+
+
+    @property
+    @load_save(**feature_config['sleep_freq']['save'])
+    def state_awake_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='state_AWAKE',  
+                                location_name='state_awake_freq',
+                                agg_func=feature_config['sleep_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_freq']['save'])
+    def state_light_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='state_LIGHT', 
+                                location_name='state_light_freq',
+                                agg_func=feature_config['sleep_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_freq']['save'])
+    def state_deep_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='state_DEEP', 
+                                location_name='state_deep_freq',
+                                agg_func=feature_config['sleep_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_freq']['save'])
+    def state_rem_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='state_REM',  
+                                location_name='state_rem_freq',
+                                agg_func=feature_config['sleep_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['snore_freq']['save'])
+    def snore_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='snoring',  
+                                location_name='snore_freq',
+                                agg_func=feature_config['snore_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['bed_freq']['save'])
+    def bed_in_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='value_bed_in', 
+                                location_name='bed_in_freq',
+                                agg_func=feature_config['bed_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['bed_freq']['save'])
+    def bed_out_freq(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='value_bed_out', 
+                                location_name='bed_out_freq', 
+                                agg_func=feature_config['bed_freq']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_hr_mean']['save'])
+    def sleep_hr_mean(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='heart_rate', 
+                                location_name='sleep_hr_mean', 
+                                agg_func=feature_config['sleep_hr_mean']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_hr_std']['save'])
+    def sleep_hr_std(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='heart_rate', 
+                                location_name='sleep_hr_std', 
+                                agg_func=feature_config['sleep_hr_std']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_rr_mean']['save'])
+    def sleep_rr_mean(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='respiratory_rate', 
+                                location_name='sleep_rr_mean', 
+                                agg_func=feature_config['sleep_rr_mean']['agg_type'])
+    @property
+    @load_save(**feature_config['sleep_rr_std']['save'])
+    def sleep_rr_std(self):
+        return get_daily_agg(self.formatter.sleep_data, 
+                                value_name='respiratory_rate', 
+                                location_name='sleep_rr_std', 
+                                agg_func=feature_config['sleep_rr_std']['agg_type'])
+
 
     @property
     @load_save(**feature_config['body_temperature']['save'])

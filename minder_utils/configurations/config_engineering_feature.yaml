@@ -62,6 +62,34 @@ entropy_rate_daily:
   sensors: 'all'
   save: *save_config
 
+snore_freq:
+  agg_type: 'sum'
+  save: *save_config
+
+sleep_freq:
+  agg_type: 'sum'
+  save: *save_config
+
+bed_freq:
+  agg_type: 'sum'
+  save: *save_config
+
+sleep_hr_mean:
+  agg_type: 'mean'
+  save: *save_config
+
+sleep_hr_std:
+  agg_type: 'std'
+  save: *save_config
+
+sleep_rr_mean:
+  agg_type: 'mean'
+  save: *save_config
+
+sleep_rr_std:
+  agg_type: 'std'
+  save: *save_config
+
 raw_activity:
   save: *save_config
 

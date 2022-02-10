@@ -45,6 +45,17 @@ environmental:
              'corridor1', 'secondary', 'office', 'garage' ]
   save: *save_config
 
+sleep:
+  type:         ['raw_sleep_mat', 'raw_sleep_event']
+  columns:      ['id', 'time', 'location', 'value']
+  categorical_columns: ['state', 'value']
+  value_columns:   ['heart_rate', 'respiratory_rate', 
+                 'snoring']
+  save: *save_config
+
+
+
+
 individuals:
   text: [ 'homes', 'raw_sleep_mat', 'raw_behavioural',
           'procedure', 'observation_notes', 'encounter',

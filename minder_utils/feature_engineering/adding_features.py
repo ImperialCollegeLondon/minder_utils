@@ -391,3 +391,17 @@ def get_subject_rp_location_delta(data,
 
 
     return out
+
+
+def get_daily_agg(data, value_name, location_name, agg_func):
+    data_out = data[data.location == value_name].copy()
+    grouper = pd.Grouper(key = 'time', freq = '1d', dropna = False)
+    columns_agg = ['id', 'location']
+    columns_agg.append(grouper)
+    out =  data_out.groupby(columns_agg).agg(agg_func).reset_index()[['id',
+                                                                        'time', 
+                                                                        'location', 
+                                                                        'value']].copy()
+    out['week'] = compute_week_number(out['time'])
+    out['location'] = location_name
+    return out

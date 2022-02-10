@@ -22,32 +22,32 @@ class Formatting:
         self.path = reformat_path(path)
         self.add_tihm = add_tihm
         self.activity_nice_locations = {
-        'hallway': 'Hallway', 
-        'kitchen': 'Kitchen', 
-        'lounge':'Lounge', 
-        'bathroom1': 'Bathroom', 
-        'bedroom1':'Bedroom',
-        'kettle': 'Kettle',
-        'toaster': 'Toaster',
-        'fridge door': 'Fridge Door',
-        'back door': 'Back Door',
-        'front door': 'Front Door',
-        'microwave': 'Microwave',
-        'study': 'Study',
-        'dining room': 'Dining Room',
-        'living room': 'Living Room',
-        'iron': 'Iron',
-        'corridor1': 'Corridor',
-        'WC1': 'WC',
-        'main door': 'Main Door',
-        'utility': 'Utility', 
-        'office': 'Office', 
-        'multi': 'Multi', 
-        'conservatory': 'Conservatory',
-        'garage': 'Garage', 
-        'secondary': 'Secondary', 
-        'cellar': 'Cellar'
-                                                        }
+                                        'hallway': 'Hallway', 
+                                        'kitchen': 'Kitchen', 
+                                        'lounge':'Lounge', 
+                                        'bathroom1': 'Bathroom', 
+                                        'bedroom1':'Bedroom',
+                                        'kettle': 'Kettle',
+                                        'toaster': 'Toaster',
+                                        'fridge door': 'Fridge Door',
+                                        'back door': 'Back Door',
+                                        'front door': 'Front Door',
+                                        'microwave': 'Microwave',
+                                        'study': 'Study',
+                                        'dining room': 'Dining Room',
+                                        'living room': 'Living Room',
+                                        'iron': 'Iron',
+                                        'corridor1': 'Corridor',
+                                        'WC1': 'WC',
+                                        'main door': 'Main Door',
+                                        'utility': 'Utility', 
+                                        'office': 'Office', 
+                                        'multi': 'Multi', 
+                                        'conservatory': 'Conservatory',
+                                        'garage': 'Garage', 
+                                        'secondary': 'Secondary', 
+                                        'cellar': 'Cellar'
+                                        }
 
         categories_check = ['device_types', 'homes', 'patients']
         if not np.all([os.path.exists(os.path.join(path, category + '.csv')) for category in categories_check]):
@@ -86,8 +86,13 @@ class Formatting:
     def environmental_data(self):
         return label_dataframe(self.process_data('environmental'))
 
+    @property
+    @load_save(**config['sleep']['save'])
+    def sleep_data(self):
+        return label_dataframe(self.process_data('sleep')).sort_values('time').reset_index(drop=True)
+
     def process_data(self, datatype):
-        assert datatype in ['physiological', 'activity', 'environmental'], 'not a valid type'
+        assert datatype in ['physiological', 'activity', 'environmental', 'sleep'], 'not a valid type'
         process_func = getattr(self, 'process_{}_data'.format(datatype))
         dataframe = pd.DataFrame(columns=self.config[datatype]['columns'])
         for name in iter_dir(self.path):
@@ -98,6 +103,54 @@ class Formatting:
             end_time = time.time()
             print('Finished in {:.2f} seconds'.format(end_time - start_time))
         return dataframe
+
+    def process_sleep_data(self, name, df):
+        '''
+        This function will process the sleep data.
+
+        '''
+        col_filter = ['patient_id', 'start_date']
+        categorical_columns = self.config['sleep']['categorical_columns']
+        value_columns = self.config['sleep']['value_columns']
+        data_adding = pd.read_csv(os.path.join(self.path, name + '.csv'))
+        categorical_columns = [column for column in categorical_columns if column in list(data_adding.columns)]
+        if len(categorical_columns) != 0:
+            data_cat = data_adding[col_filter+categorical_columns].copy()
+            data_cat = pd.melt(data_cat.merge(
+                                                pd.get_dummies(data_cat[categorical_columns]),
+                                                left_index=True, right_index=True
+                                                            ).drop(categorical_columns,
+                                                                    axis=1),
+                                id_vars=col_filter,
+                                var_name='location',
+                                value_name='value')
+            data_cat = data_cat[data_cat.value != 0]
+            data_cat = data_cat[data_cat['value'].notna()]
+            data_cat.value = data_cat.value.astype(float)
+        else:
+            data_cat = None
+
+        value_columns = [column for column in value_columns if column in list(data_adding.columns)]
+        if len(value_columns) != 0:
+            data_val = data_adding[col_filter+value_columns].copy()
+            data_val = pd.melt(data_val,
+                            id_vars=col_filter,
+                            var_name='location',
+                            value_name='value')
+            data_val = data_val[data_val['value'].notna()]
+            data_val.value = data_val.value.astype(float)
+        else:
+            data_val = None
+
+        if (data_val is None) and (data_cat is None):
+            return df
+
+        data_out = pd.concat([data_cat, data_val])
+
+        data_out.columns = self.config['sleep']['columns']
+        data_out.time = pd.to_datetime(data_out.time, utc=True)
+
+        return pd.concat([df, data_out])
 
     def process_physiological_data(self, name, df):
         """
