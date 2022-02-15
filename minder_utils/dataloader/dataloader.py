@@ -209,5 +209,8 @@ class Dataloader:
     def get_data(df, p_id, date, datatype):
         if df is None:
             return
-        return df.loc[(p_id, date, config[datatype]['sensors'])] \
-            .sort_values('location', key=lambda x: x.map(config[datatype]['sort_dict']))['value'].to_numpy()
+        try:
+            return df.loc[(p_id, date, config[datatype]['sensors'])] \
+                .sort_values('location', key=lambda x: x.map(config[datatype]['sort_dict']))['value'].to_numpy()
+        except KeyError:
+            return [0.] * len(config[datatype]['sensors'])

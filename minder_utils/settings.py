@@ -99,9 +99,7 @@ def dates_save(refresh=False):
         date_dict = {'previous': {'since': None, 'until': today - DT.timedelta(days=7)},
                      'current': {'since': today - DT.timedelta(days=7), 'until': today},
                      'gap': {'since': None, 'until': None}}
-        date_backup(False)
     else:
-        date_backup(False)
         with open(dates_path) as json_file:
             date_dict = json.load(json_file)
         for state in date_dict:
@@ -117,7 +115,7 @@ def dates_save(refresh=False):
         date_dict['current']['until'] = today
     with open(dates_path, 'w') as file_write:
         json.dump(date_dict, file_write, default=str)
-
+    date_backup(False)
     print('Dates Saved')
 
     return

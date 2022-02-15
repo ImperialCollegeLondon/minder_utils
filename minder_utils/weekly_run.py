@@ -18,13 +18,12 @@ class Weekly_alerts:
     def __init__(self, autoencoder='cnn', normalisation=True):
         self.normalisation = normalisation
         self.loader = Weekly_dataloader(num_days_extended=1)
-        # check the collate next week ,106
         self.loader.refresh()
         self.reset()
 
         unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))
         unlabelled = unlabelled.reshape(-1, 3, 8, 14)
-        extractor = Extractor()
+        extractor = Extractor(save_path='./data/weekly_test/model')
         extractor.train(unlabelled, autoencoder)
 
         self.extractor = extractor

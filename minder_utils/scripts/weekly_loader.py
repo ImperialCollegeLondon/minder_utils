@@ -138,7 +138,12 @@ class Weekly_dataloader:
     def refresh(self, refresh_period=None):
         if refresh_period is None:
             refresh_period = ['current']
-        date_dict = self.get_dates()
+        try:
+            date_dict = self.get_dates()
+        except FileNotFoundError:
+            print('Dates file does not exist, start to initialise')
+            self.initialise()
+            return
         if date_dict['current']['until'] == DT.date.today() - DT.timedelta(days=1):
             print('Data is up-to-date')
             return

@@ -72,6 +72,7 @@ def standardise_physiological_environmental(df, date_range, shared_id=None):
     df.time = pd.to_datetime(df.time)
     df = df.groupby(['id', 'location']).apply(lambda x: x.set_index('time')
                                                                   .resample('D').mean()).reset_index().fillna(0)
+    df.time = pd.to_datetime(df.time).dt.date
     idx = pd.MultiIndex.from_product((df.id.unique(), date_range, df.location.unique()), names=['id', 'time', 'location'])
     return df.set_index(['id', 'time', 'location']).reindex(idx, fill_value=0)\
         .reset_index().pivot_table(index=['id', 'time', 'location'], values='value')

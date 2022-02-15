@@ -87,6 +87,7 @@ class Formatting:
         """
         col_filter = ['patient_id', 'start_date', 'device_type', 'value']
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
+        data = data[data.start_date != 'start_date']
         data.loc[:, 'device_type'] = data.device_type.map(self.device_type)
         try:
             data = getattr(self, 'process_' + name)(data)[col_filter]
@@ -94,6 +95,7 @@ class Formatting:
             data.device_type += '->' + name[4:]
         data.start_date = pd.to_datetime(data.start_date).dt.date
         data = data[col_filter]
+        data.value = data.value.astype(float)
         data = data.groupby(['patient_id', 'start_date', 'device_type']).mean().reset_index()
         data.columns = self.config['physiological']['columns']
         data.location = data.location.apply(lambda x: x.split('->')[-1])
@@ -115,6 +117,7 @@ class Formatting:
         """
         col_filter = ['patient_id', 'start_date', 'location_name', 'value']
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
+        data = data[data.start_date != 'start_date']
         data = data[data['location_name'] != 'location_name']
         data = getattr(self, 'process_' + name)(data)[col_filter]
         data.columns = self.config['activity']['columns']
