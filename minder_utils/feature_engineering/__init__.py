@@ -1,3 +1,11 @@
+
+from minder_utils.feature_engineering.engineer import Feature_engineer
+
+
+__all__ = ['Feature_engineer']
+
+
+
 '''
 TODO:
     1. Feature Engineering
@@ -26,7 +34,3 @@ NOTE:
 5. a very low temperature below 36C
     - Body temperature (Low)
 '''
-from minder_utils.feature_engineering.engineer import Feature_engineer
-
-
-__all__ = ['Feature_engineer']

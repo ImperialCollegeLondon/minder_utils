@@ -111,8 +111,28 @@ def get_value_delta(df:pd.DataFrame, name):
 
 
 
+def get_location_activity(data, location, time_range=None, name=None):
+    data = data[data.location == location][['id', 'time', 'value']]
+    data.time = pd.to_datetime(data.time)
+    if time_range is None:
+        data = data.set_index('time').reset_index()
+    else:
+        data = data.set_index('time').between_time(*time_range).reset_index()
+    data.time = data.time.dt.date
+    data = data.groupby(['id', 'time'])['value'].sum().reset_index()
+    data['week'] = compute_week_number(data.time)
+    data['location'] = name if not name is None else location 
+    return data
 
-def get_bathroom_activity(data, time_range, name):
+
+def get_bathroom_activity(data, time_range=None, name=None):
+
+    data = get_location_activity(data=data, 
+                                  location='bathroom1',
+                                  time_range=time_range, 
+                                  name=name)
+
+    '''
     data = data[data.location == 'bathroom1'][['id', 'time', 'value']]
     data.time = pd.to_datetime(data.time)
     data = data.set_index('time').between_time(*time_range).reset_index()
@@ -120,7 +140,15 @@ def get_bathroom_activity(data, time_range, name):
     data = data.groupby(['id', 'time'])['value'].sum().reset_index()
     data['week'] = compute_week_number(data.time)
     data['location'] = name
+    '''    
+
     return data
+
+def get_bedroom_activity(data, time_range=None, name=None):
+    return get_location_activity(data=data, 
+                                  location='bedroom1',
+                                  time_range=time_range, 
+                                  name=name)
 
 
 def get_body_temperature(data):
@@ -362,4 +390,18 @@ def get_subject_rp_location_delta(data,
     out['value'] = values
 
 
+    return out
+
+
+def get_daily_agg(data, value_name, location_name, agg_func):
+    data_out = data[data.location == value_name].copy()
+    grouper = pd.Grouper(key = 'time', freq = '1d', dropna = False)
+    columns_agg = ['id', 'location']
+    columns_agg.append(grouper)
+    out =  data_out.groupby(columns_agg).agg(agg_func).reset_index()[['id',
+                                                                        'time', 
+                                                                        'location', 
+                                                                        'value']].copy()
+    out['week'] = compute_week_number(out['time'])
+    out['location'] = location_name
     return out

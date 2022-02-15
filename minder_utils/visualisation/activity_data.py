@@ -35,7 +35,7 @@ class Visualisation_Activity:
 
     @staticmethod
     def get_label_info():
-        activity_data = Formatting().activity_data
+        activity_data = label_dataframe(Formatting().activity_data)
         labelled_data = activity_data[activity_data.valid.isin([True, False])]
         labelled_data.time = labelled_data.time.dt.date
         labelled_data = labelled_data[['id', 'time', 'valid']].drop_duplicates()
@@ -46,7 +46,7 @@ class Visualisation_Activity:
         assert valid in [None, True, False], 'the valid must be in [None, True, False]'
 
         # select data according to patient id, date, valid
-        activity_data = Formatting().activity_data
+        activity_data = label_dataframe(Formatting().activity_data)
 
         if valid is not None:
             activity_data = activity_data[activity_data.valid == valid]
@@ -55,7 +55,8 @@ class Visualisation_Activity:
             activity_data = self.filter_dates(date, activity_data)
             activity_data = self.filter_patient(patient_id, activity_data)
         else:
-            activity_data = self.filter_patient(patient_id, activity_data)
+            if patient_id != 'all':
+                activity_data = self.filter_patient(patient_id, activity_data)
             activity_data = self.filter_dates(date, activity_data)
 
         self.data = {'raw_data': activity_data}
@@ -232,7 +233,6 @@ class Visualisation_Activity:
 
         fig.supxlabel('Time')
         fig.supylabel('Location')
-        print(mappings)
 
 
 if __name__ == '__main__':
@@ -268,11 +268,11 @@ class Visualisation_Entropy:
     
     '''
 
-    def __init__(self, activity_data_list, id='all', data_list_names=None, week_or_day = 'week'):
+    def __init__(self, activity_data_list, patient_id='all', data_list_names=None, week_or_day = 'week'):
         '''
         This function is used to initialise the class.
         '''
-
+        
         if type(activity_data_list) == list:
             self.activity_data_list = activity_data_list
         else:
@@ -297,13 +297,13 @@ class Visualisation_Entropy:
         else:
             self.data_list_names = ['Set {}'.format(i + 1) for i in range(len(self.activity_data_list))]
 
-        if type(id) == str:
-            if not id == 'all':
-                self.id = [id]
+        if type(patient_id) == str:
+            if not patient_id == 'all':
+                self.id = [patient_id]
             else:
-                self.id = id
+                self.id = patient_id
         else:
-            self.id = id
+            self.id = patient_id
 
         if not self.id == 'all':
             filtered_activity_data_list = []
@@ -679,9 +679,26 @@ class Visualisation_Bathroom():
         return data
 
     def plot_night(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
-        
+
+        cp = [
+                sns.color_palette("muted")[4],
+                sns.color_palette("tab10")[2],
+                sns.color_palette("tab10")[0],
+                sns.color_palette('Paired', 9)[-2],  
+                sns.color_palette('bright', desat=0.75)[-1],
+                sns.color_palette("deep")[3],
+            ]
+
+        palette_index = 0
+        if ma:
+            palette_index += 1
+            if delta: palette_index += 1
+
+
+        palette = cp[palette_index]
+
         data = self._get_data('night', ma=ma, delta=delta)
-        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax, palette=palette)
         ax.set_title(self.attr)
         
         return fig, ax
@@ -689,15 +706,32 @@ class Visualisation_Bathroom():
 
     def plot_day(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
         
+        cp = [
+                sns.color_palette("muted")[4],
+                sns.color_palette("tab10")[2],
+                sns.color_palette("tab10")[0],
+                sns.color_palette('Paired', 9)[-2],  
+                sns.color_palette('bright', desat=0.75)[-1],
+                sns.color_palette("deep")[3],
+            ]
+
+        palette_index = 0
+        if ma:
+            palette_index += 1
+            if delta: palette_index += 1
+
+
+        palette = cp[palette_index]
+
         data = self._get_data('daytime', ma=ma, delta=delta)
-        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax, palette=palette)
         ax.set_title(self.attr)
         
         return fig, ax
     
 
 
-    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None):
+    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None, palette=None):
         
         data = data.dropna(subset=['value'])
         data['value'] = data['value'].astype(float)
@@ -729,7 +763,124 @@ class Visualisation_Bathroom():
             ax.set_xlabel('Value')
 
         elif plot_type == 'line':
-            ax = sns.lineplot(x='time', y='value', data=data)
+            print(palette)
+            ax = sns.lineplot(x='time', y='value', data=data, color=palette)
+            ax.tick_params(axis='x', rotation=90)
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Value')
+
+
+        return fig, ax
+            
+
+
+class Visualisation_Location():
+    '''
+    This class allows the user to produce visualisations 
+    of the features engineered around bathroom visits.
+
+
+    '''
+    def __init__(self, location, patient_id='all'):
+
+        self.fmg = Formatting()
+        self.fe = Feature_engineer(self.fmg)
+        self.location = location
+
+        if type(patient_id) == str:
+            if patient_id == 'all':
+                self.id = patient_id
+            else:
+                self.id = [patient_id]
+        elif patient_id == list:
+            self.id = patient_id
+        else:
+            raise TypeError("patient_id must be a string, 'all' or a list")
+
+        return
+    
+    def _get_data(self, ma=False, delta=False):
+        attr = self.location
+        attr += '_activity'
+        if ma:
+            attr += '_' + 'ma'
+            if delta:
+                attr += '_' + 'delta'
+        else:
+            if delta:
+                raise TypeError('Cannot use delta=True if ma=False')
+        
+        data = getattr(self.fe, attr)
+        data['time'] = pd.to_datetime(data['time'])
+        data = label_dataframe(data)
+
+        self.attr = attr
+        
+        if not self.id == 'all':
+            data = data[data.id.isin(self.id)]
+
+        return data
+
+    def plot_data(self, plot_type, ma=False, delta=False, by_flag=False, fig=None, ax=None):
+        
+        cp = [
+                sns.color_palette("muted")[4],
+                sns.color_palette("tab10")[2],
+                sns.color_palette("tab10")[0],
+                sns.color_palette('Paired', 9)[-2],  
+                sns.color_palette('bright', desat=0.75)[-1],
+                sns.color_palette("deep")[3],
+            ]
+
+        palette_index = 0
+        if ma:
+            palette_index += 1
+            if delta: palette_index += 1
+
+
+        palette = cp[palette_index]
+        
+        data = self._get_data(ma=ma, delta=delta)
+        fig, ax = self._plot_data(data=data, plot_type=plot_type, by_flag=by_flag, fig=fig, ax=ax, palette=palette)
+        ax.set_title(self.attr)
+        
+        return fig, ax
+    
+
+
+    def _plot_data(self, data, plot_type, by_flag=False, fig=None, ax=None, palette=None):
+        
+        data = data.dropna(subset=['value'])
+        data['value'] = data['value'].astype(float)
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+        
+        if plot_type=='boxplot':
+            if by_flag:
+                ax = sns.boxplot(x='value',
+                                    data=data, y ='valid', ax=ax,
+                                    orient='h', color='xkcd:light teal')
+            else:
+                ax = sns.boxplot(x='value',
+                                    data=data, ax=ax,
+                                    orient='h', color='xkcd:light teal')
+            ax.set_xlabel('Value')
+            
+        elif plot_type == 'violin':
+            if by_flag:
+                ax = sns.violinplot(x='value', y = 'valid',
+                                    data=data, ax=ax, inner='quartile',
+                                    orient='h', cut=0, color='xkcd:light teal')
+
+            else:
+                ax = sns.violinplot(x='value',
+                                    data=data, ax=ax, inner='quartile',
+                                    orient='h', cut=0, color='xkcd:light teal')
+            ax.set_xlabel('Value')
+
+        elif plot_type == 'line':
+            ax = sns.lineplot(x='time', y='value', data=data, color=palette)
             ax.tick_params(axis='x', rotation=90)
             ax.set_xlabel('Date')
             ax.set_ylabel('Value')

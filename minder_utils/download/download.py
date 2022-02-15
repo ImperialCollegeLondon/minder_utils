@@ -8,6 +8,7 @@ import os
 from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir
 from minder_utils.configurations import token_path
 import numpy as np
+from datetime import date, datetime
 
 
 class Downloader:
@@ -46,11 +47,16 @@ class Downloader:
         - _: dict: 
             This returns a dictionary of the available datasets.
         '''
+        print('Sending Request...')
+        r = requests.get(self.url + 'info/datasets', headers=self.params)
+        if r.status_code == 401:
+            raise TypeError('Authentication failed!'\
+                ' Please check your token - it might be out of date.')
         try:
-            print('Sending Request...')
-            return requests.get(self.url + 'info/datasets', headers=self.params).json()
+            return r.json()
         except json.decoder.JSONDecodeError:
-            print('Get response ', requests.get(self.url + 'info/datasets', headers=self.params))
+            print('Get response ', r)
+            
 
     def _export_request(self, categories='all', since=None, until=None):
         '''
@@ -93,7 +99,11 @@ class Downloader:
         print('From ', since, 'to', until)
         schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
         job_id = schedule_job.headers['Content-Location']
-        response = requests.get(job_id, headers=self.params).json()
+        response = requests.get(job_id, headers=self.params)
+        if response.status_code == 401:
+            raise TypeError('Authentication failed!'\
+                ' Please check your token - it might be out of date.')
+        response = response.json()
         waiting = True
         while waiting:
 
@@ -175,7 +185,11 @@ class Downloader:
                     continue
 
                 request_url = request_url_dict[category]
-                response = requests.get(request_url, headers=self.params).json()
+                response = requests.get(request_url, headers=self.params)
+                if response.status_code == 401:
+                    raise TypeError('Authentication failed!'\
+                        ' Please check your token - it might be out of date.')
+                response = response.json()
                 job_id_dict[category] = response['id']
 
                 if response['status'] == 202:
@@ -186,6 +200,9 @@ class Downloader:
                     sys.stdout.write("Request failed for category {}".format(category))
                     sys.stdout.flush()
                     waiting_for[category] = False
+
+                elif response['status'] == 401:
+                    raise TypeError('Authentication failed! Please check your token.')
 
                 else:
                     waiting_for[category] = False
@@ -329,6 +346,8 @@ class Downloader:
         
 
         '''
+        if until is None:
+            until = datetime.now()
         save_path = reformat_path(save_path)
         if categories is None:
             raise TypeError('Please supply at least one category...')
@@ -351,7 +370,7 @@ class Downloader:
                 data = pd.read_csv(file_path + '.csv')
                 # add the following to avoid a duplicate of the last and first row
                 last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
-                since = pd.to_datetime(data[['start_date']].iloc[-1, 0])
+                since = pd.to_datetime(data['start_date'].loc[data['start_date'].last_valid_index()])
                 if self.convert_to_ISO(since) > self.convert_to_ISO(until):
                     # change since to earliest date and overwrite all data for this category
                     since = pd.to_datetime(data[['start_date']].iloc[0, 0])

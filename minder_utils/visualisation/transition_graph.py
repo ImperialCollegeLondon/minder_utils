@@ -8,12 +8,10 @@ import numpy as np
 import pandas as pd
 import calendar
 
-os.chdir('../../')
 
-patient_id = '6xrbQMkh12eYMdP7Xi1ggc'
 locations = ['']
 formater = Formatting()
-df = formater.activity_data[formater.activity_data.id == patient_id]
+df = formater.activity_data[formater.activity_data.id == formater.activity_data.id.unique()[0]]
 
 
 df = df[df.location.isin(['bedroom1', 'bathroom1', 'hallway', 'kitchen',

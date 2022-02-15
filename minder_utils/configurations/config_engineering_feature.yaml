@@ -28,6 +28,17 @@ bathroom_daytime_ma_delta:
   save: *save_config
 
 
+bedroom_activity:
+  save: *save_config
+
+bedroom_activity_ma:
+  save: *save_config
+  w: 3
+
+bedroom_activity_ma_delta:
+  save: *save_config 
+
+
 bathroom_urgent:
   recall_value: 2
   save: *save_config
@@ -49,6 +60,34 @@ entropy_rate:
 
 entropy_rate_daily:
   sensors: 'all'
+  save: *save_config
+
+snore_freq:
+  agg_type: 'sum'
+  save: *save_config
+
+sleep_freq:
+  agg_type: 'sum'
+  save: *save_config
+
+bed_freq:
+  agg_type: 'sum'
+  save: *save_config
+
+sleep_hr_mean:
+  agg_type: 'mean'
+  save: *save_config
+
+sleep_hr_std:
+  agg_type: 'std'
+  save: *save_config
+
+sleep_rr_mean:
+  agg_type: 'mean'
+  save: *save_config
+
+sleep_rr_std:
+  agg_type: 'std'
   save: *save_config
 
 raw_activity:

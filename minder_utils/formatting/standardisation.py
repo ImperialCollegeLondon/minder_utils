@@ -6,12 +6,6 @@ from importlib.machinery import SourceFileLoader
 from minder_utils.configurations import data_path, config
 
 
-# import python function from path:
-path_dir = data_path
-with open(path_dir, 'r') as file_read:
-    path = file_read.read()
-dri_data_util_validate = SourceFileLoader('dri_data_util_validate', path + '/validated_date.py').load_module()
-from dri_data_util_validate import validated_date
 
 
 def standardise_activity_data(df):
