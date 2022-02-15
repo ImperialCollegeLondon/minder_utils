@@ -7,7 +7,7 @@ from minder_utils.dataloader import Dataloader
 import numpy as np
 from minder_utils.util.util import save_mkdir, delete_dir
 import json
-from minder_utils.settings import dates_save
+from minder_utils.settings import dates_save, date_backup
 import pandas as pd
 from minder_utils.configurations import dates_path
 from minder_utils.configurations import config
@@ -126,28 +126,36 @@ class Weekly_dataloader:
             save_path = os.path.join(self.default_dir, period, 'npy', data_type)
             save_mkdir(save_path)
             attr = 'get_{}_data'.format(data_type)
-            activity_data, physiological_data, environmental_data, p_ids, dates = getattr(dataloader, attr)()
+            activity_data, physiological_data, environmental_data, p_ids, labels, dates = getattr(dataloader, attr)()
             np.save(os.path.join(save_path, 'activity.npy'.format(data_type)), activity_data)
             np.save(os.path.join(save_path, 'physiological.npy'.format(data_type)), physiological_data)
             np.save(os.path.join(save_path, 'environmental.npy'.format(data_type)), environmental_data)
             np.save(os.path.join(save_path, 'patient_id.npy'), p_ids)
             if data_type == 'labelled':
-                np.save(os.path.join(save_path, 'label.npy'), dates)
-            else:
-                np.save(os.path.join(save_path, 'dates.npy'), dates)
+                np.save(os.path.join(save_path, 'label.npy'), labels)
+            np.save(os.path.join(save_path, 'dates.npy'), dates)
 
     def refresh(self, refresh_period=None):
         if refresh_period is None:
             refresh_period = ['current']
-        date_dict = self.get_dates()
+        try:
+            date_dict = self.get_dates()
+        except FileNotFoundError:
+            print('Dates file does not exist, start to initialise')
+            self.initialise()
+            return
         if date_dict['current']['until'] == DT.date.today() - DT.timedelta(days=1):
             print('Data is up-to-date')
             return
         dates_save(refresh=False)
         date_dict = self.get_dates()
-        if date_dict['gap']['until'] > date_dict['gap']['since']:
-            self.download('gap')
-        self.download('current')
+        try:
+            if date_dict['gap']['until'] > date_dict['gap']['since']:
+                self.download('gap')
+            self.download('current')
+        except TypeError:
+            date_backup(True)
+            return False
         self.collate()
         for folder in refresh_period:
             self.format(folder)

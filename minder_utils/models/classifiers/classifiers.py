@@ -102,7 +102,7 @@ class Classifiers:
         return tree.DecisionTreeClassifier()
 
     def knn(self):
-        return KNeighborsClassifier()
+        return KNeighborsClassifier(n_neighbors=4)
 
     def __name__(self):
         return self.model_type

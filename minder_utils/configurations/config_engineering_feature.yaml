@@ -100,28 +100,16 @@ activity:
 
 activity_evently:
   features: null
-  save:
-    save_path: [ './data', 'pkl', 'feature_engineering' ]
-    save_name: null
-    verbose: True
-    refresh: False
+  save: *save_config
 
 activity_daily:
   features: null
-  save:
-    save_path: [ './data', 'pkl', 'feature_engineering' ]
-    save_name: null
-    verbose: True
-    refresh: False
+  save: *save_config
 
 
 activity_weekly:
   features: null
-  save:
-    save_path: [ './data', 'pkl', 'feature_engineering' ]
-    save_name: null
-    verbose: True
-    refresh: False
+  save: *save_config
 
 
 

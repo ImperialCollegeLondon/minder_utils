@@ -1,6 +1,11 @@
 import numpy as np
 
 
+class Outlier_Detector:
+    def __init__(self, method='grubbs'):
+        pass
+
+
 class ZScore:
     def __init__(self):
         return

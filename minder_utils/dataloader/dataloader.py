@@ -74,14 +74,15 @@ class Dataloader:
     @property
     @load_save(**config['labelled_data']['save'])
     def labelled_data(self):
-        activity_data, physiological_data, environmental_data, patient_ids, uti_labels = \
+        activity_data, physiological_data, environmental_data, patient_ids, uti_labels, labelled_dates = \
             self.get_labelled_data(normalise=False)
         return {
             'activity': activity_data,
             'phy': physiological_data,
             'env': environmental_data,
             'p_ids': patient_ids,
-            'uti_labels': uti_labels
+            'uti_labels': uti_labels,
+            'dates': labelled_dates
         }
 
     @property
@@ -100,7 +101,7 @@ class Dataloader:
     def get_labelled_data(self, normalise=False):
         # get p ids
         p_ids = self.labelled_df.index.get_level_values(0).unique()
-        activity_data, uti_labels, patient_ids, physiological_data, environmental_data = [], [], [], [], []
+        activity_data, uti_labels, patient_ids, physiological_data, environmental_data, labelled_dates = [], [], [], [], [], []
         for idx in range(len(p_ids)):
             # get data of patient
             data = self.labelled_df.loc[p_ids[idx]]
@@ -119,6 +120,7 @@ class Dataloader:
                     env_data.append(self.get_data(self.environmental, p_ids[idx], p_date, 'environmental'))
                     labels.append(int(valid) if valid else -1)
                     patient.append(p_ids[idx])
+                    labelled_dates.append(date)
                     for i in range(1, self.max_days + 1):
                         for symbol in [-1, 1]:
                             f_date = p_date - datetime.timedelta(i) * symbol
@@ -145,8 +147,9 @@ class Dataloader:
         patient_ids = np.array(patient_ids)
         physiological_data = np.array(physiological_data)
         environmental_data = np.array(environmental_data)
+        labelled_dates = np.array(labelled_dates)
 
-        return activity_data, physiological_data, environmental_data, patient_ids, uti_labels
+        return activity_data, physiological_data, environmental_data, patient_ids, uti_labels, labelled_dates
 
     def get_unlabelled_data(self, normalise=False, date='2021-03-01'):
         '''
@@ -196,7 +199,7 @@ class Dataloader:
                 outputs_p_ids.append(p_ids[idx])
                 outputs_dates.append(date)
         return np.array(outputs), np.array(phy_data), np.array(env_data), \
-               np.array(outputs_p_ids), np.array(outputs_dates)
+               np.array(outputs_p_ids), None, np.array(outputs_dates)
 
     @staticmethod
     def laplace_smooth(i, lam=3, denominator=1):
@@ -206,5 +209,8 @@ class Dataloader:
     def get_data(df, p_id, date, datatype):
         if df is None:
             return
-        return df.loc[(p_id, date, config[datatype]['sensors'])] \
-            .sort_values('location', key=lambda x: x.map(config[datatype]['sort_dict']))['value'].to_numpy()
+        try:
+            return df.loc[(p_id, date, config[datatype]['sensors'])] \
+                .sort_values('location', key=lambda x: x.map(config[datatype]['sort_dict']))['value'].to_numpy()
+        except KeyError:
+            return [0.] * len(config[datatype]['sensors'])

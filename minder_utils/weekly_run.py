@@ -8,6 +8,7 @@ from minder_utils.formatting.map_utils import map_raw_ids
 from minder_utils.evaluate.evaluate_models import evaluate
 from minder_utils.formatting.format_util import y_to_categorical
 from minder_utils.formatting.format_util import normalise
+import ruamel.yaml
 
 pd.set_option('max_columns', None)
 pd.set_option('max_colwidth', None)
@@ -16,14 +17,13 @@ pd.set_option('max_colwidth', None)
 class Weekly_alerts:
     def __init__(self, autoencoder='cnn', normalisation=True):
         self.normalisation = normalisation
-        self.loader = Weekly_dataloader(num_days_extended=6)
-        # check the collate next week
-        # self.loader.refresh()
+        self.loader = Weekly_dataloader(num_days_extended=1)
+        self.loader.refresh()
         self.reset()
 
         unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))
         unlabelled = unlabelled.reshape(-1, 3, 8, 14)
-        extractor = Extractor()
+        extractor = Extractor(save_path='./data/weekly_test/model')
         extractor.train(unlabelled, autoencoder)
 
         self.extractor = extractor
@@ -164,22 +164,8 @@ def get_results(model, transform, boosting):
 if __name__ == '__main__':
     # data = feature_engineering()
     wa = Weekly_alerts()
-    for trans in [True, False]:
-        for boost in [True, False]:
-            print('------', trans, boost)
-            # wa.evaluate(trans, boost)
-            df = wa.predict(trans, boost)
-            for p_id in df['patient id'].unique():
-                res = cal_confidence(df, p_id, True)
-                if res > 0.5:
-                    print(p_id, res, df[df['patient id'] == p_id]['TIHM ids'].unique())
-            print('------' * 10)
-    X = np.load(os.path.join(wa.loader.previous_unlabelled_data, 'activity.npy'))
-    p_ids = np.load(os.path.join(wa.loader.previous_unlabelled_data, 'patient_id.npy'))
-    dates = np.load(os.path.join(wa.loader.previous_unlabelled_data, 'dates.npy'), allow_pickle=True)
-    test_data = X[p_ids == '']
-    test_dates = dates[p_ids == '']
-    test_data = normalise(test_data.reshape(test_data.shape[0], 24, -1)).reshape(test_data.shape)
-    wa.data['test'] = (test_data.reshape(137, 3, 8, 14), p_ids[p_ids == ''], test_dates)
-    df = wa.predict(True, True)
-    print(df[df.prediction == 1])
+    df = wa.predict(True, False)
+    for p_id in df['patient id'].unique():
+        res = cal_confidence(df, p_id, True)
+        if res > 0.5:
+            print(p_id, res, df[df['patient id'] == p_id]['TIHM ids'].unique())

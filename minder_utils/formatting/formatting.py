@@ -21,40 +21,14 @@ class Formatting:
     def __init__(self, path=os.path.join('./data', 'raw_data'), add_tihm=None):
         self.path = reformat_path(path)
         self.add_tihm = add_tihm
-        self.activity_nice_locations = {
-                                        'hallway': 'Hallway', 
-                                        'kitchen': 'Kitchen', 
-                                        'lounge':'Lounge', 
-                                        'bathroom1': 'Bathroom', 
-                                        'bedroom1':'Bedroom',
-                                        'kettle': 'Kettle',
-                                        'toaster': 'Toaster',
-                                        'fridge door': 'Fridge Door',
-                                        'back door': 'Back Door',
-                                        'front door': 'Front Door',
-                                        'microwave': 'Microwave',
-                                        'study': 'Study',
-                                        'dining room': 'Dining Room',
-                                        'living room': 'Living Room',
-                                        'iron': 'Iron',
-                                        'corridor1': 'Corridor',
-                                        'WC1': 'WC',
-                                        'main door': 'Main Door',
-                                        'utility': 'Utility', 
-                                        'office': 'Office', 
-                                        'multi': 'Multi', 
-                                        'conservatory': 'Conservatory',
-                                        'garage': 'Garage', 
-                                        'secondary': 'Secondary', 
-                                        'cellar': 'Cellar'
-                                        }
+        self.activity_nice_locations = config['activity_nice_locations']
 
         categories_check = ['device_types', 'homes', 'patients']
         if not np.all([os.path.exists(os.path.join(path, category + '.csv')) for category in categories_check]):
             print('Downloading required files for formatting')
             dl = Downloader()
             dl.export(categories=['device_types', 'homes', 'patients'],
-                      reload=True, since=None, until=None, save_path=path, append = False)
+                      reload=True, since=None, until=None, save_path=path, append=False)
             print('Required files downloaded')
 
         self.device_type = \
@@ -68,7 +42,7 @@ class Formatting:
         if add_tihm:
             data = self.process_data('physiological')
             tihm_data = format_tihm_data()
-            return pd.concat([data, tihm_data['physiological']])
+            return label_dataframe(pd.concat([data, tihm_data['physiological']]))
         return label_dataframe(self.process_data('physiological').drop_duplicates())
 
     @property
@@ -78,7 +52,7 @@ class Formatting:
         if add_tihm:
             data = self.process_data('activity')
             tihm_data = format_tihm_data()
-            return pd.concat([data, tihm_data['activity']]).drop_duplicates().sort_values('time')
+            return label_dataframe(pd.concat([data, tihm_data['activity']]).drop_duplicates().sort_values('time'))
         return label_dataframe(self.process_data('activity')).sort_values('time')
 
     @property
@@ -166,6 +140,7 @@ class Formatting:
         """
         col_filter = ['patient_id', 'start_date', 'device_type', 'value']
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
+        data = data[data.start_date != 'start_date']
         data.loc[:, 'device_type'] = data.device_type.map(self.device_type)
         try:
             data = getattr(self, 'process_' + name)(data)[col_filter]
@@ -173,6 +148,7 @@ class Formatting:
             data.device_type += '->' + name[4:]
         data.start_date = pd.to_datetime(data.start_date).dt.date
         data = data[col_filter]
+        data.value = data.value.astype(float)
         data = data.groupby(['patient_id', 'start_date', 'device_type']).mean().reset_index()
         data.columns = self.config['physiological']['columns']
         data.location = data.location.apply(lambda x: x.split('->')[-1])
@@ -194,6 +170,7 @@ class Formatting:
         """
         col_filter = ['patient_id', 'start_date', 'location_name', 'value']
         data = pd.read_csv(os.path.join(self.path, name + '.csv'))
+        data = data[data.start_date != 'start_date']
         data = data[data['location_name'] != 'location_name']
         data = getattr(self, 'process_' + name)(data)[col_filter]
         data.columns = self.config['activity']['columns']
@@ -221,6 +198,7 @@ class Formatting:
         data = data.groupby(['patient_id', 'start_date', 'location_name']).mean().reset_index()
         data.columns = self.config['environmental']['columns']
         data.time = pd.to_datetime(data.time, utc=True)
+        data['type'] = name
         return df.append(data)
 
     @staticmethod
