@@ -15,12 +15,10 @@ setup(
     url='https://github.com/ImperialCollegeLondon/minder_utils',
     packages=['minder_utils',],
     long_description=open('README.txt').read(),
-    install_requires=["numpy",
-                        "pandas",
-                        "requests",
+    install_requires=["requests",
                         "argparse",
                         "pyyaml",
-                        "typing-extensions",
+                        "typing-extensions==3.7.4",
                         "pydtmc",
                         "networkx==2.6.3"
     ]
