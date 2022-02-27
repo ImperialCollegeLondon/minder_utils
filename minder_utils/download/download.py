@@ -49,9 +49,10 @@ class Downloader:
         '''
         print('Sending Request...')
         r = requests.get(self.url + 'info/datasets', headers=self.params)
-        if r.status_code == 401:
+        if r.status_code in [401, 403]:
             raise TypeError('Authentication failed!'\
-                ' Please check your token - it might be out of date.')
+                ' Please check your token - it might be out of date. '\
+                'You might also not have authorization to complete your request.')
         try:
             return r.json()
         except json.decoder.JSONDecodeError:
@@ -186,26 +187,28 @@ class Downloader:
 
                 request_url = request_url_dict[category]
                 response = requests.get(request_url, headers=self.params)
-                if response.status_code == 401:
+                if response.status_code in [401, 403]:
                     raise TypeError('Authentication failed!'\
-                        ' Please check your token - it might be out of date.')
-                response = response.json()
-                job_id_dict[category] = response['id']
-
-                if response['status'] == 202:
+                                ' Please check your token - it might be out of date. '\
+                                'You might also not have authorization to complete your request.')
+                
+                elif response.status_code == 202:
                     waiting_for[category] = True
 
-                elif response['status'] == 500:
+                elif response.status_code == 500:
                     sys.stdout.write('\r')
                     sys.stdout.write("Request failed for category {}".format(category))
+                    sys.stdout.write('\n')
                     sys.stdout.flush()
                     waiting_for[category] = False
-
-                elif response['status'] == 401:
-                    raise TypeError('Authentication failed! Please check your token.')
-
+                
                 else:
                     waiting_for[category] = False
+
+                if not category in job_id_dict:
+                    response = response.json()
+                    job_id_dict[category] = response['id']
+
 
             # if we are no longer waiting for a job to complete, move onto the downloads
             if True in list(waiting_for.values()):
@@ -368,20 +371,25 @@ class Downloader:
                 since = None
             else:
                 data = pd.read_csv(file_path + '.csv')
-                # add the following to avoid a duplicate of the last and first row
-                last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
-                since = pd.to_datetime(data['start_date'].loc[data['start_date'].last_valid_index()])
-                if self.convert_to_ISO(since) > self.convert_to_ISO(until):
-                    # change since to earliest date and overwrite all data for this category
-                    since = pd.to_datetime(data[['start_date']].iloc[0, 0])
-                    # if the earliest date is after until, then we error
+                if 'start_date' in data.columns:
+                    # add the following to avoid a duplicate of the last and first row
+                    last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
+                    since = pd.to_datetime(data['start_date'].loc[data['start_date'].last_valid_index()])
                     if self.convert_to_ISO(since) > self.convert_to_ISO(until):
-                        raise TypeError('Please check your inputs. For {} we found that you tried refreshing' \
-                                        'to a date earlier than the earliest date in the file.'.format(category))
+                        # change since to earliest date and overwrite all data for this category
+                        since = pd.to_datetime(data[['start_date']].iloc[0, 0])
+                        # if the earliest date is after until, then we error
+                        if self.convert_to_ISO(since) > self.convert_to_ISO(until):
+                            raise TypeError('Please check your inputs. For {} we found that you tried refreshing' \
+                                            'to a date earlier than the earliest date in the file.'.format(category))
+                        else:
+                            mode_dict[category] = 'w'
                     else:
-                        mode_dict[category] = 'w'
+                        mode_dict[category] = 'a'
+                
                 else:
-                    mode_dict[category] = 'a'
+                    since=None
+                    mode_dict[category] = 'w'
 
             export_dict[category] = (since, until)
 
