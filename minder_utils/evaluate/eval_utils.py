@@ -1,7 +1,7 @@
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.metrics import confusion_matrix
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from ..formatting.format_util import y_to_categorical
 
 
@@ -50,3 +50,52 @@ def split_by_ids(X, y, patient_ids, cat=True, valid_only=True, stratify=True, se
            X[np.isin(patient_ids, test_ids)], y[np.isin(patient_ids, test_ids)]
 
 
+
+class StratifiedKFoldPids:
+    def __init__(self, n_splits=5, shuffle=False, random_state=None):
+        self.n_splits = n_splits
+        self.shuffle = shuffle
+        self.random_state = random_state
+        return
+
+
+    def get_n_splits(self):
+        return self.n_splits
+
+
+    def split_by_ids(self, y, pids, seed=0):
+        y[y == 0] = -1
+        y = y.reshape(-1, )
+        pids = pids.reshape(-1, )
+        # make sure the train and test set got both positive and negative patients
+        y_p_id = []
+        for p_id in np.unique(pids):
+            _y = np.unique(y[pids == p_id])
+            rng = np.random.default_rng(seed)
+            y_p_id.append(int(_y[0]) if len(_y) < 2 else rng.integers(0,2))
+            seed += 1
+        y_p_id = np.array(y_p_id)
+        y_p_id[y_p_id < 0] = 0
+        splitter = StratifiedKFold(n_splits=self.n_splits, 
+                                    shuffle=self.shuffle, 
+                                    random_state=seed if self.shuffle else None)
+        splits = list(splitter.split(np.unique(pids), y=y_p_id))
+        return [[np.unique(pids)[train_idx], np.unique(pids)[test_idx]] for train_idx, test_idx in splits]
+
+
+    def split(self, X, y, pids):
+        rng = np.random.default_rng(self.random_state)
+        seed = rng.integers(0,1e6)
+        list_of_splits_pids = self.split_by_ids(y=y, pids=pids, seed=seed)
+        list_of_splits = []
+        for train_pids, test_pids in list_of_splits_pids:
+            
+            train_idx_new = np.arange(len(pids))[np.isin(pids, train_pids)]
+            test_idx_new = np.arange(len(pids))[np.isin(pids, test_pids)]
+
+            list_of_splits.append([
+                train_idx_new,
+                test_idx_new,
+            ])
+            
+        return list_of_splits
