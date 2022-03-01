@@ -139,8 +139,9 @@ class StratifiedKFoldPids:
         
         
         '''
-        y[y == 0] = -1
-        y = y.reshape(-1, )
+        labels = np.copy(y)
+        labels[labels == 0] = -1
+        labels = labels.reshape(-1, )
         pids = pids.reshape(-1, )
         # make sure the train and test set got both positive and negative patients
         y_p_id = []
