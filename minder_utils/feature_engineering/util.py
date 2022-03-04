@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 
 def compute_week_number(df):
-    df = pd.to_datetime(df)
+    df = pd.to_datetime(df, utc=True, infer_datetime_format=True)
     return df.dt.isocalendar().week + (df.dt.isocalendar().year - 2000) * 100
 
 
