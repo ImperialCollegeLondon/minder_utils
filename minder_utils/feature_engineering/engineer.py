@@ -41,7 +41,7 @@ class Feature_engineer:
         return {
             'bathroom_night': 'Bathroom activity during the night',
             'bathroom_daytime': 'Bathroom activity during the day',
-             # 'bathroom_urgent': 'TODO',
+            # 'bathroom_urgent': 'Time to the bathroom from the previous location',
             'body_temperature': 'Mean of body temperature of the participant during the week',
             'entropy': 'Entropy of the activity',
             # 'raw_activity': 'Raw activity data (weekly)',
