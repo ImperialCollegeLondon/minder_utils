@@ -30,7 +30,8 @@ def reformat_path(path):
         return str(path).replace(os.sep, ntpath.sep)
     elif 'unix' in platform.platform().lower():
         return str(path).replace(os.sep, posixpath.sep)
-
+    else:
+        return path
 
 def save_mkdir(path):
     Path(reformat_path(path)).mkdir(parents=True, exist_ok=True)

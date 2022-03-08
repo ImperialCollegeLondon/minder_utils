@@ -76,9 +76,9 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
         manual_label = validated_date(True)
         #manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
         label_df = pd.concat([manual_label, df])
-        label_df = label_df.drop_duplicates()
+        label_df = label_df.drop_duplicates().copy()
     else:
-        label_df = df.drop_duplicates()
+        label_df = df.drop_duplicates().copy()
     if not days_either_side == 0:
         def dates_either_side_group_by(x):
             date = pd.to_datetime(x['date'].values[0])
@@ -91,6 +91,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
         label_df = label_df.groupby(['patient id', 'date', 'valid']).apply(dates_either_side_group_by).reset_index(drop=True)
     label_df['time'] = label_df['patient id'].astype(str) + label_df['date'].astype(str)
     mapping = label_df[['time', 'valid']].set_index('time').to_dict()['valid']
+    unlabelled_df['time'] = pd.to_datetime(unlabelled_df['time'])
     unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
     unlabelled_df['valid'] = unlabelled_df['valid'].map(mapping)
     return unlabelled_df
