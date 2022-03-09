@@ -153,7 +153,7 @@ class Formatting:
         data.columns = self.config['physiological']['columns']
         data.location = data.location.apply(lambda x: x.split('->')[-1])
         data.time = pd.to_datetime(data.time, utc=True)
-        return df.append(data)
+        return pd.concat([df, data])
 
     def process_activity_data(self, name, df):
         """
@@ -175,7 +175,7 @@ class Formatting:
         data = getattr(self, 'process_' + name)(data)[col_filter]
         data.columns = self.config['activity']['columns']
         data.time = pd.to_datetime(data.time, utc=True)
-        return df.append(data)
+        return pd.concat([df, data])
 
     def process_environmental_data(self, name, df):
         """
@@ -199,7 +199,7 @@ class Formatting:
         data.columns = self.config['environmental']['columns']
         data.time = pd.to_datetime(data.time, utc=True)
         data['type'] = name
-        return df.append(data)
+        return pd.concat([df, data])
 
     @staticmethod
     def process_raw_door_sensor(data):
