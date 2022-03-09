@@ -184,3 +184,26 @@ class PBar:
         print(p_bar_to_print)
 
         return
+
+
+
+def please_dont_fail(func, tries=3):
+    
+    def wrapper(*args, **kwargs):
+
+        failed=True
+        times_tried = 0
+
+        while failed and times_tried<tries:
+            try:
+                out = func(*args, **kwargs)
+                failed = False
+            except:
+                times_tried += 1
+        if failed:
+            raise RuntimeError('We tried {} times and it did not work'.format(tries))
+        
+        else:
+            return out
+    
+    return wrapper

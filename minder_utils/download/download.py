@@ -5,10 +5,11 @@ import io
 from pathlib import Path
 import sys
 import os
-from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir
+from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir, please_dont_fail
 from minder_utils.configurations import token_path
 import numpy as np
 from datetime import date, datetime
+import time
 
 
 class Downloader:
@@ -48,7 +49,8 @@ class Downloader:
             This returns a dictionary of the available datasets.
         '''
         print('Sending Request...')
-        r = requests.get(self.url + 'info/datasets', headers=self.params)
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        r = reponse_func(self.url + 'info/datasets', headers=self.params)
         if r.status_code in [401, 403]:
             raise TypeError('Authentication failed!'\
                 ' Please check your token - it might be out of date. '\
@@ -100,7 +102,8 @@ class Downloader:
         print('From ', since, 'to', until)
         schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
         job_id = schedule_job.headers['Content-Location']
-        response = requests.get(job_id, headers=self.params)
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        response = reponse_func(job_id, headers=self.params)
         if response.status_code == 401:
             raise TypeError('Authentication failed!'\
                 ' Please check your token - it might be out of date.')
@@ -109,7 +112,8 @@ class Downloader:
         while waiting:
 
             if response['status'] == 202:
-                response = requests.get(job_id, headers=self.params).json()
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                response = reponse_func(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
                 progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after=False)
@@ -186,7 +190,8 @@ class Downloader:
                     continue
 
                 request_url = request_url_dict[category]
-                response = requests.get(request_url, headers=self.params)
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                response = reponse_func(request_url, headers=self.params)
                 if response.status_code in [401, 403]:
                     raise TypeError('Authentication failed!'\
                                 ' Please check your token - it might be out of date. '\
@@ -283,8 +288,8 @@ class Downloader:
         if export_index is None:
             if reload:
                 self._export_request(categories=categories, since=since, until=until)
-
-        data = requests.get(self.url + 'export', headers=self.params).json()
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        data = reponse_func(self.url + 'export', headers=self.params).json()
         export_index = -1 if export_index is None else export_index
         if export_index is None:
             if not reload:
@@ -307,7 +312,8 @@ class Downloader:
         for idx, record in enumerate(data[export_index]['jobRecord']['output']):
             print('Exporting {}/{}'.format(idx + 1, len(data[export_index]['jobRecord']['output'])).ljust(20, ' '),
                   str(record['type']).ljust(20, ' '), end=' ')
-            content = requests.get(record['url'], headers=self.params)
+            reponse_func = please_dont_fail(requests.get, tries=3)
+            content = reponse_func(record['url'], headers=self.params)
             if content.status_code != 200:
                 print('Fail, Response code {}'.format(content.status_code))
             else:
@@ -395,8 +401,8 @@ class Downloader:
 
         job_id_dict, request_url_dict = self._export_request_parallel(export_dict=export_dict)
 
-
-        data = requests.get(self.url + 'export', headers=self.params).json()
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        data = reponse_func(self.url + 'export', headers=self.params).json()
 
         for category in categories:
 
@@ -404,13 +410,14 @@ class Downloader:
                 raise TypeError('Uh-oh! Something seems to have gone wrong.' \
                                 'Please check the inputs to the function and try again.' \
                                 ' Looks as if category {} caused the problem'.format(category))
-
-            content = requests.get(request_url_dict[category], headers=self.params)
+            reponse_func = please_dont_fail(requests.get, tries=3)
+            content = reponse_func(request_url_dict[category], headers=self.params)
             output = json.load(io.StringIO(content.text))['jobRecord']['output']
 
 
             for n_output, data_chunk in enumerate(output):
-                content = requests.get(data_chunk['url'], headers=self.params)
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                content = reponse_func(data_chunk['url'], headers=self.params)
                 sys.stdout.write('\r')
                 sys.stdout.write("For {}, exporting {}/{}".format(category, n_output + 1, len(output)))
                 sys.stdout.flush()
