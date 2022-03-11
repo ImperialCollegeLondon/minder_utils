@@ -87,9 +87,11 @@ class Formatting:
         categorical_columns = self.config['sleep']['categorical_columns']
         value_columns = self.config['sleep']['value_columns']
         data_adding = pd.read_csv(os.path.join(self.path, name + '.csv'))
+        data_adding = data_adding[data_adding.start_date != 'start_date']
         categorical_columns = [column for column in categorical_columns if column in list(data_adding.columns)]
         if len(categorical_columns) != 0:
             data_cat = data_adding[col_filter+categorical_columns].copy()
+            data_cat.replace({False: 0, True: 1}, inplace=True)
             data_cat = pd.melt(data_cat.merge(
                                                 pd.get_dummies(data_cat[categorical_columns]),
                                                 left_index=True, right_index=True
@@ -107,6 +109,7 @@ class Formatting:
         value_columns = [column for column in value_columns if column in list(data_adding.columns)]
         if len(value_columns) != 0:
             data_val = data_adding[col_filter+value_columns].copy()
+            data_val.replace({False: 0, True: 1}, inplace=True)
             data_val = pd.melt(data_val,
                             id_vars=col_filter,
                             var_name='location',

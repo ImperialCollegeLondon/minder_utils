@@ -25,7 +25,7 @@ class Classifiers:
     @property
     def methods(self):
         return {
-            # 'nn': 'neural network',
+            'nn': 'neural network',
             # 'lstm': 'LSTM',
             'lr': 'logistic regression',
             'bayes': 'naive bayesian',

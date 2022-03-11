@@ -10,8 +10,6 @@ from minder_utils.formatting.format_util import y_to_categorical
 from minder_utils.formatting.format_util import normalise
 import ruamel.yaml
 
-pd.set_option('max_columns', None)
-pd.set_option('max_colwidth', None)
 
 
 class Weekly_alerts:
@@ -26,13 +24,18 @@ class Weekly_alerts:
         extractor = Extractor(save_path='./data/weekly_test/model')
         extractor.train(unlabelled, autoencoder)
 
+        sleep_extractor = Extractor(save_path='./data/weekly_test/sleep_model')
+        unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'sleep.npy'))
+        sleep_extractor.train(unlabelled, 'nn')
+
         self.extractor = extractor
+        self.sleep_extractor = sleep_extractor
         self.autoencoder = autoencoder
 
     def reset(self, num_days_extended=0):
         X = np.load(os.path.join(self.loader.previous_labelled_data, 'activity.npy'))
-        y = np.load(os.path.join(self.loader.previous_labelled_data, 'label.npy'))
-        label_p_ids = np.load(os.path.join(self.loader.previous_labelled_data, 'patient_id.npy'))
+        y = np.load(os.path.join(self.loader.previous_labelled_data, 'label.npy'), allow_pickle=True).astype(int)
+        label_p_ids = np.load(os.path.join(self.loader.previous_labelled_data, 'patient_id.npy'), allow_pickle=True).astype(str)
 
         # labelled data
         indices = list(y[0][1: num_days_extended * 2 + 1]) + [-1, 1]
@@ -44,7 +47,7 @@ class Weekly_alerts:
 
         # test data
         weekly_data = np.load(os.path.join(self.loader.current_data, 'activity.npy'))
-        p_ids = np.load(os.path.join(self.loader.current_data, 'patient_id.npy'))
+        p_ids = np.load(os.path.join(self.loader.current_data, 'patient_id.npy'), allow_pickle=True)
         dates = np.load(os.path.join(self.loader.current_data, 'dates.npy'), allow_pickle=True)
         weekly_data = weekly_data.reshape(-1, 3, 8, 14)
 

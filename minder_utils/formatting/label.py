@@ -11,28 +11,26 @@ import datetime
 
 
 def load_manual_labels():
-
     # import python function from path:
 
     with open(data_path, 'r') as file_read:
         path = file_read.read()
 
     path_path = Path(reformat_path(path + '/validated_date.py'))
-    
+
     try:
-        dri_data_util_validate = SourceFileLoader('dri_data_util_validate', reformat_path(path + '/validated_date.py')).load_module()
+        dri_data_util_validate = SourceFileLoader('dri_data_util_validate',
+                                                  reformat_path(path + '/validated_date.py')).load_module()
     except FileNotFoundError:
         print('Manual label file not found, you might be missing labels!!')
         return None
-    
+
     from dri_data_util_validate import validated_date
 
     return validated_date
 
 
-
-
-def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_side = 0):
+def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_side=0):
     '''
     This function will label the input dataframe based on the information in ```procedure.csv``` and
     manual labels from TIHM.
@@ -74,7 +72,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
     df = df.dropna()
     if not validated_date is None:
         manual_label = validated_date(True)
-        #manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
+        # manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
         label_df = pd.concat([manual_label, df])
         label_df = label_df.drop_duplicates()
     else:
@@ -82,15 +80,18 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
     if not days_either_side == 0:
         def dates_either_side_group_by(x):
             date = pd.to_datetime(x['date'].values[0])
-            x = [x]*(2*days_either_side+1)
+            x = [x] * (2 * days_either_side + 1)
             new_date_values = np.arange(-days_either_side, days_either_side + 1)
             new_dates = [date + datetime.timedelta(int(value)) for value in new_date_values]
             x = pd.concat(x)
             x['date'] = new_dates
             return x
-        label_df = label_df.groupby(['patient id', 'date', 'valid']).apply(dates_either_side_group_by).reset_index(drop=True)
+
+        label_df = label_df.groupby(['patient id', 'date', 'valid']).apply(dates_either_side_group_by).reset_index(
+            drop=True)
     label_df['time'] = label_df['patient id'].astype(str) + label_df['date'].astype(str)
     mapping = label_df[['time', 'valid']].set_index('time').to_dict()['valid']
+    unlabelled_df.time = pd.to_datetime(unlabelled_df.time)
     unlabelled_df['valid'] = unlabelled_df.id.astype(str) + unlabelled_df.time.dt.date.astype(str)
     unlabelled_df['valid'] = unlabelled_df['valid'].map(mapping)
     return unlabelled_df
@@ -143,7 +144,7 @@ def label_by_week(df):
     '''
     validated_date = load_manual_labels()
     manual_label = validated_date(True)
-    #manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
+    # manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
     manual_label.date = pd.to_datetime(manual_label.date)
     manual_label['week'] = manual_label.date.dt.isocalendar().week + \
                            (manual_label.date.dt.isocalendar().year - 2000) * 100

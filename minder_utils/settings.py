@@ -115,7 +115,6 @@ def dates_save(refresh=False):
         date_dict['current']['until'] = today
     with open(dates_path, 'w') as file_write:
         json.dump(date_dict, file_write, default=str)
-    date_backup(False)
     print('Dates Saved')
 
     return

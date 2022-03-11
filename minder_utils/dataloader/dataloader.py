@@ -24,7 +24,7 @@ class Dataloader:
         - label_data: Default False. label the data or not. If False, ```get_labelled_data()``` cannot be used.
     """
 
-    def __init__(self, activity, physiological=None, environmental=None, max_days=3, label_data=False):
+    def __init__(self, activity, physiological=None, environmental=None, sleep_data=None, max_days=3, label_data=False):
         if activity is None:
             warnings.warn('Activity data is None, this class can be only used to load the processed data')
             return
@@ -44,29 +44,33 @@ class Dataloader:
             if physiological is not None else physiological
         self.environmental = standardise_physiological_environmental(environmental, date_range, shared_id) \
             if environmental is not None else environmental
+        self.sleep_data = standardise_physiological_environmental(sleep_data, date_range, shared_id) \
+            if sleep_data is not None else sleep_data
 
         for datatype in ['environmental', 'physiological']:
             config[datatype]['sort_dict'] = dict(
                 zip(config[datatype]['sensors'], range(len(config[datatype]['sensors']))))
 
-        if label_data:
-            activity = label_dataframe(activity)
-            self.labelled_df = activity[~activity.valid.isna()]
-            self.labelled_df.set_index(['id', 'valid', 'Date'], inplace=True)
-            if len(self.labelled_df) > 0:
-                self.true_p_ids = self.labelled_df.loc[:, True, :].index.get_level_values(0).unique()
-                self.false_p_ids = self.labelled_df.loc[:, False, :].index.get_level_values(0).unique()
-            else:
-                print('no data is labelled')
-
-        activity.set_index(['id', 'Date'], inplace=True)
-        self.activity = activity
-        self.max_days = max_days
-
-        self.transfer_sensors = ['back door', 'bathroom1', 'bedroom1', 'dining room',
-                                 'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
-                                 'living room', 'lounge', 'microwave', 'study', 'toaster']
         self.select_sensors = config['activity']['sensors']
+        activity = activity[np.concatenate([['id', 'Date', 'time'], self.select_sensors])]
+
+        if label_data:
+            activity = label_dataframe(activity, days_either_side=max_days)
+            # self.labelled_df = activity[~activity.valid.isna()]
+            # self.labelled_df.set_index(['id', 'valid', 'Date'], inplace=True)
+            # if len(self.labelled_df) > 0:
+            #     self.true_p_ids = self.labelled_df.loc[:, True, :].index.get_level_values(0).unique()
+            #     self.false_p_ids = self.labelled_df.loc[:, False, :].index.get_level_values(0).unique()
+            # else:
+            #     print('no data is labelled')
+            activity.set_index(['id', 'Date', 'valid'], inplace=True)
+        else:
+            activity.set_index(['id', 'Date'], inplace=True)
+        self.max_days = max_days
+        self.activity = activity
+        # self.transfer_sensors = ['back door', 'bathroom1', 'bedroom1', 'dining room',
+        #                          'fridge door', 'front door', 'hallway', 'kettle', 'kitchen',
+        #                          'living room', 'lounge', 'microwave', 'study', 'toaster']
 
     def __len__(self):
         return int(len(self.labelled_df) / 24)
@@ -74,12 +78,13 @@ class Dataloader:
     @property
     @load_save(**config['labelled_data']['save'])
     def labelled_data(self):
-        activity_data, physiological_data, environmental_data, patient_ids, uti_labels, labelled_dates = \
+        activity_data, physiological_data, environmental_data, patient_ids, sleep_data, uti_labels, labelled_dates = \
             self.get_labelled_data(normalise=False)
         return {
             'activity': activity_data,
             'phy': physiological_data,
             'env': environmental_data,
+            'sleep': sleep_data,
             'p_ids': patient_ids,
             'uti_labels': uti_labels,
             'dates': labelled_dates
@@ -88,17 +93,70 @@ class Dataloader:
     @property
     @load_save(**config['unlabelled_data']['save'])
     def unlabelled_data(self):
-        activity_data, physiological_data, environmental_data, patient_ids, dates = \
+        activity_data, physiological_data, environmental_data, sleep_data, patient_ids, dates = \
             self.get_unlabelled_data(normalise=False)
         return {
             'activity': activity_data,
             'phy': physiological_data,
             'env': environmental_data,
+            'sleep': sleep_data,
             'p_ids': patient_ids,
             'dates': dates
         }
 
     def get_labelled_data(self, normalise=False):
+        data = self.activity[~self.activity.index.get_level_values(2).isna()]
+        activity_data = data.to_numpy().reshape(-1, 24, len(self.select_sensors) + 1)[:, :, 1:]
+        indices = data.index.drop_duplicates()
+        labels = indices.get_level_values(2)
+        dates = indices.get_level_values(1)
+        patient_ids = indices.get_level_values(0)
+
+        indices = indices.to_frame(index=False)
+        indices.columns = ['id', 'time', 'valid']
+        indices.time = pd.to_datetime(indices.time)
+        indices = indices[['id', 'time']]
+        physiological = self.get_data_by_index(self.physiological, indices)
+        environmental = self.get_data_by_index(self.environmental, indices)
+        sleep_data = self.get_data_by_index(self.sleep_data, indices)
+
+        return activity_data.astype(float), physiological, environmental, sleep_data, patient_ids.astype(str), labels.astype(int), dates
+
+    def get_unlabelled_data(self, normalise=False, date='2021-03-01'):
+        if self.activity.index.nlevels == 3:
+            data = self.activity[self.activity.index.get_level_values(2).isna()]
+        else:
+            data = self.activity
+        activity_data = data.to_numpy().reshape(-1, 24, len(self.select_sensors) + 1)[:, :, 1:]
+        indices = data.index.drop_duplicates()
+        labels = None
+        dates = indices.get_level_values(1)
+        patient_ids = indices.get_level_values(0)
+
+        indices = indices.to_frame(index=False)
+        if self.activity.index.nlevels == 3:
+            indices.columns = ['id', 'time', 'valid']
+            indices = indices[['id', 'time']]
+        else:
+            indices.columns = ['id', 'time']
+        indices.time = pd.to_datetime(indices.time)
+        physiological = self.get_data_by_index(self.physiological, indices)
+        environmental = self.get_data_by_index(self.environmental, indices)
+        sleep_data = self.get_data_by_index(self.sleep_data, indices)
+
+        return activity_data.astype(float), physiological, environmental, sleep_data, patient_ids.astype(str), labels, dates
+
+    def _get_labelled_data(self, normalise=False):
+        '''
+        This function is expired
+        Parameters
+        ----------
+        normalise
+
+        Returns
+        -------
+
+        '''
         # get p ids
         p_ids = self.labelled_df.index.get_level_values(0).unique()
         activity_data, uti_labels, patient_ids, physiological_data, environmental_data, labelled_dates = [], [], [], [], [], []
@@ -149,10 +207,11 @@ class Dataloader:
         environmental_data = np.array(environmental_data)
         labelled_dates = np.array(labelled_dates)
 
-        return activity_data, physiological_data, environmental_data, patient_ids, uti_labels, labelled_dates
+        return activity_data.astype(float), physiological_data, environmental_data, patient_ids, uti_labels, labelled_dates
 
-    def get_unlabelled_data(self, normalise=False, date='2021-03-01'):
+    def _get_unlabelled_data(self, normalise=False, date='2021-03-01'):
         '''
+        Warnings: This function is expired
         Get the unlabelled data,
         Parameters
         ----------
@@ -206,11 +265,23 @@ class Dataloader:
         return np.exp(- np.abs(i) / lam) / denominator
 
     @staticmethod
-    def get_data(df, p_id, date, datatype):
+    def get_data_by_index(df, indices):
+        '''
+        This function processes the physiological and environmental data into numpy array based on the given
+        ids and dates
+        Parameters
+        ----------
+        df: Dataframe, physiological / environmental data, indices = ['id', 'time', 'location'], columns = ['value']
+        indices: Dataframe, contains columns = ['id', 'time']
+
+        Returns
+        -------
+
+        '''
         if df is None:
-            return
-        try:
-            return df.loc[(p_id, date, config[datatype]['sensors'])] \
-                .sort_values('location', key=lambda x: x.map(config[datatype]['sort_dict']))['value'].to_numpy()
-        except KeyError:
-            return [0.] * len(config[datatype]['sensors'])
+            return None
+        data = df.reset_index()
+        data = indices[['id', 'time']].merge(data, how='left')
+        num_sensors = len(data.location.unique())
+        data = data.set_index(['id', 'time', 'location'])
+        return data.to_numpy().reshape(-1, num_sensors).astype(float)

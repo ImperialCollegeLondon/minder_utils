@@ -50,13 +50,12 @@ class Downloader:
         print('Sending Request...')
         r = requests.get(self.url + 'info/datasets', headers=self.params)
         if r.status_code == 401:
-            raise TypeError('Authentication failed!'\
-                ' Please check your token - it might be out of date.')
+            raise TypeError('Authentication failed!' \
+                            ' Please check your token - it might be out of date.')
         try:
             return r.json()
         except json.decoder.JSONDecodeError:
             print('Get response ', r)
-            
 
     def _export_request(self, categories='all', since=None, until=None):
         '''
@@ -101,8 +100,8 @@ class Downloader:
         job_id = schedule_job.headers['Content-Location']
         response = requests.get(job_id, headers=self.params)
         if response.status_code == 401:
-            raise TypeError('Authentication failed!'\
-                ' Please check your token - it might be out of date.')
+            raise TypeError('Authentication failed!' \
+                            ' Please check your token - it might be out of date.')
         response = response.json()
         waiting = True
         while waiting:
@@ -187,8 +186,8 @@ class Downloader:
                 request_url = request_url_dict[category]
                 response = requests.get(request_url, headers=self.params)
                 if response.status_code == 401:
-                    raise TypeError('Authentication failed!'\
-                        ' Please check your token - it might be out of date.')
+                    raise TypeError('Authentication failed!' \
+                                    ' Please check your token - it might be out of date.')
                 response = response.json()
                 job_id_dict[category] = response['id']
 
@@ -219,8 +218,8 @@ class Downloader:
 
         return job_id_dict, request_url_dict
 
-    def export(self, since=None, until=None, reload=True, 
-                categories='all', save_path='./data/raw_data/', append=True, export_index=None):
+    def export(self, since=None, until=None, reload=True,
+               categories='all', save_path='./data/raw_data/', append=True, export_index=None):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -314,10 +313,16 @@ class Downloader:
                 else:
                     mode = 'a' if append else 'w'
                     header = not Path(os.path.join(save_path, record['type'] + '.csv')).exists() or mode == 'w'
-                
-                pd.read_csv(io.StringIO(content.text)).to_csv(os.path.join(save_path, record['type'] + '.csv'),
-                                                              mode=mode,
-                                                              header=header, index=False)
+
+                csv_content = pd.read_csv(io.StringIO(content.text))
+                if record['type'] not in ['homes', 'device_types', 'patients']:
+                    try:
+                        csv_content = csv_content.drop(['id'], axis=1)
+                    except KeyError:
+                        pass
+                csv_content.to_csv(os.path.join(save_path, record['type'] + '.csv'),
+                                   mode=mode,
+                                   header=header, index=False)
                 categories_downloaded.append(record['type'])
                 print('Success')
 
@@ -387,19 +392,17 @@ class Downloader:
 
         job_id_dict, request_url_dict = self._export_request_parallel(export_dict=export_dict)
 
-
         data = requests.get(self.url + 'export', headers=self.params).json()
 
         for category in categories:
 
-            if not category in  request_url_dict:
+            if not category in request_url_dict:
                 raise TypeError('Uh-oh! Something seems to have gone wrong.' \
                                 'Please check the inputs to the function and try again.' \
                                 ' Looks as if category {} caused the problem'.format(category))
 
             content = requests.get(request_url_dict[category], headers=self.params)
             output = json.load(io.StringIO(content.text))['jobRecord']['output']
-
 
             for n_output, data_chunk in enumerate(output):
                 content = requests.get(data_chunk['url'], headers=self.params)
@@ -414,7 +417,7 @@ class Downloader:
                     sys.stdout.flush()
                 else:
                     current_data = pd.read_csv(io.StringIO(content.text))
-                    
+
                     if Path(save_path + category + '.csv').exists():
                         data_to_save = pd.read_csv(save_path + category + '.csv', index_col=0)
                         data_to_save = data_to_save.append(current_data, ignore_index=True)
@@ -436,8 +439,7 @@ class Downloader:
                     '''
 
                     data_to_save.to_csv(save_path + category + '.csv', mode='w',
-                                            header=True)
-
+                                        header=True)
 
             sys.stdout.write('\n')
 

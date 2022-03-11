@@ -116,9 +116,11 @@ class Weekly_dataloader:
 
     def format(self, period):
         loader = Formatting(os.path.join(self.default_dir, period, 'csv'), add_tihm=period == 'previous')
+        loader.sleep_data
         dataloader = Dataloader(loader.activity_data,
                                 loader.physiological_data,
                                 loader.environmental_data,
+                                loader.sleep_data,
                                 self.num_days_extended, period == 'previous')
 
         categories = ['labelled', 'unlabelled'] if period == 'previous' else ['unlabelled']
@@ -126,11 +128,12 @@ class Weekly_dataloader:
             save_path = os.path.join(self.default_dir, period, 'npy', data_type)
             save_mkdir(save_path)
             attr = 'get_{}_data'.format(data_type)
-            activity_data, physiological_data, environmental_data, p_ids, labels, dates = getattr(dataloader, attr)()
-            np.save(os.path.join(save_path, 'activity.npy'.format(data_type)), activity_data)
+            activity_data, physiological_data, environmental_data, sleep_data, p_ids, labels, dates = getattr(dataloader, attr)()
+            np.save(os.path.join(save_path, 'activity.npy'.format(data_type)), activity_data.astype(float))
             np.save(os.path.join(save_path, 'physiological.npy'.format(data_type)), physiological_data)
             np.save(os.path.join(save_path, 'environmental.npy'.format(data_type)), environmental_data)
-            np.save(os.path.join(save_path, 'patient_id.npy'), p_ids)
+            np.save(os.path.join(save_path, 'sleep.npy'.format(data_type)), sleep_data)
+            np.save(os.path.join(save_path, 'patient_id.npy'), p_ids.astype(str))
             if data_type == 'labelled':
                 np.save(os.path.join(save_path, 'label.npy'), labels)
             np.save(os.path.join(save_path, 'dates.npy'), dates)
@@ -159,6 +162,7 @@ class Weekly_dataloader:
         self.collate()
         for folder in refresh_period:
             self.format(folder)
+        date_backup(False)
         return
 
     def collate(self):
