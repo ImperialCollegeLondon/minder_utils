@@ -5,10 +5,11 @@ import io
 from pathlib import Path
 import sys
 import os
-from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir
+from minder_utils.util.util import progress_spinner, reformat_path, save_mkdir, please_dont_fail
 from minder_utils.configurations import token_path
 import numpy as np
 from datetime import date, datetime
+import time
 
 
 class Downloader:
@@ -48,10 +49,13 @@ class Downloader:
             This returns a dictionary of the available datasets.
         '''
         print('Sending Request...')
-        r = requests.get(self.url + 'info/datasets', headers=self.params)
-        if r.status_code == 401:
-            raise TypeError('Authentication failed!' \
-                            ' Please check your token - it might be out of date.')
+
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        r = reponse_func(self.url + 'info/datasets', headers=self.params)
+        if r.status_code in [401, 403]:
+            raise TypeError('Authentication failed!'\
+                ' Please check your token - it might be out of date. '\
+                'You might also not have authorization to complete your request.')
         try:
             return r.json()
         except json.decoder.JSONDecodeError:
@@ -98,7 +102,8 @@ class Downloader:
         print('From ', since, 'to', until)
         schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
         job_id = schedule_job.headers['Content-Location']
-        response = requests.get(job_id, headers=self.params)
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        response = reponse_func(job_id, headers=self.params)
         if response.status_code == 401:
             raise TypeError('Authentication failed!' \
                             ' Please check your token - it might be out of date.')
@@ -107,7 +112,8 @@ class Downloader:
         while waiting:
 
             if response['status'] == 202:
-                response = requests.get(job_id, headers=self.params).json()
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                response = reponse_func(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
                 progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after=False)
@@ -184,27 +190,30 @@ class Downloader:
                     continue
 
                 request_url = request_url_dict[category]
-                response = requests.get(request_url, headers=self.params)
-                if response.status_code == 401:
-                    raise TypeError('Authentication failed!' \
-                                    ' Please check your token - it might be out of date.')
-                response = response.json()
-                job_id_dict[category] = response['id']
-
-                if response['status'] == 202:
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                response = reponse_func(request_url, headers=self.params)
+                if response.status_code in [401, 403]:
+                    raise TypeError('Authentication failed!'\
+                                ' Please check your token - it might be out of date. '\
+                                'You might also not have authorization to complete your request.')
+                
+                elif response.status_code == 202:
                     waiting_for[category] = True
 
-                elif response['status'] == 500:
+                elif response.status_code == 500:
                     sys.stdout.write('\r')
                     sys.stdout.write("Request failed for category {}".format(category))
+                    sys.stdout.write('\n')
                     sys.stdout.flush()
                     waiting_for[category] = False
-
-                elif response['status'] == 401:
-                    raise TypeError('Authentication failed! Please check your token.')
-
+                
                 else:
                     waiting_for[category] = False
+
+                if not category in job_id_dict:
+                    response = response.json()
+                    job_id_dict[category] = response['id']
+
 
             # if we are no longer waiting for a job to complete, move onto the downloads
             if True in list(waiting_for.values()):
@@ -279,8 +288,8 @@ class Downloader:
         if export_index is None:
             if reload:
                 self._export_request(categories=categories, since=since, until=until)
-
-        data = requests.get(self.url + 'export', headers=self.params).json()
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        data = reponse_func(self.url + 'export', headers=self.params).json()
         export_index = -1 if export_index is None else export_index
         if export_index is None:
             if not reload:
@@ -303,7 +312,8 @@ class Downloader:
         for idx, record in enumerate(data[export_index]['jobRecord']['output']):
             print('Exporting {}/{}'.format(idx + 1, len(data[export_index]['jobRecord']['output'])).ljust(20, ' '),
                   str(record['type']).ljust(20, ' '), end=' ')
-            content = requests.get(record['url'], headers=self.params)
+            reponse_func = please_dont_fail(requests.get, tries=3)
+            content = reponse_func(record['url'], headers=self.params)
             if content.status_code != 200:
                 print('Fail, Response code {}'.format(content.status_code))
             else:
@@ -373,39 +383,46 @@ class Downloader:
                 since = None
             else:
                 data = pd.read_csv(file_path + '.csv')
-                # add the following to avoid a duplicate of the last and first row
-                last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
-                since = pd.to_datetime(data['start_date'].loc[data['start_date'].last_valid_index()])
-                if self.convert_to_ISO(since) > self.convert_to_ISO(until):
-                    # change since to earliest date and overwrite all data for this category
-                    since = pd.to_datetime(data[['start_date']].iloc[0, 0])
-                    # if the earliest date is after until, then we error
+                if 'start_date' in data.columns:
+                    # add the following to avoid a duplicate of the last and first row
+                    last_rows[category] = data[['start_date', 'id']].iloc[-1, :].to_numpy()
+                    since = pd.to_datetime(data['start_date'].loc[data['start_date'].last_valid_index()])
                     if self.convert_to_ISO(since) > self.convert_to_ISO(until):
-                        raise TypeError('Please check your inputs. For {} we found that you tried refreshing' \
-                                        'to a date earlier than the earliest date in the file.'.format(category))
+                        # change since to earliest date and overwrite all data for this category
+                        since = pd.to_datetime(data[['start_date']].iloc[0, 0])
+                        # if the earliest date is after until, then we error
+                        if self.convert_to_ISO(since) > self.convert_to_ISO(until):
+                            raise TypeError('Please check your inputs. For {} we found that you tried refreshing' \
+                                            'to a date earlier than the earliest date in the file.'.format(category))
+                        else:
+                            mode_dict[category] = 'w'
                     else:
-                        mode_dict[category] = 'w'
+                        mode_dict[category] = 'a'
+                
                 else:
-                    mode_dict[category] = 'a'
+                    since=None
+                    mode_dict[category] = 'w'
 
             export_dict[category] = (since, until)
 
         job_id_dict, request_url_dict = self._export_request_parallel(export_dict=export_dict)
 
-        data = requests.get(self.url + 'export', headers=self.params).json()
 
+        reponse_func = please_dont_fail(requests.get, tries=3)
+        data = reponse_func(self.url + 'export', headers=self.params).json()
         for category in categories:
 
             if not category in request_url_dict:
                 raise TypeError('Uh-oh! Something seems to have gone wrong.' \
                                 'Please check the inputs to the function and try again.' \
                                 ' Looks as if category {} caused the problem'.format(category))
-
-            content = requests.get(request_url_dict[category], headers=self.params)
+            reponse_func = please_dont_fail(requests.get, tries=3)
+            content = reponse_func(request_url_dict[category], headers=self.params)
             output = json.load(io.StringIO(content.text))['jobRecord']['output']
 
             for n_output, data_chunk in enumerate(output):
-                content = requests.get(data_chunk['url'], headers=self.params)
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                content = reponse_func(data_chunk['url'], headers=self.params)
                 sys.stdout.write('\r')
                 sys.stdout.write("For {}, exporting {}/{}".format(category, n_output + 1, len(output)))
                 sys.stdout.flush()
