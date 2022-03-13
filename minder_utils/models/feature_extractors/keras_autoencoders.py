@@ -3,10 +3,12 @@ from tensorflow.keras.layers import Dense, Input, Conv2D, Flatten
 from tensorflow.keras.callbacks import EarlyStopping
 import os
 from tensorflow import keras
+import numpy as np
 
 
 def get_ae_model(model_type='nn', input_dim=(8, 14, 3), encoding_dim=24 * 7):
     if model_type == 'nn':
+        
         input_layer = Input(shape=(input_dim,))
         encoded = Dense(15, activation='relu')(input_layer)
         encoded = Dense(10, activation='relu')(encoded)

@@ -24,12 +24,12 @@ class Weekly_alerts:
         extractor = Extractor(save_path='./data/weekly_test/model')
         extractor.train(unlabelled, autoencoder)
 
-        sleep_extractor = Extractor(save_path='./data/weekly_test/sleep_model')
-        unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'sleep.npy'))
-        sleep_extractor.train(unlabelled, 'nn')
+        #sleep_extractor = Extractor(save_path='./data/weekly_test/sleep_model')
+        #unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'sleep.npy'))
+        #sleep_extractor.train(unlabelled, 'nn')
 
         self.extractor = extractor
-        self.sleep_extractor = sleep_extractor
+        #self.sleep_extractor = sleep_extractor
         self.autoencoder = autoencoder
 
     def reset(self, num_days_extended=0):
@@ -37,13 +37,15 @@ class Weekly_alerts:
         y = np.load(os.path.join(self.loader.previous_labelled_data, 'label.npy'), allow_pickle=True).astype(int)
         label_p_ids = np.load(os.path.join(self.loader.previous_labelled_data, 'patient_id.npy'), allow_pickle=True).astype(str)
 
+        X = X.reshape(-1, 3, 8, 14)
+
         # labelled data
-        indices = list(y[0][1: num_days_extended * 2 + 1]) + [-1, 1]
-        X = X[np.isin(y, indices)].reshape(-1, 3, 8, 14)
-        label_p_ids = label_p_ids[np.isin(y, indices)]
-        y = y[np.isin(y, indices)]
-        y[y > 0] = 1
-        y[y < 0] = -1
+        #indices = list(y[0][1: num_days_extended * 2 + 1]) + [-1, 1]
+        #X = X[np.isin(y, indices)].reshape(-1, 3, 8, 14)
+        #label_p_ids = label_p_ids[np.isin(y, indices)]
+        #y = y[np.isin(y, indices)]
+        #y[y > 0] = 1
+        #y[y < 0] = -1
 
         # test data
         weekly_data = np.load(os.path.join(self.loader.current_data, 'activity.npy'))
@@ -85,9 +87,9 @@ class Weekly_alerts:
         prediction = np.argmax(probability, axis=1)
         df = {'patient id': p_ids, 'Date': dates, 'prediction': prediction,
               'confidence': probability[np.arange(probability.shape[0]), prediction]}
-        df['TIHM ids'] = map_raw_ids(df['patient id'], True)
+        df['TIHM ids'] = df['patient id']#map_raw_ids(df['patient id'], True)
         df = pd.DataFrame(df)
-        df.to_csv('../results/weekly_test/alerts.csv')
+        df.to_csv('./results/weekly_test/alerts.csv')
         return df
 
     def _predict(self, clf_type, return_df=False, transform=True, boosting=True):
@@ -110,7 +112,7 @@ class Weekly_alerts:
                   'confidence': probability[np.arange(probability.shape[0]), prediction]}
             df['TIHM ids'] = map_raw_ids(df['patient id'], True)
             df = pd.DataFrame(df)
-            df.to_csv('../results/weekly_test/alerts.csv')
+            df.to_csv('./results/weekly_test/alerts.csv')
             return df
         return probability
 
