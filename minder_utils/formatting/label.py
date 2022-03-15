@@ -63,13 +63,40 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
         df = pd.read_csv(os.path.join(save_path, 'procedure.csv'))
 
     df.notes = df.notes.apply(lambda x: str(x).lower())
-    df = df[df.notes.str.contains('urinalysis') | df.notes.str.contains('uti') | df.notes.str.contains(
-        'positive') | df.notes.str.contains('negative')]
-    df = df[['patient_id', 'start_date', 'outcome']]
-    df.columns = ['patient id', 'date', 'valid']
+    df.type = df.type.apply(lambda x: str(x).lower())
+
+    # filtering rows that are about UTIs
+    def uti_filter(x):
+        keep = False
+        type = str(x.type)
+        notes = str(x.notes)
+        if ('urine' in type
+            or 'urinalysis' in type
+            or 'uti' in type):
+            keep = True
+            return keep
+        elif ('urine' in notes 
+            or 'urinalysis' in notes 
+            or 'uti' in notes ):
+            keep = True
+            return keep
+        return keep
+
+    df['keep'] = df[['type', 'notes']].apply(uti_filter, axis=1)
+    df = df[df['keep']==True]
+    df = df[['patient_id', 'start_date', 'outcome', 'notes']]
+    df.columns = ['patient id', 'date', 'valid', 'notes']
+    
+    # labelling UTIs
     df.valid = map_url_to_flag(df.valid)
+    df[(df.valid == True)
+        & (df.notes.str.contains('negative'))] = False
+    
+    df = df[['patient id', 'date', 'valid']]
+
     df.date = pd.to_datetime(df.date).dt.date
     df = df.dropna()
+
     if not validated_date is None:
         manual_label = validated_date(True)
         # manual_label['patient id'] = map_numeric_ids(manual_label['patient id'], True)
@@ -77,6 +104,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
         label_df = label_df.drop_duplicates().copy()
     else:
         label_df = df.drop_duplicates().copy()
+
     if not days_either_side == 0:
         def dates_either_side_group_by(x):
             date = pd.to_datetime(x['date'].values[0])
@@ -86,9 +114,9 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
             x = pd.concat(x)
             x['date'] = new_dates
             return x
-
         label_df = label_df.groupby(['patient id', 'date', 'valid']).apply(dates_either_side_group_by).reset_index(
             drop=True)
+
     label_df['time'] = label_df['patient id'].astype(str) + label_df['date'].astype(str)
     mapping = label_df[['time', 'valid']].set_index('time').to_dict()['valid']
     unlabelled_df['time'] = pd.to_datetime(unlabelled_df['time'])
