@@ -112,7 +112,7 @@ class Weekly_dataloader:
         self.downloader.export(since=date_dict[period]['since'], until=date_dict[period]['until'], reload=True,
                                save_path=os.path.join(self.default_dir, 'previous' if period == 'gap' else period,
                                                       'csv/'),
-                               categories=categories)
+                               categories=categories, save_index=False)
 
     def format(self, period):
         loader = Formatting(os.path.join(self.default_dir, period, 'csv'), add_tihm=period == 'previous')
@@ -169,8 +169,9 @@ class Weekly_dataloader:
         date_dict = self.get_dates()
         for filename in iter_dir(self.previous_csv_data, split=False):
             if filename not in ['device_types.csv', 'homes.csv', 'patients.csv']:
-                previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename), index_col=0)
-                current_data = pd.read_csv(os.path.join(self.current_csv_data, filename), index_col=0)
+                print(filename)
+                previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename), index_col=False)
+                current_data = pd.read_csv(os.path.join(self.current_csv_data, filename), index_col=False)
                 current_data = current_data[current_data.start_date != 'start_date']
                 previous_data = previous_data[previous_data.start_date != 'start_date']
 

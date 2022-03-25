@@ -228,7 +228,8 @@ class Downloader:
         return job_id_dict, request_url_dict
 
     def export(self, since=None, until=None, reload=True,
-               categories='all', save_path='./data/raw_data/', append=True, export_index=None):
+               categories='all', save_path='./data/raw_data/', append=True, export_index=None,
+               save_index=True):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -278,6 +279,9 @@ class Downloader:
             You may use this argument to download a previous request. ```-1``` will download
             the most recent request. This argument will over rule the ```reload``` argument.
             Defaults to ```None```.
+
+        - save_index: bool:
+            Whether to save the index in the csv file.
 
         '''
         save_path = reformat_path(save_path)
@@ -332,7 +336,7 @@ class Downloader:
                         pass
                 csv_content.to_csv(os.path.join(save_path, record['type'] + '.csv'),
                                    mode=mode,
-                                   header=header, index=False)
+                                   header=header, index=save_index)
                 categories_downloaded.append(record['type'])
                 print('Success')
 

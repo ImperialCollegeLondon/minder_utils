@@ -22,6 +22,8 @@ def standardise_activity_data(df):
 
     df = df.append(df_borders, sort=False, ignore_index=True) \
         .drop_duplicates(subset=['id', 'time', 'location'])
+    df['time'] = pd.to_datetime(df['time'])
+    print(df['time'])
     df = df.fillna(0).groupby(['id', 'location']).apply(lambda x: x.set_index('time')
                                                         .resample('H').sum()).reset_index()
     table_df = df.pivot_table(index=['id', 'time'], columns='location',
