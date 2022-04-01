@@ -291,7 +291,8 @@ class Downloader:
 
     def export(self, since=None, until=None, reload=True,
                categories='all', save_path='./data/raw_data/', append=True, export_index=None,
-               save_index=True, return_categories_downloaded=False):
+               save_index=True, return_categories_downloaded=False,
+               remove_id=False):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -393,12 +394,15 @@ class Downloader:
                     mode = 'a' if append else 'w'
                     header = not Path(os.path.join(save_path, record['type'] + '.csv')).exists() or mode == 'w'
 
-                csv_content = pd.read_csv(io.StringIO(content.text))
-                if record['type'] not in ['homes', 'device_types', 'patients']:
-                    try:
-                        csv_content = csv_content.drop(['id'], axis=1)
-                    except KeyError:
-                        pass
+                csv_content = pd.read_csv(io.StringIO(content.text), index_col=False)
+                
+                if remove_id:
+                    if record['type'] not in ['homes', 'device_types', 'patients']:
+                        try:
+                            csv_content = csv_content.drop(['id'], axis=1)
+                        except KeyError:
+                            pass
+                
                 csv_content.to_csv(os.path.join(save_path, record['type'] + '.csv'),
                                    mode=mode,
                                    header=header, index=save_index)
@@ -456,7 +460,7 @@ class Downloader:
         if type(categories) == str:
             if categories == 'all':
                 print('You have selected ALL categories... are you sure?')
-                progress_spinner(30, 'You have 30 seconds to cancel', new_line_after=True)
+                progress_spinner(1, 'You have 30 seconds to cancel', new_line_after=True)
                 categories = self.get_category_names(categories)
             else:
                 categories = [categories]
@@ -469,7 +473,6 @@ class Downloader:
         else:
             index_col=False
             save_index=False
-
         logging.debug('index_col={}, save_index={}'.format(index_col,save_index))
         logging.debug('Getting data for categories {}'.format(categories))
         categories_downloaded = self.export(since=since, until=until, reload=True,
@@ -482,9 +485,13 @@ class Downloader:
         logging.debug('removing possible duplicates...')
 
         for cat in categories_downloaded:
+            logging.debug('loading {}'.format(cat))
             data = pd.read_csv(save_path + cat + '.csv', index_col=index_col)
-            data = data.drop_duplicates()
+            logging.debug('de-duplicating {}'.format(cat))
+            data = data.drop_duplicates().reset_index(drop=True)
+            logging.debug('saving {}'.format(cat))
             data.to_csv(save_path + cat + '.csv', index=save_index)
+        print('Done')
 
         return
 

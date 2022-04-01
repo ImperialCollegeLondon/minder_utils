@@ -2,7 +2,7 @@ name: &save_config
   save_path: ['./data', 'pkl', 'feature_engineering']
   save_name: null
   verbose: True
-  refresh: False
+  refresh: True
 
 nocturia:
   time_range: ['22:00', '06:00']

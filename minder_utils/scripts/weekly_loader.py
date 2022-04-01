@@ -112,7 +112,7 @@ class Weekly_dataloader:
         self.downloader.export(since=date_dict[period]['since'], until=date_dict[period]['until'], reload=True,
                                save_path=os.path.join(self.default_dir, 'previous' if period == 'gap' else period,
                                                       'csv/'),
-                               categories=categories, save_index=False)
+                               categories=categories, save_index=False, remove_id=True)
 
     def format(self, period):
         loader = Formatting(os.path.join(self.default_dir, period, 'csv'), add_tihm=period == 'previous')
