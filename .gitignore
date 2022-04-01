@@ -19,6 +19,7 @@ __pycache__/
 test.py
 # C extensions
 *.so
+**/logs
 
 # Distribution / packaging
 .Python

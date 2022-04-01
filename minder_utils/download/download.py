@@ -10,6 +10,59 @@ from minder_utils.configurations import token_path
 import numpy as np
 from datetime import date, datetime
 import time
+import contextlib
+
+
+import http.client
+import logging
+from logging import FileHandler
+
+def setup_logging(loglevel):
+
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y--%H-%M-%S")
+
+    # the file handler receives all messages from level DEBUG on up, regardless
+    logging_path = os.path.join(os.path.dirname(__file__), '..', '..', 'logs', '{}_logging.txt'.format(dt_string))
+    fileHandler = FileHandler(logging_path)
+    fileHandler.setLevel(logging.DEBUG)
+    handlers = [fileHandler]
+
+    if loglevel is not None:
+        # if a log level is configured, use that for logging to the console
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setLevel(loglevel)
+        handlers.append(stream_handler)
+
+    if loglevel == logging.DEBUG:
+        # when logging at debug level, make http.client extra chatty too
+        # http.client *uses `print()` calls*, not logging.
+        http.client.HTTPConnection.debuglevel = 1
+
+    # finally, configure the root logger with our choice of handlers
+    # the logging level of the root set to DEBUG (defaults to WARNING otherwise).
+    logformat = "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
+    logging.basicConfig(
+        filename=logging_path,
+        format=logformat, datefmt="%Y-%m-%d %H:%M:%S",
+        level=logging.DEBUG, #handlers=handlers, 
+    )
+    logging.getLogger("urllib3").propagate = True
+
+
+http_client_logger = logging.getLogger("http.client")
+
+def print_to_log(*args):
+    http_client_logger.debug(" ".join(args)) 
+
+def do_nothing(*args, **kwargs):
+    return
+
+# monkey-patch a `print` global into the http.client module; all calls to
+# print() in that module will then use our print_to_log implementation
+http.client.print = print_to_log
+setup_logging(logging.DEBUG)
+
 
 
 class Downloader:
@@ -49,6 +102,7 @@ class Downloader:
             This returns a dictionary of the available datasets.
         '''
         print('Sending Request...')
+        logging.debug('getting info')
 
         reponse_func = please_dont_fail(requests.get, tries=3)
         r = reponse_func(self.url + 'info/datasets', headers=self.params)
@@ -60,6 +114,7 @@ class Downloader:
             return r.json()
         except json.decoder.JSONDecodeError:
             print('Get response ', r)
+        logging.debug('info done')
 
     def _export_request(self, categories='all', since=None, until=None):
         '''
@@ -88,6 +143,7 @@ class Downloader:
         #     else:
         #         print('Job ID ', job['id'], 'is NOT deleted. Response code ', response.status_code)
         print('Creating new export request')
+        logging.debug('making requests')
         export_keys = {'datasets': {}}
         if since is not None:
             export_keys['since'] = self.convert_to_ISO(since)
@@ -110,6 +166,7 @@ class Downloader:
         response = response.json()
         waiting = True
         while waiting:
+            logging.debug('checking status')
 
             if response['status'] == 202:
                 reponse_func = please_dont_fail(requests.get, tries=3)
@@ -127,6 +184,7 @@ class Downloader:
                 sys.stdout.write('\n')
                 print("Job is completed, start to download the data")
                 waiting = False
+        logging.debug('no more waiting for the server')
 
     def _export_request_parallel(self, export_dict):
         '''
@@ -156,6 +214,7 @@ class Downloader:
                 raise TypeError('Category {} is not available to download. Please check the name.'.format(category))
 
         print('Creating new parallel export requests')
+        logging.debug('creating new parallel export requests')
 
         # the following creates a list of export keys to be called by the API
         export_key_list = {}
@@ -185,6 +244,7 @@ class Downloader:
         waiting_for = {category: True for category in categories_list}
         job_id_dict = {}
         while waiting:
+            logging.debug('checking status')
             for category in categories_list:
                 if not waiting_for[category]:
                     continue
@@ -217,6 +277,7 @@ class Downloader:
 
             # if we are no longer waiting for a job to complete, move onto the downloads
             if True in list(waiting_for.values()):
+                logging.debug('waiting for server')
                 progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after=False)
             else:
                 sys.stdout.write('\n')
@@ -224,12 +285,13 @@ class Downloader:
                 sys.stdout.flush()
                 sys.stdout.write('\n')
                 waiting = False
+        logging.debug('finished waiting for the server')
 
         return job_id_dict, request_url_dict
 
     def export(self, since=None, until=None, reload=True,
                categories='all', save_path='./data/raw_data/', append=True, export_index=None,
-               save_index=True):
+               save_index=True, return_categories_downloaded=False):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -288,6 +350,7 @@ class Downloader:
         p = Path(save_path)
         if not p.exists():
             print('Target directory does not exist, creating a new folder')
+            logging.debug('target directory does not exist, creating a new folder')
             save_mkdir(save_path)
         if export_index is None:
             if reload:
@@ -312,6 +375,8 @@ class Downloader:
                         print('Not a valid input')
                         export_index = int(input('Enter the index of the job ...'))
         print('Start to export job')
+        logging.debug('start to export job')
+        logging.debug('downloading the data')
         categories_downloaded = []
         for idx, record in enumerate(data[export_index]['jobRecord']['output']):
             print('Exporting {}/{}'.format(idx + 1, len(data[export_index]['jobRecord']['output'])).ljust(20, ' '),
@@ -339,6 +404,93 @@ class Downloader:
                                    header=header, index=save_index)
                 categories_downloaded.append(record['type'])
                 print('Success')
+        logging.debug('done with export')
+
+        if return_categories_downloaded:
+            return categories_downloaded
+        else:
+            return
+
+
+
+    def refresh_at_once(self, since, categories=None, until=None,
+                        save_path='./data/raw_data/', 
+                        export_index=None):
+        '''
+        This function allows for the user to refresh the data currently saved in the 
+        save path. This differs from ```.refresh()``` in that a ```since``` argument
+        must be used. This function will download the data between ```until``` and 
+        ```since``` and then de-duplicate the files.
+
+        Arguments
+        ---------
+
+        - since: valid input to pd.to_datetime(.): 
+            This is the date and time from which the data will be loaded. If ```None```,
+            the earliest possible date is used.
+            Default: ```None```
+
+         - until: valid input to pd.to_datetime(.): 
+            This is the date and time to which the data will be loaded up until. If ```None```,
+            the latest possible date is used.
+            Default: ```None```
+
+        - categories: list or string: 
+            If a list, this is the datasets that will be downloaded. Please use the
+            dataset names that can be returned by using the get_category_names function.
+            If a string is given, only this dataset will be refreshed.
+
+        - save_path: string: 
+            This is the save path for the data that is downloaded from minder.
+            Default: ```'./data/raw_data/'```
+        
+        - export_index: integer:
+            You may use this argument to download a previous request. ```-1``` will download
+            the most recent request. This argument will over rule the ```reload``` argument.
+            Defaults to ```None```.
+
+        '''
+
+        save_path = reformat_path(save_path)
+
+        if type(categories) == str:
+            if categories == 'all':
+                print('You have selected ALL categories... are you sure?')
+                progress_spinner(30, 'You have 30 seconds to cancel', new_line_after=True)
+                categories = self.get_category_names(categories)
+            else:
+                categories = [categories]
+
+        print('Checking the index saving method.')
+        cols = pd.read_csv(save_path+categories[0]+'.csv', index_col=False, header=0, nrows=0).columns.tolist()
+        if np.any(['Unnamed:' in col for col in cols]):
+            index_col=0
+            save_index=True
+        else:
+            index_col=False
+            save_index=False
+
+        logging.debug('index_col={}, save_index={}'.format(index_col,save_index))
+        logging.debug('Getting data for categories {}'.format(categories))
+        categories_downloaded = self.export(since=None, until=None, reload=True,
+                                                categories=categories, save_path=save_path, 
+                                                append=True, export_index=export_index,
+                                                return_categories_downloaded=True,
+                                                save_index=save_index)
+
+        print('Removing possible duplicates...')
+        logging.debug('removing possible duplicates...')
+
+        for cat in categories_downloaded:
+            data = pd.read_csv(save_path + cat + '.csv', index_col=index_col)
+            data = data.drop_duplicates()
+            data.to_csv(save_path + cat + '.csv', index=save_index)
+
+        return
+
+
+
+
 
     def refresh(self, until=None, categories=None, save_path='./data/raw_data/'):
         '''
@@ -379,6 +531,7 @@ class Downloader:
         export_dict = {}
         mode_dict = {}
         print('Checking current files...')
+        logging.debug('checking dates from current files')
         last_rows = {}
         for category in categories:
             file_path = os.path.join(save_path, category)
@@ -411,6 +564,7 @@ class Downloader:
 
         job_id_dict, request_url_dict = self._export_request_parallel(export_dict=export_dict)
 
+        logging.debug('downloading the data')
 
         reponse_func = please_dont_fail(requests.get, tries=3)
         data = reponse_func(self.url + 'export', headers=self.params).json()
