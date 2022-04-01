@@ -472,7 +472,7 @@ class Downloader:
 
         logging.debug('index_col={}, save_index={}'.format(index_col,save_index))
         logging.debug('Getting data for categories {}'.format(categories))
-        categories_downloaded = self.export(since=None, until=None, reload=True,
+        categories_downloaded = self.export(since=since, until=until, reload=True,
                                                 categories=categories, save_path=save_path, 
                                                 append=True, export_index=export_index,
                                                 return_categories_downloaded=True,
@@ -707,7 +707,7 @@ class Downloader:
             This is the date converted to ISO.
 
         '''
-        date = pd.to_datetime(date)
+        date = pd.to_datetime(date, dayfirst=True)
         return date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
 
