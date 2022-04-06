@@ -139,6 +139,8 @@ class Weekly_dataloader:
             np.save(os.path.join(save_path, 'dates.npy'), dates)
 
     def refresh(self, refresh_period=None):
+        Downloader().refresh(categories=['procedure'], 
+                                        save_path=os.path.join(self.default_dir, '..', 'raw_data'))
         if refresh_period is None:
             refresh_period = ['current']
         try:
@@ -162,6 +164,7 @@ class Weekly_dataloader:
         self.collate()
         for folder in refresh_period:
             self.format(folder)
+        self.format('previous')
         date_backup(False)
         return
 

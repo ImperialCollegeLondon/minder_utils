@@ -46,6 +46,10 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
         This is the path that points to the ```procedure.csv``` file. If this 
         file does not exist, it will be downloaded to this path.
 
+    - days_either_side: int:
+        The number of days either side of a label that will be given the same label.
+
+
     Returns
     ---------
     
@@ -59,7 +63,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
     try:
         df = pd.read_csv(os.path.join(save_path, 'procedure.csv'))
     except FileNotFoundError:
-        Downloader().export(categories=['procedure'], save_path=save_path)
+        Downloader().export(categories=['procedure'], save_path=save_path, append=False)
         df = pd.read_csv(os.path.join(save_path, 'procedure.csv'))
 
     df.notes = df.notes.apply(lambda x: str(x).lower())
