@@ -20,8 +20,12 @@ def standardise_activity_data(df):
                                         + ' ' + df_borders.hour)
     df_borders.drop('hour', inplace=True, axis=1)
 
-    df = df.append(df_borders, sort=False, ignore_index=True) \
-        .drop_duplicates(subset=['id', 'time', 'location'])
+    df = pd.concat([df, df_borders], sort=False, ignore_index=True) \
+                    .drop_duplicates(subset=['id', 'time', 'location'])
+    
+    #df = df.append(df_borders, sort=False, ignore_index=True) \
+    #    .drop_duplicates(subset=['id', 'time', 'location'])
+
     df['time'] = pd.to_datetime(df['time'])
     print(df['time'])
     df = df.fillna(0).groupby(['id', 'location']).apply(lambda x: x.set_index('time')

@@ -227,7 +227,7 @@ class Formatting:
         for value in ['systolic_value', 'diastolic_value']:
             tmp_filter = col_filter.copy()
             tmp_filter[3] = value
-            tmp_data = data[tmp_filter]
+            tmp_data = data[tmp_filter].copy()
             tmp_data.device_type += '->' + value.split('_')[0]
             tmp_data['value'] = tmp_data[value]
             blood_pressure.append(tmp_data[col_filter])

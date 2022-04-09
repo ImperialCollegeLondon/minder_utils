@@ -602,8 +602,9 @@ class Downloader:
 
                     if Path(save_path + category + '.csv').exists():
                         data_to_save = pd.read_csv(save_path + category + '.csv', index_col=0)
-                        data_to_save = data_to_save.append(current_data, ignore_index=True)
-                        data_to_save = data_to_save.drop_duplicates(ignore_index=True)
+                        data_to_save = pd.concat([data_to_save, current_data], ignore_index=True)
+                        #data_to_save = data_to_save.append(current_data, ignore_index=True)
+                        data_to_save = data_to_save.drop_duplicates(ignore_index=True).reset_index(drop=True)
 
                     else:
                         data_to_save = current_data

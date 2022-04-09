@@ -143,7 +143,7 @@ def load_data_default(reload_weekly=False, reload_all=False):
 
 
 def cal_confidence(df, p_id, by_days=False):
-    df = df[df['patient id'] == p_id]
+    df = df[df['patient id'] == p_id].copy()
     if by_days and df.prediction.sum() < 3:
         return 0
     df.prediction = df.prediction.map({0: 1, 1: 0})

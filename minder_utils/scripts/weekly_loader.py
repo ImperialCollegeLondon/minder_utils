@@ -149,7 +149,7 @@ class Weekly_dataloader:
             print('Dates file does not exist, start to initialise')
             self.initialise()
             return
-        if date_dict['current']['until'] == DT.date.today() - DT.timedelta(days=1):
+        if date_dict['current']['until'] == pd.Timestamp(DT.date.today() - DT.timedelta(days=1)):
             print('Data is up-to-date')
             return
         dates_save(refresh=False)
@@ -175,8 +175,8 @@ class Weekly_dataloader:
                 print(filename)
                 previous_data = pd.read_csv(os.path.join(self.previous_csv_data, filename), index_col=False)
                 current_data = pd.read_csv(os.path.join(self.current_csv_data, filename), index_col=False)
-                current_data = current_data[current_data.start_date != 'start_date']
-                previous_data = previous_data[previous_data.start_date != 'start_date']
+                current_data = current_data[current_data.start_date != 'start_date'].copy()
+                previous_data = previous_data[previous_data.start_date != 'start_date'].copy()
 
                 current_data.start_date = pd.to_datetime(current_data.start_date)
                 current_mask = current_data.start_date.dt.date < date_dict['gap']['until']
