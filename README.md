@@ -7,7 +7,14 @@ For documentation and installation instructions, please see: [minder_utils docum
 
 Install anaconda, and create environment via:
 ```
-conda env create -f environment.yml
+# Linux
+conda create --name minder_utils --file conda-linux-64.lock
+# Windows
+conda create --name minder_utils --file conda-win-64.lock
+# Mac
+conda create --name minder_utils --file conda-osx-64.lock
+# M1 Mac
+conda create --name minder_utils --file conda-osx-arm64.lock
 ```
  
 ## Overview

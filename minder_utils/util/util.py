@@ -28,7 +28,7 @@ def reformat_path(path):
         return path
     elif 'windows' in platform.platform().lower():
         return str(path).replace(os.sep, ntpath.sep)
-    elif 'unix' in platform.platform().lower():
+    elif 'unix' in platform.platform().lower() or 'linux' in platform.platform().lower():
         return str(path).replace(os.sep, posixpath.sep)
     else:
         return path
