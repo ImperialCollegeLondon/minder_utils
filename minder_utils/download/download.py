@@ -460,7 +460,7 @@ class Downloader:
         if type(categories) == str:
             if categories == 'all':
                 print('You have selected ALL categories... are you sure?')
-                progress_spinner(1, 'You have 30 seconds to cancel', new_line_after=True)
+                progress_spinner(30, 'You have 30 seconds to cancel', new_line_after=True)
                 categories = self.get_category_names(categories)
             else:
                 categories = [categories]

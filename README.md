@@ -7,7 +7,14 @@ For documentation and installation instructions, please see: [minder_utils docum
 
 Install anaconda, and create environment via:
 ```
-conda env create -f environment.yml
+# Linux
+conda create --name minder_utils --file conda-linux-64.lock
+# Windows
+conda create --name minder_utils --file conda-win-64.lock
+# Mac
+conda create --name minder_utils --file conda-osx-64.lock
+# M1 Mac
+conda create --name minder_utils --file conda-osx-arm64.lock
 ```
  
 ## Overview
@@ -28,7 +35,7 @@ The weekly_loader in the 'scripts' folder supports download the activity data we
  - put the data in a specific format
  - normalise and save the data
 
-Please check the [Instruction.ipynb](./Instruction.ipynb) for usage.
+For exmaples of installing the package, downloading, and loading the package, please see the documentation website.
 
 Please share your ideas/code of formatting the data (activity, environmental, physiological, questionary), data visualisation or any other ideas with us. We will organise the code and share to others.
 
