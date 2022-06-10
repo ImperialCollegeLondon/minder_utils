@@ -21,8 +21,9 @@ class Weekly_alerts:
 
         unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'activity.npy'))
         unlabelled = unlabelled.reshape(-1, 3, 8, 14)
+        unlabelled = normalise(unlabelled.reshape(unlabelled.shape[0], 24, -1)).reshape(unlabelled.shape)
         extractor = Extractor(save_path='./data/weekly_test/model')
-        extractor.train(unlabelled, autoencoder)
+        extractor.train(unlabelled, autoencoder, normalisation='l2')
 
         #sleep_extractor = Extractor(save_path='./data/weekly_test/sleep_model')
         #unlabelled = np.load(os.path.join(self.loader.previous_unlabelled_data, 'sleep.npy'))
@@ -70,7 +71,7 @@ class Weekly_alerts:
     def _evaluate(self, clf_type, transform=True, boosting=True):
         X, y, label_p_ids = self.data['labelled']
         if transform:
-            X = self.extractor.transform(X, self.autoencoder)
+            X = self.extractor.transform(X, self.autoencoder, normalisation='l2')
         else:
             X = X.reshape(X.shape[0], -1)
         return evaluate(Classifiers(clf_type, boosting), X, y, label_p_ids, 10)
@@ -96,8 +97,8 @@ class Weekly_alerts:
         weekly_data, p_ids, dates = self.data['test']
         X, y, label_p_ids = self.data['labelled']
         if transform:
-            X = self.extractor.transform(X, self.autoencoder)
-            weekly_data = self.extractor.transform(weekly_data, self.autoencoder)
+            X = self.extractor.transform(X, self.autoencoder, normalisation='l2')
+            weekly_data = self.extractor.transform(weekly_data, self.autoencoder, normalisation='l2')
         else:
             X = X.reshape(X.shape[0], -1)
             weekly_data = weekly_data.reshape(weekly_data.shape[0], -1)

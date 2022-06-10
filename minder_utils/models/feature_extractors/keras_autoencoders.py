@@ -44,7 +44,7 @@ class Extractor:
     def train(self, data, model_type, normalisation=None, input_dim=(8, 14, 3), encoding_dim=24 * 7):
         if self.save_path is not None:
             try:
-                encoder = keras.models.load_model(os.path.join(self.save_path, model_type + str(normalisation)) + '.h5')
+                encoder = keras.models.load_model(os.path.join(self.save_path, model_type + str(normalisation)+ '.h5'))
                 self.existing_models[model_type + str(normalisation)] = encoder
             except (OSError, FileNotFoundError):
                 pass
