@@ -94,7 +94,7 @@ def label_dataframe(unlabelled_df, save_path='./data/raw_data/', days_either_sid
     # labelling UTIs
     df.valid = map_url_to_flag(df.valid)
     df[(df.valid == True)
-        & (df.notes.str.contains('negative'))] = False
+        & (df.notes.str.contains('negative'))].valid = False
     
     df = df[['patient id', 'date', 'valid']]
 
