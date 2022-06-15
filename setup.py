@@ -13,7 +13,7 @@ setup(
     author='UKDRI CR&T Imperial College London',
     author_email='',
     url='https://github.com/ImperialCollegeLondon/minder_utils',
-    packages=['minder_utils',],
+    package_data={"minder_utils.configurations": ["*.yaml"]},
     long_description=open('README.txt').read(),
     install_requires=["requests",
                         "argparse",
