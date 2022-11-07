@@ -282,6 +282,7 @@ class Dataloader:
             return None
         data = df.reset_index()
         data = indices[['id', 'time']].merge(data, how='left')
-        num_sensors = len(data.location.unique())
-        data = data.set_index(['id', 'time', 'location'])
-        return data.to_numpy().reshape(-1, num_sensors).astype(float)
+        unique_sensors = data.location.dropna().unique()
+        num_sensors = len(unique_sensors)
+        data = data.set_index(['id', 'time', 'location']).unstack(level=2)['value']
+        return data[unique_sensors].to_numpy().astype(float)
