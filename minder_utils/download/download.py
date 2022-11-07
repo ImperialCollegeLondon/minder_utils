@@ -156,6 +156,7 @@ class Downloader:
                     export_keys['datasets'][category] = {}
         print('Exporting the ', export_keys['datasets'])
         print('From ', since, 'to', until)
+        logging.debug(f"request: {self.url + 'export'}; data={json.dumps(export_keys)}")
         schedule_job = requests.post(self.url + 'export', data=json.dumps(export_keys), headers=self.params)
         job_id = schedule_job.headers['Content-Location']
         reponse_func = please_dont_fail(requests.get, tries=3)
@@ -167,13 +168,14 @@ class Downloader:
         waiting = True
         while waiting:
             logging.debug('checking status')
+            logging.debug(f'response: {response}')
 
             if response['status'] == 202:
-                reponse_func = please_dont_fail(requests.get, tries=3)
-                response = reponse_func(job_id, headers=self.params).json()
                 # the following waits for x seconds and runs an animation in the 
                 # mean time to make sure the user doesn't think the code is broken
                 progress_spinner(30, 'Waiting for the sever to complete the job', new_line_after=False)
+                reponse_func = please_dont_fail(requests.get, tries=3)
+                response = reponse_func(job_id, headers=self.params).json()
 
             elif response['status'] == 500:
                 sys.stdout.write('\r')
