@@ -116,7 +116,7 @@ class Downloader:
             print('Get response ', r)
         logging.debug('info done')
 
-    def _export_request(self, categories='all', since=None, until=None):
+    def _export_request(self, categories='all', since=None, until=None, organizations=None):
         '''
         This is an internal function that makes the request to download the data.
 
@@ -149,6 +149,8 @@ class Downloader:
             export_keys['since'] = self.convert_to_ISO(since)
         if until is not None:
             export_keys['until'] = self.convert_to_ISO(until)
+        if organizations:
+            export_keys['organizations'] = organizations
         info = self.get_info()['Categories']
         for key in info:
             for category in info[key]:
@@ -294,7 +296,7 @@ class Downloader:
     def export(self, since=None, until=None, reload=True,
                categories='all', save_path='./data/raw_data/', append=True, export_index=None,
                save_index=True, return_categories_downloaded=False,
-               remove_id=False):
+               remove_id=False, organizations=None):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -357,7 +359,7 @@ class Downloader:
             save_mkdir(save_path)
         if export_index is None:
             if reload:
-                self._export_request(categories=categories, since=since, until=until)
+                self._export_request(categories=categories, since=since, until=until, organizations=organizations)
         reponse_func = please_dont_fail(requests.get, tries=3)
         data = reponse_func(self.url + 'export', headers=self.params).json()
         export_index = -1 if export_index is None else export_index
