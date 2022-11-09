@@ -116,7 +116,7 @@ class Downloader:
             print('Get response ', r)
         logging.debug('info done')
 
-    def _export_request(self, categories='all', since=None, until=None):
+    def _export_request(self, categories='all', since=None, until=None, organizations):
         '''
         This is an internal function that makes the request to download the data.
 
@@ -149,6 +149,8 @@ class Downloader:
             export_keys['since'] = self.convert_to_ISO(since)
         if until is not None:
             export_keys['until'] = self.convert_to_ISO(until)
+        if organizations:
+            export_keys['organizations'] = organizations
         info = self.get_info()['Categories']
         for key in info:
             for category in info[key]:
@@ -188,7 +190,7 @@ class Downloader:
                 waiting = False
         logging.debug('no more waiting for the server')
 
-    def _export_request_parallel(self, export_dict):
+    def _export_request_parallel(self, export_dict, organizations):
         '''
         This function allows the user to make parallel export requests. This is useful 
         when the requests have difference since and until dates for the different datasets in 
@@ -228,6 +230,8 @@ class Downloader:
                 export_keys['since'] = self.convert_to_ISO(since)
             if not until is None:
                 export_keys['until'] = self.convert_to_ISO(until)
+            if organizations:
+                export_keys['organizations'] = organizations
 
             export_key_list[category] = export_keys
 
@@ -294,7 +298,7 @@ class Downloader:
     def export(self, since=None, until=None, reload=True,
                categories='all', save_path='./data/raw_data/', append=True, export_index=None,
                save_index=True, return_categories_downloaded=False,
-               remove_id=False):
+               remove_id=False, organizations=None):
         '''
         This is a function that is able to download the data and save it as a csv in save_path.
 
@@ -357,7 +361,7 @@ class Downloader:
             save_mkdir(save_path)
         if export_index is None:
             if reload:
-                self._export_request(categories=categories, since=since, until=until)
+                self._export_request(categories=categories, since=since, until=until, organizations=organizations)
         reponse_func = please_dont_fail(requests.get, tries=3)
         data = reponse_func(self.url + 'export', headers=self.params).json()
         export_index = -1 if export_index is None else export_index
@@ -501,7 +505,7 @@ class Downloader:
 
 
 
-    def refresh(self, until=None, categories=None, save_path='./data/raw_data/'):
+    def refresh(self, until=None, categories=None, save_path='./data/raw_data/', organizations=None):
         '''
         This function allows for the user to refresh the data currently saved in the 
         save path. It will download the data missing between the saved files and the
@@ -571,7 +575,7 @@ class Downloader:
 
             export_dict[category] = (since, until)
 
-        job_id_dict, request_url_dict = self._export_request_parallel(export_dict=export_dict)
+        job_id_dict, request_url_dict = self._export_request_parallel(export_dict=export_dict, organizations=organizations)
 
         logging.debug('downloading the data')
 
