@@ -116,7 +116,7 @@ class Downloader:
             print('Get response ', r)
         logging.debug('info done')
 
-    def _export_request(self, categories='all', since=None, until=None, organizations):
+    def _export_request(self, categories='all', since=None, until=None, organizations=None):
         '''
         This is an internal function that makes the request to download the data.
 
